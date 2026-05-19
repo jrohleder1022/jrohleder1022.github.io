@@ -1,0 +1,2113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ROTH IRA — Concentrated Portfolio Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg-card: #111111;
+    --bg-elevated: #161616;
+    --border: #1f1f1f;
+    --border-bright: #2a2a2a;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --text-faint: #555;
+    --green: #00d97e;
+    --red: #ff3b30;
+    --amber: #ffb800;
+    --blue: #4a9eff;
+    --accent: #d4ff00;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(212, 255, 0, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(255, 59, 48, 0.04) 0%, transparent 50%);
+  }
+  .display-font { font-family: 'Fraunces', serif; font-feature-settings: "ss01" on; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .grid-bg {
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .card-elevated {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-bright);
+  }
+  .ticker-tape {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: #050505;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .ticker-content {
+    display: inline-block;
+    animation: scroll 60s linear infinite;
+    padding-left: 100%;
+  }
+  @keyframes scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+  .glow-green { box-shadow: 0 0 20px rgba(0, 217, 126, 0.15); }
+  .glow-red { box-shadow: 0 0 20px rgba(255, 59, 48, 0.15); }
+  .glow-amber { box-shadow: 0 0 20px rgba(255, 184, 0, 0.2); }
+  .risk-pulse {
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  input, textarea, select {
+    background: #0a0a0a;
+    border: 1px solid var(--border-bright);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    padding: 8px 12px;
+    border-radius: 2px;
+    font-size: 13px;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  button {
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 10px 18px;
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 2px;
+  }
+  .btn-primary:hover { background: #b8e000; transform: translateY(-1px); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border-bright);
+    padding: 8px 14px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 2px;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+  .btn-sell {
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    padding: 8px 14px;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 2px;
+  }
+  .btn-sell:hover { background: var(--red); color: #fff; }
+  .tab {
+    padding: 14px 20px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(8px);
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-backdrop.active { display: flex; }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  td {
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  tr:hover { background: rgba(255,255,255,0.02); }
+  .badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .badge-buy { background: rgba(0,217,126,0.1); color: var(--green); border: 1px solid rgba(0,217,126,0.3); }
+  .badge-sell { background: rgba(255,59,48,0.1); color: var(--red); border: 1px solid rgba(255,59,48,0.3); }
+  .badge-contrib { background: rgba(74,158,255,0.1); color: var(--blue); border: 1px solid rgba(74,158,255,0.3); }
+  .risk-meter {
+    position: relative;
+    height: 8px;
+    background: var(--border);
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .risk-meter-fill {
+    height: 100%;
+    transition: width 0.5s ease-out;
+  }
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); }
+  ::-webkit-scrollbar-thumb:hover { background: #333; }
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-bright), transparent);
+  }
+  .corner-mark {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--accent);
+  }
+  .corner-tl { top: -1px; left: -1px; border-top: 1px solid; border-left: 1px solid; }
+  .corner-tr { top: -1px; right: -1px; border-top: 1px solid; border-right: 1px solid; }
+  .corner-bl { bottom: -1px; left: -1px; border-bottom: 1px solid; border-left: 1px solid; }
+  .corner-br { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; }
+</style>
+</head>
+<body>
+
+<!-- Storage warning banner — only visible when non-persistent -->
+<div id="storageWarning" class="hidden" style="background:#3a1a00;border-bottom:1px solid #ffb800;padding:10px 20px;color:#ffb800;font-family:JetBrains Mono,monospace;font-size:12px;text-align:center;">
+  <strong>⚠ TEMPORARY STORAGE MODE</strong> — <span id="storageWarningText"></span>
+  <button onclick="exportData()" style="margin-left:12px;background:#ffb800;color:#000;border:none;padding:4px 10px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;border-radius:2px;cursor:pointer;">↓ Backup Now</button>
+</div>
+
+<!-- Header bar -->
+<header class="border-b border-[var(--border)] bg-[#050505] sticky top-0 z-40">
+  <div class="max-w-[1400px] mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <div>
+        <div class="text-[9px] tracking-[0.2em] text-[var(--text-faint)] uppercase">Roth IRA Terminal</div>
+        <div class="display-font text-2xl font-light tracking-tight">CONCENTRATED·BOOK</div>
+      </div>
+      <div class="hidden md:block w-px h-10 bg-[var(--border-bright)]"></div>
+      <div class="hidden md:flex gap-6 text-xs">
+        <div><span class="text-[var(--text-faint)]">ACCT</span> <span class="text-[var(--accent)]">237971896</span></div>
+        <div><span class="text-[var(--text-faint)]">VINT</span> 2026</div>
+        <div><span class="text-[var(--text-faint)]">LIMIT</span> $7,000</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div id="storageBadge" class="hidden md:block text-[9px] tracking-[0.15em] uppercase font-mono" style="padding:4px 8px;border:1px solid var(--border-bright);border-radius:2px;cursor:help;"></div>
+      <div class="hidden md:flex gap-2">
+        <button class="btn-ghost" onclick="exportData()" title="Download backup">↓ Backup</button>
+        <label class="btn-ghost cursor-pointer" title="Restore from backup">
+          ↑ Restore
+          <input type="file" accept=".json" style="display:none" onchange="if(this.files[0]) importData(this.files[0]); this.value='';">
+        </label>
+        <button class="btn-ghost" onclick="resetToDefaults()" title="Reset all data">⟲ Reset</button>
+      </div>
+      <div class="text-right">
+        <div class="text-[9px] tracking-[0.2em] text-[var(--text-faint)] uppercase">Live</div>
+        <div class="flex items-center gap-2 justify-end">
+          <span class="w-2 h-2 rounded-full bg-[var(--green)] risk-pulse"></span>
+          <span class="text-xs mono" id="liveTime">--:--:--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Ticker tape -->
+<div class="ticker-tape py-2 text-xs">
+  <div class="ticker-content">
+    <span class="mx-6"><span class="text-[var(--text-faint)]">GOOGL</span> <span class="text-[var(--text)]">$396.78</span> <span class="text-[var(--red)]">−1.07%</span></span>
+    <span class="mx-6"><span class="text-[var(--text-faint)]">NVDA</span> <span class="text-[var(--text)]">$225.32</span> <span class="text-[var(--red)]">−4.43%</span></span>
+    <span class="mx-6"><span class="text-[var(--text-faint)]">AMZN</span> <span class="text-[var(--text)]">$264.14</span> <span class="text-[var(--red)]">−1.16%</span></span>
+    <span class="mx-6"><span class="text-[var(--text-faint)]">NOW</span> <span class="text-[var(--text)]">$95.07</span> <span class="text-[var(--green)]">+5.04%</span></span>
+    <span class="mx-6 text-[var(--amber)]">⚠ CONCENTRATION RISK: 77.7% IN 2 NAMES</span>
+    <span class="mx-6"><span class="text-[var(--text-faint)]">SPX</span> <span class="text-[var(--text)]">−</span></span>
+    <span class="mx-6"><span class="text-[var(--text-faint)]">QQQ</span> <span class="text-[var(--text)]">−</span></span>
+    <span class="mx-6 text-[var(--accent)]">► UPDATE PRICES MANUALLY IN POSITIONS TAB</span>
+  </div>
+</div>
+
+<main class="max-w-[1400px] mx-auto px-6 py-8">
+
+  <!-- Hero stats -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border)] mb-8 border border-[var(--border)]">
+    <div class="bg-[var(--bg-card)] p-6 relative">
+      <div class="corner-mark corner-tl"></div>
+      <div class="corner-mark corner-br"></div>
+      <div class="stat-label">Portfolio Value</div>
+      <div class="stat-value display-font" id="totalValue">$18,918.83</div>
+      <div class="text-xs text-[var(--text-faint)] mt-2">Last updated <span id="lastUpdate">manually</span></div>
+    </div>
+    <div class="bg-[var(--bg-card)] p-6">
+      <div class="stat-label">Total P/L</div>
+      <div class="stat-value display-font text-[var(--green)]" id="totalPL">+$4,637.72</div>
+      <div class="text-xs text-[var(--green)] mt-2" id="totalPLPct">+32.49% all-time</div>
+    </div>
+    <div class="bg-[var(--bg-card)] p-6">
+      <div class="stat-label">2026 Contributions</div>
+      <div class="stat-value display-font" id="contribYTD">$0</div>
+      <div class="text-xs text-[var(--text-faint)] mt-2"><span id="contribRemaining">$7,000</span> remaining</div>
+    </div>
+    <div class="bg-[var(--bg-card)] p-6 relative">
+      <div class="corner-mark corner-tr"></div>
+      <div class="corner-mark corner-bl"></div>
+      <div class="stat-label">Concentration HHI</div>
+      <div class="stat-value display-font text-[var(--amber)]" id="hhiValue">3,338</div>
+      <div class="text-xs text-[var(--amber)] mt-2">High concentration</div>
+    </div>
+  </section>
+
+  <!-- Risk panel - this is the critical addition for concentrated portfolio -->
+  <section class="card-elevated p-6 mb-8 relative glow-amber">
+    <div class="flex items-center justify-between mb-5">
+      <div>
+        <div class="text-[9px] tracking-[0.2em] text-[var(--amber)] uppercase">⚠ Risk Telemetry — Concentrated Book</div>
+        <div class="display-font text-xl mt-1">Early Warning System</div>
+      </div>
+      <div class="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">Updated when positions change</div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6">
+      <!-- Single-name max -->
+      <div>
+        <div class="flex justify-between items-baseline mb-2">
+          <div class="text-xs text-[var(--text-dim)]">Largest Position</div>
+          <div class="text-xs mono"><span id="maxPosPct">41.98</span>% <span class="text-[var(--text-faint)]">/ 40% limit</span></div>
+        </div>
+        <div class="risk-meter">
+          <div class="risk-meter-fill bg-[var(--amber)]" id="maxPosBar" style="width: 100%; background: linear-gradient(90deg, var(--green), var(--amber), var(--red));"></div>
+        </div>
+        <div class="text-[10px] text-[var(--text-faint)] mt-2">
+          <span id="maxPosTicker">GOOGL</span> — single-name limit breach if &gt;40%
+        </div>
+      </div>
+
+      <!-- Sector concentration -->
+      <div>
+        <div class="flex justify-between items-baseline mb-2">
+          <div class="text-xs text-[var(--text-dim)]">Sector Exposure (Tech)</div>
+          <div class="text-xs mono"><span id="sectorPct">100.0</span>%</div>
+        </div>
+        <div class="risk-meter">
+          <div class="risk-meter-fill bg-[var(--red)]" id="sectorBar" style="width: 100%;"></div>
+        </div>
+        <div class="text-[10px] text-[var(--text-faint)] mt-2">
+          Zero diversification across sectors
+        </div>
+      </div>
+
+      <!-- Estimated portfolio volatility -->
+      <div>
+        <div class="flex justify-between items-baseline mb-2">
+          <div class="text-xs text-[var(--text-dim)]">Est. Annualized Volatility</div>
+          <div class="text-xs mono"><span id="volEstimate">~38</span>%</div>
+        </div>
+        <div class="risk-meter">
+          <div class="risk-meter-fill bg-[var(--red)]" id="volBar" style="width: 76%;"></div>
+        </div>
+        <div class="text-[10px] text-[var(--text-faint)] mt-2">
+          vs ~16% for diversified index. ρ ≈ 0.75
+        </div>
+      </div>
+    </div>
+
+    <div class="divider my-5"></div>
+
+    <div class="grid md:grid-cols-2 gap-6 text-xs">
+      <div>
+        <div class="text-[9px] tracking-[0.2em] text-[var(--text-faint)] uppercase mb-2">Drawdown Scenarios</div>
+        <div class="space-y-1 mono">
+          <div class="flex justify-between"><span class="text-[var(--text-dim)]">−20% tech selloff</span><span class="text-[var(--red)]" id="dd20">−$3,784</span></div>
+          <div class="flex justify-between"><span class="text-[var(--text-dim)]">−40% (2022-style)</span><span class="text-[var(--red)]" id="dd40">−$7,568</span></div>
+          <div class="flex justify-between"><span class="text-[var(--text-dim)]">−65% (NVDA 2022)</span><span class="text-[var(--red)]" id="dd65">−$12,297</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="text-[9px] tracking-[0.2em] text-[var(--text-faint)] uppercase mb-2">Recovery Math</div>
+        <div class="space-y-1 mono text-[var(--text-dim)]">
+          <div class="flex justify-between"><span>Years of max contrib to refill $7,568 loss</span><span class="text-[var(--text)]">1.08 yr</span></div>
+          <div class="flex justify-between"><span>Roth space lost forever if depleted</span><span class="text-[var(--amber)]">Permanent</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tabs -->
+  <nav class="flex border-b border-[var(--border-bright)] mb-6 overflow-x-auto">
+    <div class="tab active" data-tab="positions">Positions</div>
+    <div class="tab" data-tab="contributions">Contributions</div>
+    <div class="tab" data-tab="transactions">Transactions</div>
+    <div class="tab" data-tab="analytics">Analytics</div>
+    <div class="tab" data-tab="macro">Macro Desk</div>
+    <div class="tab" data-tab="theory">Theory Reference</div>
+  </nav>
+
+  <!-- Tab: Positions -->
+  <section id="tab-positions" class="tab-content">
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
+      <div>
+        <h2 class="display-font text-2xl">Current Positions</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1">
+          <span id="lastFetchInfo">Update prices to recalculate risk metrics</span>
+        </p>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn-ghost" onclick="openModal('buyModal')">+ Buy</button>
+        <button class="btn-ghost" onclick="fetchLivePrices()" id="fetchBtn">⚡ Fetch Live</button>
+        <button class="btn-ghost" onclick="openModal('priceModal')">✎ Manual</button>
+        <button class="btn-ghost" onclick="openModal('apiKeyModal')" title="Manage API key">🔑</button>
+      </div>
+    </div>
+
+    <div class="card overflow-x-auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Qty</th>
+            <th>Avg Cost</th>
+            <th>Last Price</th>
+            <th>Market Value</th>
+            <th>% Acct</th>
+            <th>Unrealized P/L</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="positionsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mt-6">
+      <div class="card p-5">
+        <div class="stat-label mb-3">Allocation</div>
+        <canvas id="allocationChart" height="200"></canvas>
+      </div>
+      <div class="card p-5">
+        <div class="stat-label mb-3">Target vs Actual</div>
+        <div class="space-y-3 mt-4" id="targetBars">
+          <!-- Filled by JS -->
+        </div>
+        <div class="text-[10px] text-[var(--text-faint)] mt-4 leading-relaxed">
+          Targets reflect a defensible upper bound for a single-name in a concentrated growth portfolio (~25% max). Edit in code if you set your own targets.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab: Contributions -->
+  <section id="tab-contributions" class="tab-content hidden">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h2 class="display-font text-2xl">Contributions Ledger</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1">Track Roth IRA contributions against annual limit</p>
+      </div>
+      <button class="btn-primary" onclick="openModal('contribModal')">+ Log Contribution</button>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-px bg-[var(--border)] mb-6 border border-[var(--border)]">
+      <div class="bg-[var(--bg-card)] p-5">
+        <div class="stat-label">2026 Limit</div>
+        <div class="display-font text-2xl mt-1">$7,000</div>
+      </div>
+      <div class="bg-[var(--bg-card)] p-5">
+        <div class="stat-label">YTD Contributed</div>
+        <div class="display-font text-2xl mt-1" id="contribTotal">$0</div>
+      </div>
+      <div class="bg-[var(--bg-card)] p-5">
+        <div class="stat-label">Remaining Capacity</div>
+        <div class="display-font text-2xl mt-1 text-[var(--accent)]" id="contribRemain2">$7,000</div>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="card p-5 mb-6">
+      <div class="flex justify-between text-xs mb-2">
+        <span class="text-[var(--text-dim)]">2026 Progress</span>
+        <span class="mono" id="contribPctText">0%</span>
+      </div>
+      <div class="h-2 bg-[var(--border)] overflow-hidden">
+        <div id="contribBar" class="h-full bg-[var(--accent)] transition-all" style="width: 0%;"></div>
+      </div>
+    </div>
+
+    <div class="card overflow-x-auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Source</th>
+            <th>Note</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="contribBody">
+          <tr><td colspan="5" class="text-center text-[var(--text-faint)] py-8">No contributions logged yet. Tap "Log Contribution" to start.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tab: Transactions -->
+  <section id="tab-transactions" class="tab-content hidden">
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <h2 class="display-font text-2xl">Transaction Journal</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1">Every buy & sell — with your reasoning. This is where alpha comes from: post-hoc honesty.</p>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn-ghost" onclick="openModal('buyModal')">+ Buy</button>
+        <button class="btn-ghost" onclick="openModal('sellModal')">− Sell</button>
+      </div>
+    </div>
+
+    <div class="card overflow-x-auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Symbol</th>
+            <th>Qty</th>
+            <th>Price</th>
+            <th>Total</th>
+            <th>Thesis / Reason</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="transBody">
+          <tr><td colspan="8" class="text-center text-[var(--text-faint)] py-8">No transactions logged yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Tab: Analytics -->
+  <section id="tab-analytics" class="tab-content hidden">
+    <div class="mb-6">
+      <h2 class="display-font text-2xl">Portfolio Analytics</h2>
+      <p class="text-xs text-[var(--text-faint)] mt-1">The numbers behind your bets</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+      <div class="card p-6">
+        <div class="stat-label">Herfindahl-Hirschman Index</div>
+        <div class="display-font text-4xl mt-2" id="hhiBig">3,338</div>
+        <div class="divider my-4"></div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          HHI = Σ(weight²) × 10,000. A diversified index ETF scores ~50-200. Your portfolio of 4 stocks scores in the "highly concentrated" range (&gt;2,500). 
+          Maximum possible (all-in-one-stock) = 10,000.
+        </p>
+        <div class="mt-4 text-[10px] mono text-[var(--text-faint)]">
+          GOOGL² + NVDA² + AMZN² + NOW² = 0.42² + 0.36² + 0.17² + 0.06² ≈ 0.334
+        </div>
+      </div>
+
+      <div class="card p-6">
+        <div class="stat-label">Effective Number of Stocks</div>
+        <div class="display-font text-4xl mt-2" id="effectiveN">2.99</div>
+        <div class="divider my-4"></div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          N_eff = 1 / Σ(weight²). Tells you how many "equal-weight" stocks your portfolio behaves like. 
+          You hold 4 names but they function like ~3 equally-weighted bets because of your concentration.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <div class="stat-label">Beta vs QQQ (Estimated)</div>
+        <div class="display-font text-4xl mt-2">~1.35</div>
+        <div class="divider my-4"></div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          Your portfolio moves ~1.35x what the Nasdaq does. When QQQ drops 10%, expect your portfolio down ~13.5%. 
+          NVDA's high beta (~1.7) drives this.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <div class="stat-label">Implied Annual Volatility</div>
+        <div class="display-font text-4xl mt-2">~38%</div>
+        <div class="divider my-4"></div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          σₚ = √(wᵀΣw). Assuming individual σ ≈ 35-50% and ρ ≈ 0.75 between names. 
+          A 1-standard-deviation move = ±$7,200 in one year.
+        </p>
+      </div>
+    </div>
+
+    <div class="card p-6">
+      <div class="stat-label mb-3">Portfolio Value — Hypothetical Paths</div>
+      <canvas id="pathChart" height="100"></canvas>
+      <div class="text-[10px] text-[var(--text-faint)] mt-3">
+        Monte Carlo-style illustration assuming μ = 12%, σ = 38%, 10-year horizon. Wide cone = wide outcomes.
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab: Macro Desk -->
+  <section id="tab-macro" class="tab-content hidden">
+    <div class="mb-6">
+      <h2 class="display-font text-2xl">Macro Desk</h2>
+      <p class="text-xs text-[var(--text-faint)] mt-1">Authoritative sources, organized by what actually moves your portfolio</p>
+    </div>
+
+    <!-- Why this matters callout -->
+    <div class="card-elevated p-5 mb-6 border-l-2" style="border-left-color: var(--accent);">
+      <div class="text-[10px] tracking-[0.2em] uppercase text-[var(--accent)] mb-2">Why a Macro Desk Matters For You</div>
+      <p class="text-sm text-[var(--text-dim)] leading-relaxed">
+        You hold 77% in two AI/tech names. Tech is the <strong class="text-[var(--text)]">highest-duration equity asset class</strong> — meaning rates and inflation hit it hardest. When the 10-year yield rises 50bps, NVDA and GOOGL typically drop 5-10% before earnings even change. You don't need to predict the Fed. You just need to <strong class="text-[var(--text)]">know what's coming and how it's priced</strong>.
+      </p>
+    </div>
+
+    <!-- TIER 1: Direct Impact -->
+    <div class="mb-8">
+      <div class="flex items-baseline gap-3 mb-4">
+        <div class="display-font text-xl">Tier 1</div>
+        <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--red)]">Direct Impact On Your Holdings</div>
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <!-- Fed Funds Rate -->
+        <div class="card p-5 hover:border-[var(--accent)] transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <div class="text-[10px] tracking-wider text-[var(--text-faint)] uppercase">FRED · DFEDTARU</div>
+              <h3 class="display-font text-lg mt-1">Fed Funds Rate</h3>
+            </div>
+            <span class="badge badge-sell">CRITICAL</span>
+          </div>
+          <p class="text-xs text-[var(--text-dim)] leading-relaxed mb-4">
+            The rate that drives everything. Higher = bad for growth stocks. Watch the trajectory, not just the level.
+          </p>
+          <div class="flex gap-2 flex-wrap">
+            <a href="https://fred.stlouisfed.org/series/DFEDTARU" target="_blank" rel="noopener" class="btn-ghost">FRED Chart →</a>
+            <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener" class="btn-ghost">FOMC Calendar</a>
+          </div>
+        </div>
+
+        <!-- 10Y Treasury -->
+        <div class="card p-5 hover:border-[var(--accent)] transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <div class="text-[10px] tracking-wider text-[var(--text-faint)] uppercase">FRED · DGS10</div>
+              <h3 class="display-font text-lg mt-1">10-Year Treasury Yield</h3>
+            </div>
+            <span class="badge badge-sell">CRITICAL</span>
+          </div>
+          <p class="text-xs text-[var(--text-dim)] leading-relaxed mb-4">
+            The discount rate for long-duration cash flows. Inverse relationship with NVDA, GOOGL valuations. Watch the 5% line.
+          </p>
+          <div class="flex gap-2 flex-wrap">
+            <a href="https://fred.stlouisfed.org/series/DGS10" target="_blank" rel="noopener" class="btn-ghost">FRED Chart →</a>
+            <a href="https://home.treasury.gov/policy-issues/financing-the-government/interest-rate-statistics" target="_blank" rel="noopener" class="btn-ghost">Treasury Rates</a>
+          </div>
+        </div>
+
+        <!-- CPI -->
+        <div class="card p-5 hover:border-[var(--accent)] transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <div class="text-[10px] tracking-wider text-[var(--text-faint)] uppercase">BLS · CPIAUCSL</div>
+              <h3 class="display-font text-lg mt-1">CPI & Core CPI</h3>
+            </div>
+            <span class="badge" style="background: rgba(255,184,0,0.1); color: var(--amber); border: 1px solid rgba(255,184,0,0.3);">MONTHLY</span>
+          </div>
+          <p class="text-xs text-[var(--text-dim)] leading-relaxed mb-4">
+            Released mid-month. Hot prints crush tech. Core (ex food/energy) is what the Fed actually targets.
+          </p>
+          <div class="flex gap-2 flex-wrap">
+            <a href="https://www.bls.gov/cpi/" target="_blank" rel="noopener" class="btn-ghost">BLS Source →</a>
+            <a href="https://fred.stlouisfed.org/series/CPILFESL" target="_blank" rel="noopener" class="btn-ghost">Core CPI Chart</a>
+            <a href="https://www.bls.gov/schedule/news_release/cpi.htm" target="_blank" rel="noopener" class="btn-ghost">Release Schedule</a>
+          </div>
+        </div>
+
+        <!-- PCE -->
+        <div class="card p-5 hover:border-[var(--accent)] transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <div class="text-[10px] tracking-wider text-[var(--text-faint)] uppercase">BEA · PCEPILFE</div>
+              <h3 class="display-font text-lg mt-1">PCE (Fed's Inflation Gauge)</h3>
+            </div>
+            <span class="badge" style="background: rgba(255,184,0,0.1); color: var(--amber); border: 1px solid rgba(255,184,0,0.3);">MONTHLY</span>
+          </div>
+          <p class="text-xs text-[var(--text-dim)] leading-relaxed mb-4">
+            What the Fed actually watches. Target is 2%. Above = hawkish bias, hurts your portfolio.
+          </p>
+          <div class="flex gap-2 flex-wrap">
+            <a href="https://fred.stlouisfed.org/series/PCEPILFE" target="_blank" rel="noopener" class="btn-ghost">Core PCE Chart →</a>
+            <a href="https://www.bea.gov/data/personal-consumption-expenditures-price-index" target="_blank" rel="noopener" class="btn-ghost">BEA Source</a>
+          </div>
+        </div>
+
+        <!-- Unemployment / NFP -->
+        <div class="card p-5 hover:border-[var(--accent)] transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <div class="text-[10px] tracking-wider text-[var(--text-faint)] uppercase">BLS · PAYEMS / UNRATE</div>
+              <h3 class="display-font text-lg mt-1">Non-Farm Payrolls & Unemployment</h3>
+            </div>
+            <span class="badge" style="background: rgba(255,184,0,0.1); color: var(--amber); border: 1px solid rgba(255,184,0,0.3);">1st FRI</span>
+          </div>
+          <p class="text-xs text-[var(--text-dim)] leading-relaxed mb-4">
+            First Friday each month. Strong jobs = Fed stays tight = bad for tech. Weak = rate cuts hoped for = good for tech.
+          </p>
+          <div class="flex gap-2 flex-wrap">
+            <a href="https://www.bls.gov/news.release/empsit.toc.htm" target="_blank" rel="noopener" class="btn-ghost">BLS Release →</a>
+            <a href="https://fred.stlouisfed.org/series/PAYEMS" target="_blank" rel="noopener" class="btn-ghost">NFP Chart</a>
+            <a href="https://fred.stlouisfed.org/series/UNRATE" target="_blank" rel="noopener" class="btn-ghost">U-Rate Chart</a>
+          </div>
+        </div>
+
+        <!-- FOMC Statements -->
+        <div class="card p-5 hover:border-[var(--accent)] transition-colors">
+          <div class="flex justify-between items-start mb-3">
+            <div>
+              <div class="text-[10px] tracking-wider text-[var(--text-faint)] uppercase">FEDERAL RESERVE</div>
+              <h3 class="display-font text-lg mt-1">FOMC Statements & Minutes</h3>
+            </div>
+            <span class="badge badge-sell">8× / YEAR</span>
+          </div>
+          <p class="text-xs text-[var(--text-dim)] leading-relaxed mb-4">
+            Decisions every 6 weeks. Minutes released 3 weeks later. Press conferences move markets in real-time.
+          </p>
+          <div class="flex gap-2 flex-wrap">
+            <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener" class="btn-ghost">Calendar →</a>
+            <a href="https://www.federalreserve.gov/monetarypolicy/fomc.htm" target="_blank" rel="noopener" class="btn-ghost">Recent Statements</a>
+            <a href="https://www.federalreserve.gov/monetarypolicy/fomcminutes20260128.htm" target="_blank" rel="noopener" class="btn-ghost">Minutes Archive</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIER 2: Regime Indicators -->
+    <div class="mb-8">
+      <div class="flex items-baseline gap-3 mb-4">
+        <div class="display-font text-xl">Tier 2</div>
+        <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--amber)]">Regime Indicators</div>
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">Yield Curve (2s/10s)</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Inversion = recession warning. Most reliable signal in history.</p>
+          <a href="https://fred.stlouisfed.org/series/T10Y2Y" target="_blank" rel="noopener" class="btn-ghost text-[10px]">FRED →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">VIX (Fear Index)</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">&lt;15 complacent. &gt;30 panic. Spikes = opportunity for the patient.</p>
+          <a href="https://fred.stlouisfed.org/series/VIXCLS" target="_blank" rel="noopener" class="btn-ghost text-[10px]">FRED →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">DXY (Dollar Index)</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Strong $ hurts GOOGL/AMZN intl revenue. Watch for 105+.</p>
+          <a href="https://fred.stlouisfed.org/series/DTWEXBGS" target="_blank" rel="noopener" class="btn-ghost text-[10px]">FRED →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">M2 Money Supply</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Liquidity backdrop. Growing M2 = asset prices benefit.</p>
+          <a href="https://fred.stlouisfed.org/series/M2SL" target="_blank" rel="noopener" class="btn-ghost text-[10px]">FRED →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">High Yield Spread</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Credit stress indicator. Widening = risk-off coming.</p>
+          <a href="https://fred.stlouisfed.org/series/BAMLH0A0HYM2" target="_blank" rel="noopener" class="btn-ghost text-[10px]">FRED →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">5Y Breakeven Inflation</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Market's inflation expectation. Diverges from CPI = early signal.</p>
+          <a href="https://fred.stlouisfed.org/series/T5YIE" target="_blank" rel="noopener" class="btn-ghost text-[10px]">FRED →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIER 3: Forward Looking -->
+    <div class="mb-8">
+      <div class="flex items-baseline gap-3 mb-4">
+        <div class="display-font text-xl">Tier 3</div>
+        <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--blue)]">Forward-Looking</div>
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">ISM Manufacturing PMI</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Below 50 = contraction. Leading indicator for earnings.</p>
+          <a href="https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/" target="_blank" rel="noopener" class="btn-ghost text-[10px]">ISM →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">Initial Jobless Claims</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Weekly (Thursdays). Earliest jobs signal. &gt;300k = warning.</p>
+          <a href="https://fred.stlouisfed.org/series/ICSA" target="_blank" rel="noopener" class="btn-ghost text-[10px]">FRED →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">UMich Consumer Sentiment</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Spending intent. Drops = AMZN concerns.</p>
+          <a href="http://www.sca.isr.umich.edu/" target="_blank" rel="noopener" class="btn-ghost text-[10px]">UMich →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">GDP (Real, QoQ)</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Quarterly. Backward-looking but defines the regime.</p>
+          <a href="https://www.bea.gov/data/gdp/gross-domestic-product" target="_blank" rel="noopener" class="btn-ghost text-[10px]">BEA →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">Retail Sales</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Direct AMZN read-through. Census Bureau monthly.</p>
+          <a href="https://www.census.gov/retail/index.html" target="_blank" rel="noopener" class="btn-ghost text-[10px]">Census →</a>
+        </div>
+        <div class="card p-4 hover:border-[var(--accent)] transition-colors">
+          <h4 class="font-semibold mb-1">Atlanta Fed GDPNow</h4>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Real-time GDP nowcast. Updates with every data print.</p>
+          <a href="https://www.atlantafed.org/cqer/research/gdpnow" target="_blank" rel="noopener" class="btn-ghost text-[10px]">Atl Fed →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- News Sources -->
+    <div class="mb-8">
+      <div class="flex items-baseline gap-3 mb-4">
+        <div class="display-font text-xl">News Desk</div>
+        <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--green)]">Curated Sources</div>
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <a href="https://www.wsj.com/news/economy" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Editorial</div>
+          <h4 class="font-semibold mt-1">WSJ Economy</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Premium · Subscription required for full access</p>
+        </a>
+        <a href="https://www.wsj.com/news/markets" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Editorial</div>
+          <h4 class="font-semibold mt-1">WSJ Markets</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Premium · Real-time market coverage</p>
+        </a>
+        <a href="https://www.ft.com/markets" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Editorial</div>
+          <h4 class="font-semibold mt-1">Financial Times</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Premium · Global macro emphasis</p>
+        </a>
+        <a href="https://www.reuters.com/business/finance/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Wire</div>
+          <h4 class="font-semibold mt-1">Reuters Finance</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Free · Breaking news, no opinion</p>
+        </a>
+        <a href="https://apnews.com/hub/business" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Wire</div>
+          <h4 class="font-semibold mt-1">AP Business</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Free · Wire-service neutral</p>
+        </a>
+        <a href="https://www.bloomberg.com/economics" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Editorial</div>
+          <h4 class="font-semibold mt-1">Bloomberg Economics</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Mixed paywall · Some free articles</p>
+        </a>
+        <a href="https://www.federalreserve.gov/newsevents/speeches.htm" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--green)]">★ Primary</div>
+          <h4 class="font-semibold mt-1">Fed Speeches</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Free · Source material, no spin</p>
+        </a>
+        <a href="https://www.federalreserve.gov/publications/beige-book-default.htm" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--green)]">★ Primary</div>
+          <h4 class="font-semibold mt-1">Fed Beige Book</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Free · Regional economic conditions</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Earnings Calendar for YOUR holdings -->
+    <div class="mb-8">
+      <div class="flex items-baseline gap-3 mb-4">
+        <div class="display-font text-xl">Earnings Watch</div>
+        <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--accent)]">Your Holdings</div>
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <a href="https://abc.xyz/investor/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <h4 class="font-semibold">GOOGL — Alphabet IR</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Earnings late Jan / Apr / Jul / Oct</p>
+        </a>
+        <a href="https://investor.nvidia.com/home/default.aspx" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <h4 class="font-semibold">NVDA — Nvidia IR</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Earnings late Feb / May / Aug / Nov</p>
+        </a>
+        <a href="https://ir.aboutamazon.com/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <h4 class="font-semibold">AMZN — Amazon IR</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Earnings early Feb / Apr / Jul / Oct</p>
+        </a>
+        <a href="https://www.servicenow.com/company/investor-relations.html" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <h4 class="font-semibold">NOW — ServiceNow IR</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Earnings late Jan / Apr / Jul / Oct</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Observation Logger -->
+    <div class="card-elevated p-6">
+      <div class="flex justify-between items-start mb-5">
+        <div>
+          <div class="text-[10px] tracking-[0.2em] uppercase text-[var(--accent)] mb-1">Field Journal</div>
+          <h3 class="display-font text-2xl">Macro Observation Log</h3>
+          <p class="text-xs text-[var(--text-faint)] mt-1">What you saw, what you concluded, what you did about it</p>
+        </div>
+        <button class="btn-primary" onclick="openModal('macroModal')">+ Log Observation</button>
+      </div>
+
+      <div class="bg-black p-3 mb-4 text-[11px] text-[var(--text-dim)] leading-relaxed border-l-2 border-[var(--accent)]">
+        <strong class="text-[var(--accent)]">Why this matters:</strong> Most investors react to news. Pros document the news, their interpretation, and the action they took (or didn't). Six months later you can audit your reasoning. Were you right? Were you lucky? Did you act on the signal or freeze? That's how skill compounds.
+      </div>
+
+      <div class="card overflow-x-auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Category</th>
+              <th>Indicator / Event</th>
+              <th>Reading</th>
+              <th>My Interpretation</th>
+              <th>Action Taken</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="macroBody">
+            <tr><td colspan="7" class="text-center text-[var(--text-faint)] py-8">No observations logged yet. Start with today's biggest macro question.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab: Theory -->
+  <section id="tab-theory" class="tab-content hidden">
+    <div class="mb-6">
+      <h2 class="display-font text-2xl">Theory Reference</h2>
+      <p class="text-xs text-[var(--text-faint)] mt-1">The formulas behind every number on this dashboard</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="card p-6">
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-2">Statistics</div>
+        <h3 class="display-font text-xl mb-3">Portfolio Variance</h3>
+        <div class="bg-black p-4 mono text-sm text-[var(--accent)] my-3">σ²ₚ = wᵀ Σ w</div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          Where w = weights vector, Σ = covariance matrix. When correlations ρ between assets are below 1, total variance is less than the weighted sum of individual variances. This is the mathematical basis of diversification — the only free lunch in finance.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-2">Optimization</div>
+        <h3 class="display-font text-xl mb-3">Sharpe Ratio</h3>
+        <div class="bg-black p-4 mono text-sm text-[var(--accent)] my-3">S = (μₚ − r_f) / σₚ</div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          Return per unit of risk. Maximize this by taking ∂S/∂wᵢ = 0 for all i. The tangency portfolio (highest Sharpe) is where the capital market line touches the efficient frontier. Concentrated portfolios usually have lower Sharpe than diversified ones at the same return level.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-2">Position Sizing</div>
+        <h3 class="display-font text-xl mb-3">Kelly Criterion</h3>
+        <div class="bg-black p-4 mono text-sm text-[var(--accent)] my-3">f* = (bp − q) / b</div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          Optimal bet size given edge. p = win probability, q = 1−p, b = win/loss ratio. Most pros use "half-Kelly" because full Kelly is too volatile. If you assume 60% probability NVDA outperforms with 1.5:1 payoff, full Kelly says ~33%. Half-Kelly: ~17%. You currently hold 36% — implying you have more edge than half-Kelly assumes.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-2">Asset Pricing</div>
+        <h3 class="display-font text-xl mb-3">Fama-French 5-Factor</h3>
+        <div class="bg-black p-4 mono text-sm text-[var(--accent)] my-3">R = α + β_M·MKT + β_S·SMB + β_V·HML + β_P·RMW + β_I·CMA + ε</div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          Explains ~95% of variation in stock returns via Market, Size, Value, Profitability, Investment factors. Your portfolio loads heavily on MKT and inversely on HML (anti-value, i.e. growth). The α (alpha) is what's left — true skill or luck. Hard to distinguish without 20+ years of data.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-2">Concentration</div>
+        <h3 class="display-font text-xl mb-3">HHI & N_effective</h3>
+        <div class="bg-black p-4 mono text-sm text-[var(--accent)] my-3">HHI = Σwᵢ² × 10,000     N_eff = 1/Σwᵢ²</div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          HHI: antitrust measure repurposed for portfolios. &lt;1500 = diversified. 1500-2500 = moderate. &gt;2500 = highly concentrated. N_eff converts your HHI into "equivalent equal-weighted holdings." Your 4 stocks act like ~3.
+        </p>
+      </div>
+
+      <div class="card p-6">
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-2">Lifecycle</div>
+        <h3 class="display-font text-xl mb-3">Merton's Solution</h3>
+        <div class="bg-black p-4 mono text-sm text-[var(--accent)] my-3">w* = (μ − r_f) / (γ · σ²)</div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          Optimal equity allocation given relative risk aversion γ. For young investors, human capital acts as a bond — so the optimal financial portfolio tilts MORE toward equity to balance overall wealth. Justifies aggression at 22. Does NOT specifically justify single-stock concentration — that's a separate decision requiring genuine edge.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- BUY MODAL -->
+<div class="modal-backdrop" id="buyModal">
+  <div class="modal p-6">
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] tracking-wider uppercase text-[var(--green)] mb-1">Transaction</div>
+        <h3 class="display-font text-2xl">Log Buy Order</h3>
+      </div>
+      <button onclick="closeModal('buyModal')" class="text-[var(--text-dim)] hover:text-[var(--text)] text-xl">×</button>
+    </div>
+    <form id="buyForm" class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Date</label>
+          <input type="date" id="buyDate" required>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Symbol</label>
+          <input type="text" id="buySymbol" required placeholder="NVDA" style="text-transform: uppercase;">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Quantity</label>
+          <input type="number" step="0.001" id="buyQty" required placeholder="10">
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Price per Share</label>
+          <input type="number" step="0.01" id="buyPrice" required placeholder="225.32">
+        </div>
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Thesis / Reasoning <span class="text-[var(--amber)]">(required)</span></label>
+        <textarea id="buyReason" rows="4" required placeholder="Why are you buying? What's your edge? What would make you wrong? What price would you sell at?"></textarea>
+      </div>
+      <div class="bg-[#0a0a0a] border-l-2 border-[var(--amber)] p-3 text-[11px] text-[var(--text-dim)] leading-relaxed">
+        <strong class="text-[var(--amber)]">Pre-trade checklist:</strong> Does this push any position over 40%? Does it increase HHI above 4,000? Have you written your sell-trigger? If any answer is "I don't know" — pause.
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button type="button" class="btn-ghost" onclick="closeModal('buyModal')">Cancel</button>
+        <button type="submit" class="btn-primary">Log Buy</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- SELL MODAL -->
+<div class="modal-backdrop" id="sellModal">
+  <div class="modal p-6">
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] tracking-wider uppercase text-[var(--red)] mb-1">Transaction</div>
+        <h3 class="display-font text-2xl">Log Sell Order</h3>
+      </div>
+      <button onclick="closeModal('sellModal')" class="text-[var(--text-dim)] hover:text-[var(--text)] text-xl">×</button>
+    </div>
+    <form id="sellForm" class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Date</label>
+          <input type="date" id="sellDate" required>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Symbol</label>
+          <select id="sellSymbol" required></select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Quantity</label>
+          <input type="number" step="0.001" id="sellQty" required>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Price per Share</label>
+          <input type="number" step="0.01" id="sellPrice" required>
+        </div>
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Reason for Selling <span class="text-[var(--red)]">(required)</span></label>
+        <textarea id="sellReason" rows="4" required placeholder="Thesis broken? Rebalancing? Taking profits? Tax-loss harvesting (note: not applicable in Roth)?"></textarea>
+      </div>
+      <div class="bg-[#0a0a0a] border-l-2 border-[var(--red)] p-3 text-[11px] text-[var(--text-dim)] leading-relaxed">
+        <strong class="text-[var(--red)]">Honest sell question:</strong> Are you selling because your thesis changed, or because the price moved? These are different. Price-driven selling underperforms thesis-driven selling.
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button type="button" class="btn-ghost" onclick="closeModal('sellModal')">Cancel</button>
+        <button type="submit" class="btn-sell">Log Sell</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- CONTRIBUTION MODAL -->
+<div class="modal-backdrop" id="contribModal">
+  <div class="modal p-6">
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] tracking-wider uppercase text-[var(--blue)] mb-1">Account</div>
+        <h3 class="display-font text-2xl">Log Contribution</h3>
+      </div>
+      <button onclick="closeModal('contribModal')" class="text-[var(--text-dim)] hover:text-[var(--text)] text-xl">×</button>
+    </div>
+    <form id="contribForm" class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Date</label>
+          <input type="date" id="contribDate" required>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Amount</label>
+          <input type="number" step="0.01" id="contribAmount" required placeholder="500">
+        </div>
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Source</label>
+        <select id="contribSource">
+          <option>Paycheck</option>
+          <option>Tax refund</option>
+          <option>Side income</option>
+          <option>Savings transfer</option>
+          <option>Gift</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Note</label>
+        <input type="text" id="contribNote" placeholder="optional">
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button type="button" class="btn-ghost" onclick="closeModal('contribModal')">Cancel</button>
+        <button type="submit" class="btn-primary">Log</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- PRICE UPDATE MODAL -->
+<div class="modal-backdrop" id="priceModal">
+  <div class="modal p-6">
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-1">Refresh</div>
+        <h3 class="display-font text-2xl">Update Prices</h3>
+      </div>
+      <button onclick="closeModal('priceModal')" class="text-[var(--text-dim)] hover:text-[var(--text)] text-xl">×</button>
+    </div>
+    <form id="priceForm" class="space-y-3" id="priceFormBody"></form>
+    <div class="text-[10px] text-[var(--text-faint)] mt-4 leading-relaxed">
+      Manual price entry. Pull from Fidelity, Google Finance, or your broker. Risk metrics recalculate when you save.
+    </div>
+  </div>
+</div>
+
+<!-- MACRO OBSERVATION MODAL -->
+<div class="modal-backdrop" id="macroModal">
+  <div class="modal p-6">
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-1">Field Journal</div>
+        <h3 class="display-font text-2xl">Log Macro Observation</h3>
+      </div>
+      <button onclick="closeModal('macroModal')" class="text-[var(--text-dim)] hover:text-[var(--text)] text-xl">×</button>
+    </div>
+    <form id="macroForm" class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Date</label>
+          <input type="date" id="macroDate" required>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Category</label>
+          <select id="macroCategory" required>
+            <option>Fed / Rates</option>
+            <option>Inflation (CPI/PCE)</option>
+            <option>Jobs</option>
+            <option>GDP / Growth</option>
+            <option>Yield Curve / Bonds</option>
+            <option>Dollar / FX</option>
+            <option>Credit Spreads</option>
+            <option>Earnings (Holding)</option>
+            <option>Geopolitical</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Indicator / Event</label>
+        <input type="text" id="macroIndicator" required placeholder="e.g. CPI release, FOMC statement, NVDA earnings">
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Reading / What Happened</label>
+        <input type="text" id="macroReading" required placeholder="e.g. CPI 3.2% YoY vs 3.1% expected">
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">My Interpretation <span class="text-[var(--amber)]">(required)</span></label>
+        <textarea id="macroInterpretation" rows="3" required placeholder="What does this mean for your portfolio? Why? What's the chain of reasoning?"></textarea>
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Action Taken</label>
+        <select id="macroAction">
+          <option>No action — observing</option>
+          <option>Bought</option>
+          <option>Sold</option>
+          <option>Held / Did nothing intentionally</option>
+          <option>Updated thesis on a position</option>
+          <option>Added to watchlist</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Action Details / Notes</label>
+        <textarea id="macroNotes" rows="2" placeholder="optional — what specifically did you do, or why didn't you act?"></textarea>
+      </div>
+      <div class="bg-[#0a0a0a] border-l-2 border-[var(--accent)] p-3 text-[11px] text-[var(--text-dim)] leading-relaxed">
+        <strong class="text-[var(--accent)]">Discipline check:</strong> "Not acting" is a valid, documented decision. The goal isn't to trade more — it's to make your thinking visible so you can audit it later.
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button type="button" class="btn-ghost" onclick="closeModal('macroModal')">Cancel</button>
+        <button type="submit" class="btn-primary">Log Observation</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- API KEY MODAL -->
+<div class="modal-backdrop" id="apiKeyModal">
+  <div class="modal p-6">
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-1">Live Data</div>
+        <h3 class="display-font text-2xl">Finnhub API Key</h3>
+      </div>
+      <button onclick="closeModal('apiKeyModal')" class="text-[var(--text-dim)] hover:text-[var(--text)] text-xl">×</button>
+    </div>
+    <div class="space-y-4">
+      <div class="bg-[#0a0a0a] border-l-2 border-[var(--accent)] p-3 text-[11px] text-[var(--text-dim)] leading-relaxed">
+        <strong class="text-[var(--accent)]">How to get a free key:</strong><br>
+        1. Go to <a href="https://finnhub.io/register" target="_blank" rel="noopener" class="text-[var(--accent)] underline">finnhub.io/register</a><br>
+        2. Sign up with email (no credit card)<br>
+        3. Verify email & copy your API key from the dashboard<br>
+        4. Paste it below. Free tier: 60 calls/min, real-time US stocks.
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">API Key</label>
+        <input type="text" id="apiKeyInput" placeholder="cv8k...your-key-here" autocomplete="off">
+        <div class="text-[10px] text-[var(--text-faint)] mt-2">
+          Stored locally in your browser. Never sent anywhere except Finnhub for price requests.
+        </div>
+      </div>
+      <div class="flex gap-2 justify-between">
+        <button class="btn-ghost" onclick="clearApiKey()">Clear Key</button>
+        <div class="flex gap-2">
+          <button class="btn-ghost" onclick="closeModal('apiKeyModal')">Cancel</button>
+          <button class="btn-primary" onclick="saveApiKey()">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="border-t border-[var(--border)] mt-12 py-6 text-center text-[10px] text-[var(--text-faint)] tracking-wider uppercase">
+  Data persists in browser storage · Not financial advice · Built for one investor
+</footer>
+
+<!-- Mobile floating actions -->
+<div class="md:hidden" style="position:fixed;bottom:20px;left:20px;display:flex;flex-direction:column;gap:8px;z-index:30;">
+  <button onclick="exportData()" style="background:#d4ff00;color:#000;border:none;width:52px;height:52px;border-radius:50%;font-size:20px;font-weight:700;box-shadow:0 4px 12px rgba(212,255,0,0.3);cursor:pointer;" title="Backup data">↓</button>
+  <label style="background:#1f1f1f;color:#e8e8e8;border:1px solid #2a2a2a;width:52px;height:52px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Restore backup">↑
+    <input type="file" accept=".json" style="display:none" onchange="if(this.files[0]) importData(this.files[0]); this.value='';">
+  </label>
+</div>
+
+<script>
+// ==========================================
+// STATE MANAGEMENT — Multi-tier with clear feedback
+// ==========================================
+const STORAGE_KEY = 'rothira_tracker_v1';
+
+// Detect what storage actually works in this environment
+let STORAGE_MODE = 'unknown'; // 'localStorage', 'sessionStorage', or 'memory'
+let memoryStore = null;
+
+function detectStorage() {
+  // Try localStorage first
+  try {
+    const testKey = '__test_' + Date.now();
+    localStorage.setItem(testKey, '1');
+    const val = localStorage.getItem(testKey);
+    localStorage.removeItem(testKey);
+    if (val === '1') {
+      STORAGE_MODE = 'localStorage';
+      return;
+    }
+  } catch(e) {
+    console.warn('localStorage blocked:', e.message);
+  }
+  // Try sessionStorage as fallback
+  try {
+    const testKey = '__test_' + Date.now();
+    sessionStorage.setItem(testKey, '1');
+    const val = sessionStorage.getItem(testKey);
+    sessionStorage.removeItem(testKey);
+    if (val === '1') {
+      STORAGE_MODE = 'sessionStorage';
+      return;
+    }
+  } catch(e) {
+    console.warn('sessionStorage blocked:', e.message);
+  }
+  STORAGE_MODE = 'memory';
+}
+detectStorage();
+
+const defaultState = {
+  positions: [
+    { symbol: 'GOOGL', qty: 20.016, avgCost: 278.55, lastPrice: 396.78, target: 25 },
+    { symbol: 'NVDA',  qty: 30.005, avgCost: 159.02, lastPrice: 225.32, target: 25 },
+    { symbol: 'AMZN',  qty: 12,     avgCost: 242.91, lastPrice: 264.14, target: 20 },
+    { symbol: 'NOW',   qty: 11,     avgCost: 92.62,  lastPrice: 95.07,  target: 15 },
+  ],
+  cash: 0.72,
+  contributions: [],
+  transactions: [],
+  macroLog: [],
+  contribLimit: 7000,
+  contribYear: 2026,
+};
+
+function loadState() {
+  try {
+    let raw = null;
+    if (STORAGE_MODE === 'localStorage') {
+      raw = localStorage.getItem(STORAGE_KEY);
+    } else if (STORAGE_MODE === 'sessionStorage') {
+      raw = sessionStorage.getItem(STORAGE_KEY);
+    } else if (STORAGE_MODE === 'memory' && memoryStore) {
+      raw = memoryStore;
+    }
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (!parsed.macroLog) parsed.macroLog = [];
+      console.log(`✓ Loaded from ${STORAGE_MODE}`);
+      return parsed;
+    }
+  } catch(e) {
+    console.warn('Load failed:', e);
+  }
+  return JSON.parse(JSON.stringify(defaultState));
+}
+
+function saveState() {
+  const data = JSON.stringify(state);
+  let success = false;
+  let mode = STORAGE_MODE;
+  try {
+    if (STORAGE_MODE === 'localStorage') {
+      localStorage.setItem(STORAGE_KEY, data);
+      success = true;
+    } else if (STORAGE_MODE === 'sessionStorage') {
+      sessionStorage.setItem(STORAGE_KEY, data);
+      success = true;
+    } else {
+      memoryStore = data;
+      success = true;
+    }
+  } catch(e) {
+    console.error('Save failed in', STORAGE_MODE, ':', e);
+    // Fallback to memory
+    memoryStore = data;
+    mode = 'memory (fallback)';
+    success = true;
+  }
+  showSaveIndicator(success, mode);
+  updateStorageBadge();
+  return success;
+}
+
+function showSaveIndicator(success, mode) {
+  let el = document.getElementById('saveIndicator');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'saveIndicator';
+    el.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:10px 18px;font-family:JetBrains Mono,monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;border-radius:2px;z-index:1000;opacity:0;transition:opacity 0.3s;font-weight:700;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.5);';
+    document.body.appendChild(el);
+  }
+  if (success) {
+    el.style.background = mode === 'memory' || mode === 'memory (fallback)' ? '#ffb800' : '#d4ff00';
+    el.style.color = '#000';
+    el.textContent = mode === 'localStorage' ? '✓ Saved' :
+                     mode === 'sessionStorage' ? '✓ Saved (tab only)' :
+                     '⚠ Saved in memory — EXPORT NOW';
+  } else {
+    el.style.background = '#ff3b30';
+    el.style.color = '#fff';
+    el.textContent = '✗ Save FAILED';
+  }
+  el.style.opacity = '1';
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(() => { el.style.opacity = '0'; }, 2800);
+}
+
+function updateStorageBadge() {
+  const badge = document.getElementById('storageBadge');
+  if (!badge) return;
+  if (STORAGE_MODE === 'localStorage') {
+    badge.innerHTML = '<span style="color:var(--green)">● PERSISTENT</span>';
+    badge.title = 'Saving to localStorage — data persists across sessions';
+  } else if (STORAGE_MODE === 'sessionStorage') {
+    badge.innerHTML = '<span style="color:var(--amber)">● TAB-ONLY</span>';
+    badge.title = 'Saving to sessionStorage — data lost when tab closes. EXPORT BACKUP REGULARLY.';
+  } else {
+    badge.innerHTML = '<span style="color:var(--red)">● MEMORY-ONLY</span>';
+    badge.title = 'Browser storage blocked — data lost on page refresh. EXPORT BACKUP BEFORE CLOSING.';
+  }
+}
+
+function resetToDefaults() {
+  if (!confirm('Wipe all data and reset to the original portfolio snapshot? This cannot be undone.')) return;
+  try {
+    if (STORAGE_MODE === 'localStorage') localStorage.removeItem(STORAGE_KEY);
+    if (STORAGE_MODE === 'sessionStorage') sessionStorage.removeItem(STORAGE_KEY);
+    memoryStore = null;
+  } catch(e) {}
+  state = JSON.parse(JSON.stringify(defaultState));
+  renderAll();
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `roth-ira-backup-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported.positions || !Array.isArray(imported.positions)) throw new Error('Invalid format');
+      if (!confirm('Replace current data with imported backup?')) return;
+      state = imported;
+      if (!state.macroLog) state.macroLog = [];
+      saveState();
+      renderAll();
+    } catch(err) {
+      alert('Import failed: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+let state = loadState();
+
+// ==========================================
+// CALCULATIONS
+// ==========================================
+function calcPositions() {
+  return state.positions.map(p => {
+    const value = p.qty * p.lastPrice;
+    const cost = p.qty * p.avgCost;
+    const pl = value - cost;
+    const plPct = cost > 0 ? (pl / cost) * 100 : 0;
+    return { ...p, value, cost, pl, plPct };
+  });
+}
+
+function calcTotals() {
+  const pos = calcPositions();
+  const totalValue = pos.reduce((s, p) => s + p.value, 0) + state.cash;
+  const totalCost = pos.reduce((s, p) => s + p.cost, 0);
+  const totalPL = pos.reduce((s, p) => s + p.pl, 0);
+  const totalPLPct = totalCost > 0 ? (totalPL / totalCost) * 100 : 0;
+  
+  const weights = pos.map(p => p.value / totalValue);
+  const hhi = weights.reduce((s, w) => s + w * w, 0) * 10000;
+  const nEff = weights.length > 0 ? 1 / (hhi / 10000) : 0;
+  const maxWeight = Math.max(...weights);
+  const maxIdx = weights.indexOf(maxWeight);
+  const maxTicker = pos[maxIdx]?.symbol || '—';
+  
+  return { totalValue, totalCost, totalPL, totalPLPct, hhi, nEff, maxWeight, maxTicker, weights, positions: pos };
+}
+
+function calcContribYTD() {
+  return state.contributions
+    .filter(c => new Date(c.date).getFullYear() === state.contribYear)
+    .reduce((s, c) => s + Number(c.amount), 0);
+}
+
+// ==========================================
+// RENDERING
+// ==========================================
+function fmt(n) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtShort(n) { return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+function fmtPct(n, decimals = 2) { return n.toFixed(decimals) + '%'; }
+
+function renderPositions() {
+  const t = calcTotals();
+  const body = document.getElementById('positionsBody');
+  body.innerHTML = '';
+  
+  t.positions.forEach((p, i) => {
+    const pctOfAcct = (p.value / t.totalValue) * 100;
+    const plColor = p.pl >= 0 ? 'var(--green)' : 'var(--red)';
+    const overTarget = pctOfAcct > p.target;
+    body.innerHTML += `
+      <tr>
+        <td><strong>${p.symbol}</strong></td>
+        <td class="mono">${p.qty.toFixed(3)}</td>
+        <td class="mono">${fmt(p.avgCost)}</td>
+        <td class="mono">${fmt(p.lastPrice)}</td>
+        <td class="mono"><strong>${fmt(p.value)}</strong></td>
+        <td class="mono" style="color: ${overTarget ? 'var(--amber)' : 'var(--text)'}">${pctOfAcct.toFixed(2)}%</td>
+        <td class="mono" style="color: ${plColor}">${p.pl >= 0 ? '+' : ''}${fmt(p.pl)} <span style="opacity:.6">(${p.plPct >= 0 ? '+' : ''}${p.plPct.toFixed(1)}%)</span></td>
+        <td><button class="btn-sell" onclick="quickSell('${p.symbol}')">Sell</button></td>
+      </tr>`;
+  });
+  
+  if (state.cash > 0) {
+    body.innerHTML += `
+      <tr style="opacity: 0.6">
+        <td><strong>SPAXX</strong> <span class="text-[10px] text-[var(--text-faint)]">Cash</span></td>
+        <td class="mono">${state.cash.toFixed(2)}</td>
+        <td class="mono">—</td>
+        <td class="mono">$1.00</td>
+        <td class="mono">${fmt(state.cash)}</td>
+        <td class="mono">${((state.cash / t.totalValue) * 100).toFixed(2)}%</td>
+        <td class="mono">—</td>
+        <td></td>
+      </tr>`;
+  }
+}
+
+function renderHero() {
+  const t = calcTotals();
+  document.getElementById('totalValue').textContent = fmt(t.totalValue);
+  document.getElementById('totalPL').textContent = (t.totalPL >= 0 ? '+' : '') + fmt(t.totalPL);
+  document.getElementById('totalPL').style.color = t.totalPL >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('totalPLPct').textContent = (t.totalPL >= 0 ? '+' : '') + t.totalPLPct.toFixed(2) + '% all-time';
+  document.getElementById('totalPLPct').style.color = t.totalPL >= 0 ? 'var(--green)' : 'var(--red)';
+  
+  const ytd = calcContribYTD();
+  document.getElementById('contribYTD').textContent = fmtShort(ytd);
+  document.getElementById('contribRemaining').textContent = fmtShort(state.contribLimit - ytd);
+  
+  document.getElementById('hhiValue').textContent = Math.round(t.hhi).toLocaleString();
+  document.getElementById('hhiBig').textContent = Math.round(t.hhi).toLocaleString();
+  document.getElementById('effectiveN').textContent = t.nEff.toFixed(2);
+}
+
+function renderRisk() {
+  const t = calcTotals();
+  const maxPct = t.maxWeight * 100;
+  document.getElementById('maxPosPct').textContent = maxPct.toFixed(2);
+  document.getElementById('maxPosTicker').textContent = t.maxTicker;
+  document.getElementById('maxPosBar').style.width = Math.min(100, (maxPct / 50) * 100) + '%';
+  
+  document.getElementById('dd20').textContent = '−' + fmtShort(t.totalValue * 0.20);
+  document.getElementById('dd40').textContent = '−' + fmtShort(t.totalValue * 0.40);
+  document.getElementById('dd65').textContent = '−' + fmtShort(t.totalValue * 0.65);
+}
+
+function renderContributions() {
+  const ytd = calcContribYTD();
+  document.getElementById('contribTotal').textContent = fmtShort(ytd);
+  document.getElementById('contribRemain2').textContent = fmtShort(state.contribLimit - ytd);
+  const pct = Math.min(100, (ytd / state.contribLimit) * 100);
+  document.getElementById('contribBar').style.width = pct + '%';
+  document.getElementById('contribPctText').textContent = pct.toFixed(1) + '%';
+  
+  const body = document.getElementById('contribBody');
+  if (state.contributions.length === 0) {
+    body.innerHTML = '<tr><td colspan="5" class="text-center text-[var(--text-faint)] py-8">No contributions logged yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = '';
+  [...state.contributions].reverse().forEach((c, i) => {
+    const realIdx = state.contributions.length - 1 - i;
+    body.innerHTML += `
+      <tr>
+        <td class="mono">${c.date}</td>
+        <td class="mono"><span class="badge badge-contrib">CONTRIB</span> ${fmt(Number(c.amount))}</td>
+        <td>${c.source}</td>
+        <td class="text-[var(--text-dim)]">${c.note || '—'}</td>
+        <td><button class="btn-ghost" onclick="deleteContrib(${realIdx})">×</button></td>
+      </tr>`;
+  });
+}
+
+function renderTransactions() {
+  const body = document.getElementById('transBody');
+  if (state.transactions.length === 0) {
+    body.innerHTML = '<tr><td colspan="8" class="text-center text-[var(--text-faint)] py-8">No transactions logged yet.</td></tr>';
+    return;
+  }
+  body.innerHTML = '';
+  [...state.transactions].reverse().forEach((tr) => {
+    const isBuy = tr.type === 'buy';
+    body.innerHTML += `
+      <tr>
+        <td class="mono">${tr.date}</td>
+        <td><span class="badge ${isBuy ? 'badge-buy' : 'badge-sell'}">${tr.type.toUpperCase()}</span></td>
+        <td><strong>${tr.symbol}</strong></td>
+        <td class="mono">${Number(tr.qty).toFixed(3)}</td>
+        <td class="mono">${fmt(Number(tr.price))}</td>
+        <td class="mono">${fmt(Number(tr.qty) * Number(tr.price))}</td>
+        <td class="text-[var(--text-dim)] text-xs" style="max-width: 320px;">${tr.reason}</td>
+        <td></td>
+      </tr>`;
+  });
+}
+
+let allocChart, pathChart;
+function renderCharts() {
+  const t = calcTotals();
+  const ctx = document.getElementById('allocationChart')?.getContext('2d');
+  if (!ctx) return;
+  
+  const data = {
+    labels: t.positions.map(p => p.symbol).concat(state.cash > 0 ? ['Cash'] : []),
+    datasets: [{
+      data: t.positions.map(p => p.value).concat(state.cash > 0 ? [state.cash] : []),
+      backgroundColor: ['#d4ff00', '#00d97e', '#4a9eff', '#ffb800', '#888'],
+      borderColor: '#0a0a0a',
+      borderWidth: 2,
+    }]
+  };
+  
+  if (allocChart) allocChart.destroy();
+  allocChart = new Chart(ctx, {
+    type: 'doughnut',
+    data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#e8e8e8', font: { family: 'JetBrains Mono', size: 11 } }
+        }
+      }
+    }
+  });
+  
+  renderTargetBars();
+  renderPathChart();
+}
+
+function renderTargetBars() {
+  const t = calcTotals();
+  const el = document.getElementById('targetBars');
+  if (!el) return;
+  el.innerHTML = '';
+  t.positions.forEach(p => {
+    const actual = (p.value / t.totalValue) * 100;
+    const diff = actual - p.target;
+    const color = Math.abs(diff) < 5 ? 'var(--green)' : Math.abs(diff) < 15 ? 'var(--amber)' : 'var(--red)';
+    el.innerHTML += `
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span><strong>${p.symbol}</strong></span>
+          <span class="mono" style="color: ${color}">${actual.toFixed(1)}% / ${p.target}% target ${diff >= 0 ? '↑' : '↓'}${Math.abs(diff).toFixed(1)}</span>
+        </div>
+        <div class="relative h-2 bg-[var(--border)]">
+          <div class="absolute h-full" style="width: ${p.target}%; background: var(--border-bright);"></div>
+          <div class="absolute h-full" style="width: ${Math.min(100,actual)}%; background: ${color}; opacity: 0.8;"></div>
+        </div>
+      </div>`;
+  });
+}
+
+function renderPathChart() {
+  const t = calcTotals();
+  const ctx = document.getElementById('pathChart')?.getContext('2d');
+  if (!ctx) return;
+  
+  const years = 10;
+  const mu = 0.12, sigma = 0.38;
+  const labels = Array.from({length: years + 1}, (_, i) => 'Y' + i);
+  
+  // Generate percentile paths
+  const median = labels.map((_, i) => t.totalValue * Math.exp(mu * i));
+  const p10 = labels.map((_, i) => t.totalValue * Math.exp(mu * i - 1.28 * sigma * Math.sqrt(i)));
+  const p90 = labels.map((_, i) => t.totalValue * Math.exp(mu * i + 1.28 * sigma * Math.sqrt(i)));
+  const p25 = labels.map((_, i) => t.totalValue * Math.exp(mu * i - 0.67 * sigma * Math.sqrt(i)));
+  const p75 = labels.map((_, i) => t.totalValue * Math.exp(mu * i + 0.67 * sigma * Math.sqrt(i)));
+  
+  if (pathChart) pathChart.destroy();
+  pathChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'P90', data: p90, borderColor: 'rgba(0,217,126,0.5)', backgroundColor: 'transparent', borderDash: [3,3], pointRadius: 0 },
+        { label: 'P75', data: p75, borderColor: 'rgba(0,217,126,0.8)', backgroundColor: 'transparent', pointRadius: 0 },
+        { label: 'Median', data: median, borderColor: '#d4ff00', backgroundColor: 'transparent', pointRadius: 0, borderWidth: 2 },
+        { label: 'P25', data: p25, borderColor: 'rgba(255,184,0,0.8)', backgroundColor: 'transparent', pointRadius: 0 },
+        { label: 'P10', data: p10, borderColor: 'rgba(255,59,48,0.5)', backgroundColor: 'transparent', borderDash: [3,3], pointRadius: 0 },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#888', font: { family: 'JetBrains Mono', size: 10 } } }
+      },
+      scales: {
+        x: { ticks: { color: '#555', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#1f1f1f' } },
+        y: { ticks: { color: '#555', font: { family: 'JetBrains Mono', size: 10 }, callback: v => '$' + (v/1000).toFixed(0) + 'k' }, grid: { color: '#1f1f1f' } }
+      }
+    }
+  });
+}
+
+function renderPriceForm() {
+  const form = document.getElementById('priceForm');
+  form.innerHTML = '';
+  state.positions.forEach((p, i) => {
+    form.innerHTML += `
+      <div class="grid grid-cols-3 gap-3 items-center">
+        <div class="text-xs"><strong>${p.symbol}</strong></div>
+        <div class="text-[10px] text-[var(--text-faint)]">Current: ${fmt(p.lastPrice)}</div>
+        <input type="number" step="0.01" data-symbol="${p.symbol}" value="${p.lastPrice}" class="price-input">
+      </div>`;
+  });
+  form.innerHTML += `
+    <div class="flex gap-2 justify-end pt-3">
+      <button type="button" class="btn-ghost" onclick="closeModal('priceModal')">Cancel</button>
+      <button type="button" class="btn-primary" onclick="savePrices()">Update</button>
+    </div>`;
+}
+
+function renderSellSymbols() {
+  const sel = document.getElementById('sellSymbol');
+  sel.innerHTML = state.positions.map(p => `<option value="${p.symbol}">${p.symbol}</option>`).join('');
+}
+
+function renderMacro() {
+  const body = document.getElementById('macroBody');
+  if (!body) return;
+  const log = state.macroLog || [];
+  if (log.length === 0) {
+    body.innerHTML = '<tr><td colspan="7" class="text-center text-[var(--text-faint)] py-8">No observations logged yet. Start with today\'s biggest macro question.</td></tr>';
+    return;
+  }
+  body.innerHTML = '';
+  [...log].reverse().forEach((m, i) => {
+    const realIdx = log.length - 1 - i;
+    body.innerHTML += `
+      <tr>
+        <td class="mono text-xs">${m.date}</td>
+        <td><span class="badge badge-contrib" style="white-space:nowrap;">${m.category}</span></td>
+        <td class="text-xs"><strong>${m.indicator}</strong></td>
+        <td class="mono text-xs">${m.reading}</td>
+        <td class="text-xs text-[var(--text-dim)]" style="max-width: 280px;">${m.interpretation}</td>
+        <td class="text-xs"><strong>${m.action}</strong>${m.notes ? `<div class="text-[10px] text-[var(--text-faint)] mt-1">${m.notes}</div>` : ''}</td>
+        <td><button class="btn-ghost" onclick="deleteMacro(${realIdx})">×</button></td>
+      </tr>`;
+  });
+}
+
+function deleteMacro(idx) {
+  if (!confirm('Delete this observation?')) return;
+  state.macroLog.splice(idx, 1);
+  saveState();
+  renderMacro();
+}
+
+function renderAll() {
+  renderHero();
+  renderRisk();
+  renderPositions();
+  renderContributions();
+  renderTransactions();
+  renderCharts();
+  renderPriceForm();
+  renderSellSymbols();
+  renderMacro();
+  updateStorageBadge();
+  renderStorageWarning();
+  updateLastFetchInfo();
+}
+
+function renderStorageWarning() {
+  const banner = document.getElementById('storageWarning');
+  const text = document.getElementById('storageWarningText');
+  if (!banner) return;
+  if (STORAGE_MODE === 'localStorage') {
+    banner.classList.add('hidden');
+  } else if (STORAGE_MODE === 'sessionStorage') {
+    banner.classList.remove('hidden');
+    text.textContent = 'Data saves only for this browser tab. Closing this tab loses everything. Download a backup before closing.';
+  } else {
+    banner.classList.remove('hidden');
+    text.textContent = 'Browser storage is BLOCKED in this environment. Data lives only in memory. Download a backup before refreshing or closing. To get persistent saves: download this file and open it in a regular browser tab (Chrome, Safari, Firefox).';
+  }
+}
+
+// ==========================================
+// ACTIONS
+// ==========================================
+function openModal(id) {
+  if (id === 'priceModal') renderPriceForm();
+  if (id === 'sellModal') renderSellSymbols();
+  if (id === 'apiKeyModal') {
+    const key = getApiKey();
+    document.getElementById('apiKeyInput').value = key || '';
+  }
+  document.getElementById(id).classList.add('active');
+  // Set today's date as default
+  const today = new Date().toISOString().split('T')[0];
+  document.querySelectorAll(`#${id} input[type="date"]`).forEach(d => { if (!d.value) d.value = today; });
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+function savePrices() {
+  document.querySelectorAll('.price-input').forEach(input => {
+    const sym = input.dataset.symbol;
+    const pos = state.positions.find(p => p.symbol === sym);
+    if (pos) pos.lastPrice = parseFloat(input.value);
+  });
+  saveState();
+  renderAll();
+  closeModal('priceModal');
+}
+
+function quickSell(symbol) {
+  document.getElementById('sellSymbol').value = symbol;
+  const pos = state.positions.find(p => p.symbol === symbol);
+  if (pos) document.getElementById('sellPrice').value = pos.lastPrice;
+  openModal('sellModal');
+}
+
+function deleteContrib(idx) {
+  if (!confirm('Delete this contribution entry?')) return;
+  state.contributions.splice(idx, 1);
+  saveState();
+  renderAll();
+}
+
+// ==========================================
+// LIVE PRICE FETCHING (Finnhub)
+// ==========================================
+const FINNHUB_KEY_STORAGE = 'finnhub_api_key';
+
+function getApiKey() {
+  try {
+    if (STORAGE_MODE === 'localStorage') return localStorage.getItem(FINNHUB_KEY_STORAGE);
+    if (STORAGE_MODE === 'sessionStorage') return sessionStorage.getItem(FINNHUB_KEY_STORAGE);
+  } catch(e) {}
+  return window._finnhubKey || null;
+}
+
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) {
+    alert('Please enter an API key, or use the Clear Key button.');
+    return;
+  }
+  try {
+    if (STORAGE_MODE === 'localStorage') localStorage.setItem(FINNHUB_KEY_STORAGE, key);
+    else if (STORAGE_MODE === 'sessionStorage') sessionStorage.setItem(FINNHUB_KEY_STORAGE, key);
+    window._finnhubKey = key;
+  } catch(e) {
+    window._finnhubKey = key;
+  }
+  closeModal('apiKeyModal');
+  // Test fetch immediately
+  fetchLivePrices();
+}
+
+function clearApiKey() {
+  if (!confirm('Remove the stored API key?')) return;
+  try {
+    if (STORAGE_MODE === 'localStorage') localStorage.removeItem(FINNHUB_KEY_STORAGE);
+    if (STORAGE_MODE === 'sessionStorage') sessionStorage.removeItem(FINNHUB_KEY_STORAGE);
+  } catch(e) {}
+  window._finnhubKey = null;
+  document.getElementById('apiKeyInput').value = '';
+  closeModal('apiKeyModal');
+}
+
+async function fetchSinglePrice(symbol, apiKey) {
+  const url = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status} for ${symbol}`);
+  const data = await res.json();
+  // Finnhub returns: c=current, d=change, dp=%change, h=high, l=low, o=open, pc=prev close, t=timestamp
+  if (data.c === 0 && data.pc === 0) throw new Error(`No data for ${symbol} (invalid symbol or after-hours)`);
+  return {
+    symbol,
+    price: data.c,
+    change: data.d,
+    changePct: data.dp,
+    prevClose: data.pc,
+    timestamp: data.t,
+  };
+}
+
+async function fetchLivePrices() {
+  const key = getApiKey();
+  if (!key) {
+    document.getElementById('apiKeyInput').value = '';
+    openModal('apiKeyModal');
+    return;
+  }
+  const btn = document.getElementById('fetchBtn');
+  const origText = btn.textContent;
+  btn.textContent = '⏳ Fetching...';
+  btn.disabled = true;
+  
+  const symbols = state.positions.map(p => p.symbol);
+  const results = [];
+  const errors = [];
+  
+  // Fetch in parallel — Finnhub free tier allows 60/min
+  const promises = symbols.map(sym => 
+    fetchSinglePrice(sym, key)
+      .then(r => results.push(r))
+      .catch(e => errors.push({ symbol: sym, error: e.message }))
+  );
+  
+  try {
+    await Promise.all(promises);
+    // Update positions with fetched prices
+    let updated = 0;
+    results.forEach(r => {
+      const pos = state.positions.find(p => p.symbol === r.symbol);
+      if (pos && r.price > 0) {
+        pos.lastPrice = r.price;
+        pos.dayChange = r.change;
+        pos.dayChangePct = r.changePct;
+        updated++;
+      }
+    });
+    state.lastFetch = new Date().toISOString();
+    saveState();
+    renderAll();
+    
+    if (errors.length > 0) {
+      const errMsg = errors.map(e => `${e.symbol}: ${e.error}`).join('\n');
+      if (updated > 0) {
+        alert(`Updated ${updated} of ${symbols.length} positions.\n\nFailed:\n${errMsg}`);
+      } else {
+        alert(`All fetches failed. Common causes:\n• Invalid API key (open 🔑 to update)\n• Rate limit hit (60/min on free tier)\n• Network issue\n\nDetails:\n${errMsg}`);
+      }
+    }
+  } catch(e) {
+    alert('Fetch error: ' + e.message);
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+  }
+}
+
+function updateLastFetchInfo() {
+  const el = document.getElementById('lastFetchInfo');
+  if (!el) return;
+  if (state.lastFetch) {
+    const d = new Date(state.lastFetch);
+    const now = Date.now();
+    const ageMs = now - d.getTime();
+    const ageMin = Math.floor(ageMs / 60000);
+    let ageStr;
+    if (ageMin < 1) ageStr = 'just now';
+    else if (ageMin < 60) ageStr = `${ageMin} min ago`;
+    else if (ageMin < 1440) ageStr = `${Math.floor(ageMin/60)}h ${ageMin%60}m ago`;
+    else ageStr = `${Math.floor(ageMin/1440)}d ago`;
+    el.innerHTML = `Last fetched ${ageStr} · <span class="text-[var(--text-dim)]">${d.toLocaleString()}</span>`;
+  } else {
+    el.textContent = 'Tap ⚡ Fetch Live for real-time prices, or ✎ Manual to type in';
+  }
+}
+
+// Form handlers
+document.getElementById('buyForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const symbol = document.getElementById('buySymbol').value.toUpperCase();
+  const qty = parseFloat(document.getElementById('buyQty').value);
+  const price = parseFloat(document.getElementById('buyPrice').value);
+  const date = document.getElementById('buyDate').value;
+  const reason = document.getElementById('buyReason').value;
+  
+  // Update positions
+  let pos = state.positions.find(p => p.symbol === symbol);
+  if (pos) {
+    const newQty = pos.qty + qty;
+    pos.avgCost = (pos.qty * pos.avgCost + qty * price) / newQty;
+    pos.qty = newQty;
+    pos.lastPrice = price;
+  } else {
+    state.positions.push({ symbol, qty, avgCost: price, lastPrice: price, target: 10 });
+  }
+  state.transactions.push({ date, type: 'buy', symbol, qty, price, reason });
+  saveState();
+  renderAll();
+  closeModal('buyModal');
+  e.target.reset();
+});
+
+document.getElementById('sellForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const symbol = document.getElementById('sellSymbol').value;
+  const qty = parseFloat(document.getElementById('sellQty').value);
+  const price = parseFloat(document.getElementById('sellPrice').value);
+  const date = document.getElementById('sellDate').value;
+  const reason = document.getElementById('sellReason').value;
+  
+  const pos = state.positions.find(p => p.symbol === symbol);
+  if (pos) {
+    pos.qty = Math.max(0, pos.qty - qty);
+    pos.lastPrice = price;
+    if (pos.qty < 0.001) {
+      state.positions = state.positions.filter(p => p.symbol !== symbol);
+    }
+    state.cash += qty * price;
+  }
+  state.transactions.push({ date, type: 'sell', symbol, qty, price, reason });
+  saveState();
+  renderAll();
+  closeModal('sellModal');
+  e.target.reset();
+});
+
+document.getElementById('contribForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const date = document.getElementById('contribDate').value;
+  const amount = parseFloat(document.getElementById('contribAmount').value);
+  const source = document.getElementById('contribSource').value;
+  const note = document.getElementById('contribNote').value;
+  state.contributions.push({ date, amount, source, note });
+  state.cash += amount;
+  saveState();
+  renderAll();
+  closeModal('contribModal');
+  e.target.reset();
+});
+
+document.getElementById('macroForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (!state.macroLog) state.macroLog = [];
+  state.macroLog.push({
+    date: document.getElementById('macroDate').value,
+    category: document.getElementById('macroCategory').value,
+    indicator: document.getElementById('macroIndicator').value,
+    reading: document.getElementById('macroReading').value,
+    interpretation: document.getElementById('macroInterpretation').value,
+    action: document.getElementById('macroAction').value,
+    notes: document.getElementById('macroNotes').value,
+  });
+  saveState();
+  renderMacro();
+  closeModal('macroModal');
+  e.target.reset();
+});
+
+// Tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
+    if (tab.dataset.tab === 'positions' || tab.dataset.tab === 'analytics') {
+      setTimeout(renderCharts, 50);
+    }
+  });
+});
+
+// Clock
+function updateClock() {
+  const d = new Date();
+  document.getElementById('liveTime').textContent = d.toLocaleTimeString('en-US', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Refresh "last fetched X minutes ago" display every 60s
+setInterval(updateLastFetchInfo, 60000);
+
+// Click outside modal to close
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', (e) => { if (e.target === m) m.classList.remove('active'); });
+});
+
+renderAll();
+</script>
+</body>
+</html>
