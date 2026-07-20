@@ -49,3 +49,24 @@ with commodity mark-to-market.
 Headline outputs (Base, at build time): DCF $132 (Gordon) – $171 (exit multiple)
 vs. $155.44 market — roughly fair value; probability-weighted ~$180;
 Monte Carlo P(value > price) ≈ 58%; LBO floor ~$99–145; precedents $79–121.
+
+---
+
+# X-Energy (XE) — DCF Valuation & 3-Statement Model
+
+`XE_Valuation_Model.xlsx` — built July 20, 2026. X-Energy is the Amazon-backed
+SMR/TRISO-fuel company that IPO'd April 24, 2026 at $23 (price at build: $14.02).
+
+Same 11-sheet architecture, re-engineered for a pre-commercial company: fixed +
+variable opex (burn doesn't scale with revenue), capex as a program budget, D&A
+off the PP&E balance, revolver as a funding-gap indicator, an all-equity growth
+take-private in place of a conventional LBO (EBITDA is negative — debt capacity
+is zero), and comps/precedents on an EV-per-pipeline-GW framework (OKLO,
+NuScale). Warrant mark-to-market excluded from the operating model.
+
+Headline outputs (Base, at build time): 10-yr DCF $1.8 (Gordon) – $7.3 (exit
+multiple) vs. $14.02 market — most SMR value sits beyond a 10-year window and
+the workbook says so on its face; comps EV/GW $14–24; precedent framework
+$11–20; probability-weighted ~$8.4; Monte Carlo P(value > price) ≈ 8%. The Base
+case also surfaces a ~$0.7B external funding need around FY2030–33 (revolver
+row) before FCF turns positive in FY2034.
