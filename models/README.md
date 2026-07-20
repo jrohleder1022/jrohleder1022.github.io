@@ -29,3 +29,23 @@ plus current market data.
   expansion than the Base case — see the Bull toggle and sensitivity tables.
 
 Educational model, not investment advice. Estimated cells are flagged on-sheet.
+
+---
+
+# Vistra Corp. (VST) — DCF Valuation & 3-Statement Model
+
+`VST_Valuation_Model.xlsx` — built July 20, 2026, from SEC-mapped financials, live
+quote/beta, consensus estimates and peer multiples pulled via Alpha Vantage
+(VST, CEG, NRG, TLN), 7/17–7/20/2026.
+
+Same 11-sheet architecture as the SYM model, adapted for an IPP: real debt burden
+($20.4B, ~5.8% avg rate) with a refinance-at-maturity schedule + revolver,
+dividends and buybacks in the equity roll, ~$2.0B preferred in the bridge, and
+power-sector comps/precedents (Constellation–Calpine, ECP–Calpine, Vistra–Dynegy,
+Vistra–Energy Harbor, TXU LBO). GAAP history is shown but the model anchors on
+adjusted EBITDA (guidance ~$6.9B FY26E) and consensus revenue, since GAAP swings
+with commodity mark-to-market.
+
+Headline outputs (Base, at build time): DCF $132 (Gordon) – $171 (exit multiple)
+vs. $155.44 market — roughly fair value; probability-weighted ~$180;
+Monte Carlo P(value > price) ≈ 58%; LBO floor ~$99–145; precedents $79–121.
