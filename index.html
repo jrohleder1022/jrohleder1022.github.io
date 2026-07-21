@@ -541,11 +541,12 @@
             <th>Price</th>
             <th>Total</th>
             <th>Thesis / Reason</th>
+            <th>Effectiveness</th>
             <th></th>
           </tr>
         </thead>
         <tbody id="transBody">
-          <tr><td colspan="8" class="text-center text-[var(--text-faint)] py-8">No transactions logged yet.</td></tr>
+          <tr><td colspan="9" class="text-center text-[var(--text-faint)] py-8">No transactions logged yet.</td></tr>
         </tbody>
       </table>
     </div>
@@ -625,6 +626,39 @@
       <p class="text-sm text-[var(--text-dim)] leading-relaxed">
         You hold 77% in two AI/tech names. Tech is the <strong class="text-[var(--text)]">highest-duration equity asset class</strong> — meaning rates and inflation hit it hardest. When the 10-year yield rises 50bps, NVDA and GOOGL typically drop 5-10% before earnings even change. You don't need to predict the Fed. You just need to <strong class="text-[var(--text)]">know what's coming and how it's priced</strong>.
       </p>
+    </div>
+
+    <!-- Decision Effectiveness Scorecard: macro (portfolio-level) + micro (trade-level) -->
+    <div class="card-elevated p-6 mb-8 relative glow-green">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <div class="text-[9px] tracking-[0.2em] text-[var(--green)] uppercase">Decision Effectiveness Scorecard</div>
+          <div class="display-font text-xl mt-1">Macro &amp; Micro — Did It Work?</div>
+        </div>
+        <div class="text-[10px] text-[var(--text-faint)] uppercase tracking-wider">Auto-computed from your logs</div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-8">
+        <div>
+          <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--blue)] mb-3">Micro — Trade-Level (Transactions Tab)</div>
+          <div class="space-y-2 text-xs mono">
+            <div class="flex justify-between"><span class="text-[var(--text-dim)]">Open buys — unrealized impact</span><span id="scoreBuyImpact">$0.00</span></div>
+            <div class="flex justify-between"><span class="text-[var(--text-dim)]">Buy win rate (price &gt; cost today)</span><span id="scoreBuyWinRate">—</span></div>
+            <div class="flex justify-between"><span class="text-[var(--text-dim)]">Sells — opportunity cost / gain</span><span id="scoreSellImpact">$0.00</span></div>
+            <div class="flex justify-between"><span class="text-[var(--text-dim)]">Good-call sell rate</span><span id="scoreSellWinRate">—</span></div>
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--amber)] mb-3">Macro — Portfolio-Level (Field Journal)</div>
+          <div class="space-y-2 text-xs mono">
+            <div class="flex justify-between"><span class="text-[var(--text-dim)]">Observations with a tracked baseline</span><span id="scoreMacroCount">0</span></div>
+            <div class="flex justify-between"><span class="text-[var(--text-dim)]">Avg portfolio move since logging</span><span id="scoreMacroAvg">$0.00</span></div>
+            <div class="flex justify-between"><span class="text-[var(--text-dim)]">% of observations followed by gains</span><span id="scoreMacroPosRate">—</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="text-[10px] text-[var(--text-faint)] mt-5 leading-relaxed">
+        Effectiveness compares the price (micro) or total portfolio value (macro) at the moment you acted or observed something, to right now. It is not proof of skill — one good call can be luck. Look for the pattern across many entries, not any single row.
+      </div>
     </div>
 
     <!-- TIER 1: Direct Impact -->
@@ -938,11 +972,12 @@
               <th>Reading</th>
               <th>My Interpretation</th>
               <th>Action Taken</th>
+              <th>Portfolio Impact Since</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="macroBody">
-            <tr><td colspan="7" class="text-center text-[var(--text-faint)] py-8">No observations logged yet. Start with today's biggest macro question.</td></tr>
+            <tr><td colspan="8" class="text-center text-[var(--text-faint)] py-8">No observations logged yet. Start with today's biggest macro question.</td></tr>
           </tbody>
         </table>
       </div>
@@ -1508,6 +1543,13 @@ function calcContribYTD() {
     .reduce((s, c) => s + Number(c.amount), 0);
 }
 
+// Live/last-known price for a symbol, even after full exit (see sellForm handler
+// below — positions are zeroed out, not deleted, so this keeps working).
+function getCurrentPrice(symbol) {
+  const pos = state.positions.find(p => p.symbol === symbol);
+  return pos ? pos.lastPrice : null;
+}
+
 // ==========================================
 // RENDERING
 // ==========================================
@@ -1519,8 +1561,8 @@ function renderPositions() {
   const t = calcTotals();
   const body = document.getElementById('positionsBody');
   body.innerHTML = '';
-  
-  t.positions.forEach((p, i) => {
+
+  t.positions.filter(p => p.qty > 0.001).forEach((p, i) => {
     const pctOfAcct = (p.value / t.totalValue) * 100;
     const plColor = p.pl >= 0 ? 'var(--green)' : 'var(--red)';
     const overTarget = pctOfAcct > p.target;
@@ -1608,10 +1650,29 @@ function renderContributions() {
   });
 }
 
+// Effectiveness of one logged trade, compared to the symbol's current price.
+// Buy: did the price go up from here? Sell: did the price go down after you left
+// (good call) or up (opportunity cost — you'd have been better off holding)?
+function tradeEffectivenessHtml(tr) {
+  const cur = getCurrentPrice(tr.symbol);
+  if (cur == null) return '<span class="text-[var(--text-faint)]">no price data</span>';
+  const qty = Number(tr.qty), price = Number(tr.price);
+  const diff = (cur - price) * qty;
+  const pct = price > 0 ? ((cur - price) / price) * 100 : 0;
+  if (tr.type === 'buy') {
+    const good = diff >= 0;
+    return `<span style="color:${good ? 'var(--green)' : 'var(--red)'}">${good ? '+' : ''}${fmt(diff)} (${good ? '+' : ''}${pct.toFixed(1)}%)</span>`;
+  }
+  if (Math.abs(diff) < 0.01) return '<span class="text-[var(--text-faint)]">Flat — price unchanged</span>';
+  const goodCall = diff < 0; // price fell after the sale = selling was the right call
+  const label = goodCall ? 'Avoided' : 'Missed';
+  return `<span style="color:${goodCall ? 'var(--green)' : 'var(--red)'}">${label} ${fmt(Math.abs(diff))}</span>`;
+}
+
 function renderTransactions() {
   const body = document.getElementById('transBody');
   if (state.transactions.length === 0) {
-    body.innerHTML = '<tr><td colspan="8" class="text-center text-[var(--text-faint)] py-8">No transactions logged yet.</td></tr>';
+    body.innerHTML = '<tr><td colspan="9" class="text-center text-[var(--text-faint)] py-8">No transactions logged yet.</td></tr>';
     return;
   }
   body.innerHTML = '';
@@ -1625,7 +1686,8 @@ function renderTransactions() {
         <td class="mono">${Number(tr.qty).toFixed(3)}</td>
         <td class="mono">${fmt(Number(tr.price))}</td>
         <td class="mono">${fmt(Number(tr.qty) * Number(tr.price))}</td>
-        <td class="text-[var(--text-dim)] text-xs" style="max-width: 320px;">${tr.reason}</td>
+        <td class="text-[var(--text-dim)] text-xs" style="max-width: 280px;">${tr.reason}</td>
+        <td class="text-xs">${tradeEffectivenessHtml(tr)}</td>
         <td></td>
       </tr>`;
   });
@@ -1636,11 +1698,12 @@ function renderCharts() {
   const t = calcTotals();
   const ctx = document.getElementById('allocationChart')?.getContext('2d');
   if (!ctx) return;
-  
+
+  const openPositions = t.positions.filter(p => p.qty > 0.001);
   const data = {
-    labels: t.positions.map(p => p.symbol).concat(state.cash > 0 ? ['Cash'] : []),
+    labels: openPositions.map(p => p.symbol).concat(state.cash > 0 ? ['Cash'] : []),
     datasets: [{
-      data: t.positions.map(p => p.value).concat(state.cash > 0 ? [state.cash] : []),
+      data: openPositions.map(p => p.value).concat(state.cash > 0 ? [state.cash] : []),
       backgroundColor: ['#d4ff00', '#00d97e', '#4a9eff', '#ffb800', '#888'],
       borderColor: '#0a0a0a',
       borderWidth: 2,
@@ -1672,7 +1735,7 @@ function renderTargetBars() {
   const el = document.getElementById('targetBars');
   if (!el) return;
   el.innerHTML = '';
-  t.positions.forEach(p => {
+  t.positions.filter(p => p.qty > 0.001).forEach(p => {
     const actual = (p.value / t.totalValue) * 100;
     const diff = actual - p.target;
     const color = Math.abs(diff) < 5 ? 'var(--green)' : Math.abs(diff) < 15 ? 'var(--amber)' : 'var(--red)';
@@ -1737,9 +1800,10 @@ function renderPriceForm() {
   const form = document.getElementById('priceForm');
   form.innerHTML = '';
   state.positions.forEach((p, i) => {
+    const closedTag = p.qty <= 0.001 ? ' <span class="text-[var(--text-faint)]">(closed — price used for effectiveness tracking only)</span>' : '';
     form.innerHTML += `
       <div class="grid grid-cols-3 gap-3 items-center">
-        <div class="text-xs"><strong>${p.symbol}</strong></div>
+        <div class="text-xs"><strong>${p.symbol}</strong>${closedTag}</div>
         <div class="text-[10px] text-[var(--text-faint)]">Current: ${fmt(p.lastPrice)}</div>
         <input type="number" step="0.01" data-symbol="${p.symbol}" value="${p.lastPrice}" class="price-input">
       </div>`;
@@ -1758,26 +1822,38 @@ function renderSellSymbols() {
 
 function renderMacro() {
   const body = document.getElementById('macroBody');
-  if (!body) return;
+  if (!body) { renderScorecard(); return; }
   const log = state.macroLog || [];
   if (log.length === 0) {
-    body.innerHTML = '<tr><td colspan="7" class="text-center text-[var(--text-faint)] py-8">No observations logged yet. Start with today\'s biggest macro question.</td></tr>';
+    body.innerHTML = '<tr><td colspan="8" class="text-center text-[var(--text-faint)] py-8">No observations logged yet. Start with today\'s biggest macro question.</td></tr>';
+    renderScorecard();
     return;
   }
+  const t = calcTotals();
   body.innerHTML = '';
   [...log].reverse().forEach((m, i) => {
     const realIdx = log.length - 1 - i;
+    // Older entries logged before this feature existed have no baseline —
+    // show a dash instead of a misleading number.
+    let impactHtml = '<span class="text-[var(--text-faint)]">— (no baseline)</span>';
+    if (typeof m.portfolioValueAtLog === 'number' && m.portfolioValueAtLog > 0) {
+      const diff = t.totalValue - m.portfolioValueAtLog;
+      const pct = (diff / m.portfolioValueAtLog) * 100;
+      impactHtml = `<span style="color:${diff >= 0 ? 'var(--green)' : 'var(--red)'}">${diff >= 0 ? '+' : ''}${fmt(diff)} (${diff >= 0 ? '+' : ''}${pct.toFixed(1)}%)</span>`;
+    }
     body.innerHTML += `
       <tr>
         <td class="mono text-xs">${m.date}</td>
         <td><span class="badge badge-contrib" style="white-space:nowrap;">${m.category}</span></td>
         <td class="text-xs"><strong>${m.indicator}</strong></td>
         <td class="mono text-xs">${m.reading}</td>
-        <td class="text-xs text-[var(--text-dim)]" style="max-width: 280px;">${m.interpretation}</td>
+        <td class="text-xs text-[var(--text-dim)]" style="max-width: 220px;">${m.interpretation}</td>
         <td class="text-xs"><strong>${m.action}</strong>${m.notes ? `<div class="text-[10px] text-[var(--text-faint)] mt-1">${m.notes}</div>` : ''}</td>
+        <td class="text-xs">${impactHtml}</td>
         <td><button class="btn-ghost" onclick="deleteMacro(${realIdx})">×</button></td>
       </tr>`;
   });
+  renderScorecard();
 }
 
 function deleteMacro(idx) {
@@ -1787,13 +1863,75 @@ function deleteMacro(idx) {
   renderMacro();
 }
 
+// ==========================================
+// DECISION EFFECTIVENESS SCORECARD
+// Aggregates micro (per-trade) and macro (per-observation) effectiveness
+// into a single set of headline numbers.
+// ==========================================
+function renderScorecard() {
+  const buyImpactEl = document.getElementById('scoreBuyImpact');
+  if (!buyImpactEl) return; // scorecard markup only exists on the Macro Desk tab
+
+  const buys = state.transactions.filter(t => t.type === 'buy');
+  let buyImpact = 0, buyWins = 0, buyCounted = 0;
+  buys.forEach(t => {
+    const cur = getCurrentPrice(t.symbol);
+    if (cur == null) return;
+    const impact = (cur - Number(t.price)) * Number(t.qty);
+    buyImpact += impact;
+    buyCounted++;
+    if (impact > 0) buyWins++;
+  });
+
+  const sells = state.transactions.filter(t => t.type === 'sell');
+  let sellImpact = 0, sellGoodCalls = 0, sellCounted = 0;
+  sells.forEach(t => {
+    const cur = getCurrentPrice(t.symbol);
+    if (cur == null) return;
+    const oppCost = (cur - Number(t.price)) * Number(t.qty); // positive = money left on the table
+    sellImpact += oppCost;
+    sellCounted++;
+    if (oppCost <= 0) sellGoodCalls++;
+  });
+
+  buyImpactEl.textContent = (buyImpact >= 0 ? '+' : '') + fmt(buyImpact);
+  buyImpactEl.style.color = buyImpact >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('scoreBuyWinRate').textContent = buyCounted > 0
+    ? `${buyWins}/${buyCounted} (${(buyWins / buyCounted * 100).toFixed(0)}%)` : '—';
+
+  const sellImpactEl = document.getElementById('scoreSellImpact');
+  sellImpactEl.textContent = (sellImpact >= 0 ? '+' : '') + fmt(sellImpact);
+  sellImpactEl.style.color = sellImpact <= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('scoreSellWinRate').textContent = sellCounted > 0
+    ? `${sellGoodCalls}/${sellCounted} (${(sellGoodCalls / sellCounted * 100).toFixed(0)}%)` : '—';
+
+  const t = calcTotals();
+  const macroEntries = (state.macroLog || []).filter(m => typeof m.portfolioValueAtLog === 'number' && m.portfolioValueAtLog > 0);
+  let macroSum = 0, macroPos = 0;
+  macroEntries.forEach(m => {
+    const diff = t.totalValue - m.portfolioValueAtLog;
+    macroSum += diff;
+    if (diff > 0) macroPos++;
+  });
+  const macroAvg = macroEntries.length > 0 ? macroSum / macroEntries.length : 0;
+
+  document.getElementById('scoreMacroCount').textContent = macroEntries.length;
+  const macroAvgEl = document.getElementById('scoreMacroAvg');
+  macroAvgEl.textContent = (macroAvg >= 0 ? '+' : '') + fmt(macroAvg);
+  macroAvgEl.style.color = macroAvg >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('scoreMacroPosRate').textContent = macroEntries.length > 0
+    ? `${macroPos}/${macroEntries.length} (${(macroPos / macroEntries.length * 100).toFixed(0)}%)` : '—';
+}
+
 function renderAll() {
   renderHero();
   renderRisk();
   renderPositions();
   renderContributions();
   renderTransactions();
-  renderCharts();
+  // Charts depend on the Chart.js CDN — an ad-blocker or offline load must not
+  // take down the rest of the render pipeline (price form, macro log, etc).
+  try { renderCharts(); } catch(e) { console.warn('Chart render failed:', e); }
   renderPriceForm();
   renderSellSymbols();
   renderMacro();
@@ -2034,9 +2172,8 @@ document.getElementById('sellForm').addEventListener('submit', (e) => {
   if (pos) {
     pos.qty = Math.max(0, pos.qty - qty);
     pos.lastPrice = price;
-    if (pos.qty < 0.001) {
-      state.positions = state.positions.filter(p => p.symbol !== symbol);
-    }
+    // Zero-qty positions are kept (not deleted) so the symbol's price can still
+    // be updated later — that price feeds the sell opportunity-cost calc below.
     state.cash += qty * price;
   }
   state.transactions.push({ date, type: 'sell', symbol, qty, price, reason });
@@ -2071,6 +2208,9 @@ document.getElementById('macroForm').addEventListener('submit', (e) => {
     interpretation: document.getElementById('macroInterpretation').value,
     action: document.getElementById('macroAction').value,
     notes: document.getElementById('macroNotes').value,
+    // Snapshot today's portfolio value as the baseline for the effectiveness
+    // scorecard — "did the portfolio do better or worse after this observation?"
+    portfolioValueAtLog: calcTotals().totalValue,
   });
   saveState();
   renderMacro();
