@@ -77,3 +77,23 @@ the workbook says so on its face; comps EV/GW $14–24; precedent framework
 $11–20; probability-weighted ~$8.4; Monte Carlo P(value > price) ≈ 8%. The Base
 case also surfaces a ~$0.7B external funding need around FY2030–33 (revolver
 row) before FCF turns positive in FY2034.
+
+---
+
+# Cadence Design Systems (CDNS) — DCF Valuation & 3-Statement Model
+
+`CDNS_Valuation_Model.xlsx` — built July 20, 2026. FY2026E revenue $6,175mm
+(guidance midpoint, +17% incl. ~$160mm Hexagon), non-GAAP EPS guide ~$7.90,
+Q1-26 backlog $8.0B.
+
+Same 11-sheet architecture, tuned for a high-margin EDA compounder: 88% gross
+margin, cash-opex leverage to a 50% terminal EBITDA margin (Base), $3.08B notes
+with a refinance schedule, $1.3B/yr buybacks, and the Hexagon acquisition
+modeled as a $3.1B(e) FY26 cash outflow landing in goodwill with $0.6B(e) new
+debt. Comps: SNPS/ADSK/MSFT/ORCL. Precedents: Synopsys–Ansys (15.4x rev),
+Siemens–Altair, Renesas–Altium, Siemens–Mentor.
+
+Headline outputs (Base, at build time, price $330.10): DCF $182 (Gordon) – $297
+(exit 20x) vs. market — exit-multiple DCF and comps ($248–356) bracket the
+price; probability-weighted ~$310; Monte Carlo P(value > price) ≈ 24%; LBO
+floor $147–222 (a CDNS buyout would be the largest tech LBO ever attempted).
