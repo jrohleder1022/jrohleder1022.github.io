@@ -136,3 +136,18 @@ condensed). Weighted upsides at build: SNPS +19%, VST +16%, META +5%, NOW +50%
 analyst median after the CPO run). Verdict: EDA first on moat + entry price,
 power second on demand certainty, META third, NOW fourth (deep value or value
 trap), VECO fifth (right industry, wrong price).
+
+---
+
+# Progress Software (PRGS) — DCF Valuation & 3-Statement Model
+
+`PRGS_Valuation_Model.xlsx` — built July 21, 2026. Levered infrastructure-software
+M&A roll-up: FY2026E revenue $996mm (raised guidance), non-GAAP EPS ~$6.15, adj
+FCF ~$277mm, ARR +2% cc, ~$1.2B debt, price $39.58 (~6.4x fwd EPS, ~17% FCF
+yield). Organic business only — serial M&A treated as unmodeled optionality.
+
+Headline outputs (Base): DCF $77 (exit 8x) – $91 (Gordon); comps $49–79;
+take-private precedents $59–89; probability-weighted ~$67; Monte Carlo
+P(value > price) ≈ 100%; and the LBO actually pencils — a sponsor clears 20%+
+IRR paying up to ~$56 (+40%), making the PE bid a live valuation floor. The
+bear case ($32, 35% weight) is legacy decay — the market's central fear.
