@@ -97,3 +97,28 @@ Headline outputs (Base, at build time, price $330.10): DCF $182 (Gordon) – $29
 (exit 20x) vs. market — exit-multiple DCF and comps ($248–356) bracket the
 price; probability-weighted ~$310; Monte Carlo P(value > price) ≈ 24%; LBO
 floor $147–222 (a CDNS buyout would be the largest tech LBO ever attempted).
+
+---
+
+# Synopsys (SNPS) — DCF Valuation & 3-Statement Model
+
+`SNPS_Valuation_Model.xlsx` — built July 20, 2026. First full post-Ansys year:
+FY2026E revenue $9,665mm / non-GAAP EPS $14.76 (raised guidance), net debt
+$8.7B with a $1B/yr deleveraging schedule modeled, price $384.28 (52-wk
+$366–652).
+
+Headline outputs (Base): DCF $299 (Gordon) – $452 (exit 18x); comps $360–559;
+precedent framework $365–567; probability-weighted ~$458; **Monte Carlo
+P(value > price) ≈ 76%** — post-drawdown, SNPS is the only name in this set
+where nearly every methodology sits above the market price. LBO floor $228–346.
+
+---
+
+# Growth_Comparison.xlsx
+
+Cross-company chart comparing all five models' Base cases: modeled FY26→35
+revenue CAGR, terminal EBITDA margin, probability-weighted upside, and Monte
+Carlo odds. Verdict: X-Energy is the fastest grower (~40% CAGR, highest risk);
+Synopsys is the best growth-adjusted-for-price (+19% weighted upside, 76% MC
+odds); Symbotic and X-Energy are the growth you're asked to overpay for;
+Cadence is a fair price for the best business.
