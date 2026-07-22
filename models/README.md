@@ -30,6 +30,13 @@ plus current market data.
 
 Educational model, not investment advice. Estimated cells are flagged on-sheet.
 
+**Update (July 20, 2026):** added an `Implied_Expectations` reverse-DCF sheet —
+backs out what $42.51 requires: ~29% revenue CAGR for nine years at 21% terminal
+EBITDA margins (vs. ~12% Base, ~17% Bull), cumulative revenue of ~4.8x today's
+$22.7B backlog, and >100% implied probability of the Bull case. The market is
+pricing GreenBox/new-vertical optionality beyond this model's horizon.
+
+
 ---
 
 # Vistra Corp. (VST) — DCF Valuation & 3-Statement Model
