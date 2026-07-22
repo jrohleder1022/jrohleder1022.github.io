@@ -122,3 +122,17 @@ Carlo odds. Verdict: X-Energy is the fastest grower (~40% CAGR, highest risk);
 Synopsys is the best growth-adjusted-for-price (+19% weighted upside, 76% MC
 odds); Symbotic and X-Energy are the growth you're asked to overpay for;
 Cadence is a fair price for the best business.
+
+---
+
+# Industry_Ranking.xlsx
+
+Six-way, 10-20-year industry ranking (July 2026): EDA (SNPS/CDNS), electricity
+(VST), AI monetization (META), agentic SaaS (NOW), photonics/litho (VECO).
+SNPS/CDNS/VST use their full workbooks' probability-weighted values; VECO, META
+and NOW get compact scenario DCF sheets in this file (same framework,
+condensed). Weighted upsides at build: SNPS +19%, VST +16%, META +5%, NOW +50%
+(highest variance — agentic-disruption bear case), VECO −44% (price ~80% above
+analyst median after the CPO run). Verdict: EDA first on moat + entry price,
+power second on demand certainty, META third, NOW fourth (deep value or value
+trap), VECO fifth (right industry, wrong price).
