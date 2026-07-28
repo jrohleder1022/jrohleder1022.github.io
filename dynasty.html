@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DYNASTY DESK — Fantasy Football Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,700;9..144,900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --bg-card: #111111;
+    --bg-elevated: #161616;
+    --border: #1f1f1f;
+    --border-bright: #2a2a2a;
+    --text: #e8e8e8;
+    --text-dim: #888;
+    --text-faint: #555;
+    --green: #00d97e;
+    --red: #ff3b30;
+    --amber: #ffb800;
+    --blue: #4a9eff;
+    --accent: #d4ff00;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(212, 255, 0, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 100%, rgba(74, 158, 255, 0.04) 0%, transparent 50%);
+  }
+  .display-font { font-family: 'Fraunces', serif; font-feature-settings: "ss01" on; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; }
+  .card-elevated { background: var(--bg-elevated); border: 1px solid var(--border-bright); }
+  .ticker-tape { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: #050505; overflow: hidden; white-space: nowrap; }
+  .ticker-content { display: inline-block; animation: scroll 55s linear infinite; padding-left: 100%; }
+  @keyframes scroll { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+  .risk-pulse { animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+  input, select, textarea {
+    background: #0a0a0a; border: 1px solid var(--border-bright); color: var(--text);
+    font-family: 'JetBrains Mono', monospace; padding: 8px 12px; border-radius: 2px;
+    font-size: 13px; width: 100%; transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  button { font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.15s; }
+  .btn-primary { background: var(--accent); color: #000; border: none; padding: 10px 18px; font-weight: 700; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 2px; }
+  .btn-primary:hover { background: #b8e000; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border-bright); padding: 8px 14px; font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 2px; }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+  .tab { padding: 14px 20px; cursor: pointer; border-bottom: 2px solid transparent; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); transition: all 0.15s; white-space: nowrap; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .stat-label { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 300; letter-spacing: -0.02em; line-height: 1; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-faint); padding: 10px 14px; border-bottom: 1px solid var(--border); font-weight: 500; white-space: nowrap; }
+  td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: top; }
+  tr:hover { background: rgba(255,255,255,0.02); }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border-bright), transparent); }
+  .pos-badge { display: inline-block; padding: 2px 7px; font-size: 9px; font-weight: 700; letter-spacing: .08em; border-radius: 2px; text-transform: uppercase; }
+  .pos-QB { background: rgba(74,158,255,.15); color: var(--blue); border: 1px solid rgba(74,158,255,.35); }
+  .pos-RB { background: rgba(0,217,126,.15); color: var(--green); border: 1px solid rgba(0,217,126,.35); }
+  .pos-WR { background: rgba(212,255,0,.15); color: var(--accent); border: 1px solid rgba(212,255,0,.35); }
+  .pos-TE { background: rgba(255,184,0,.15); color: var(--amber); border: 1px solid rgba(255,184,0,.35); }
+  .tier-pill { display: inline-block; padding: 2px 8px; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; border-radius: 2px; font-weight: 600; white-space: nowrap; }
+  .t1 { background: rgba(212,255,0,.15); color: var(--accent); border: 1px solid rgba(212,255,0,.4); }
+  .t2 { background: rgba(0,217,126,.15); color: var(--green); border: 1px solid rgba(0,217,126,.35); }
+  .t3 { background: rgba(74,158,255,.15); color: var(--blue); border: 1px solid rgba(74,158,255,.35); }
+  .t4 { background: rgba(255,184,0,.12); color: var(--amber); border: 1px solid rgba(255,184,0,.3); }
+  .t5 { background: rgba(255,255,255,.06); color: var(--text-dim); border: 1px solid var(--border-bright); }
+  .t6 { background: rgba(255,255,255,.03); color: var(--text-faint); border: 1px solid var(--border); }
+  .t7 { background: transparent; color: var(--text-faint); border: 1px dashed var(--border); }
+  .rookie-badge { display:inline-block; padding:1px 5px; font-size:8px; font-weight:700; border-radius:2px; background: rgba(212,255,0,.18); color: var(--accent); border:1px solid rgba(212,255,0,.4); margin-left:6px; vertical-align:middle; }
+  .trend-up { color: var(--green); }
+  .trend-down { color: var(--red); }
+  .pill { padding: 6px 14px; font-size: 11px; border: 1px solid var(--border-bright); border-radius: 20px; color: var(--text-dim); cursor: pointer; text-transform: uppercase; letter-spacing: .05em; user-select:none; }
+  .pill:hover { color: var(--text); }
+  .pill.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+  .combo-wrap { position: relative; }
+  .combo-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-elevated); border: 1px solid var(--border-bright); max-height: 280px; overflow-y: auto; z-index: 30; border-radius: 0 0 4px 4px; display:none; }
+  .combo-list.open { display: block; }
+  .combo-item { padding: 9px 12px; font-size: 12px; cursor: pointer; display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--border); }
+  .combo-item:last-child{ border-bottom:none; }
+  .combo-item:hover { background: rgba(212,255,0,.08); }
+  .asset-chip { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--bg-elevated); border: 1px solid var(--border-bright); border-radius: 2px; padding: 8px 10px; font-size: 12px; margin-bottom: 6px; }
+  .asset-chip button { background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 2px; }
+  .asset-chip button:hover { color: var(--red); }
+  .stock-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 4px; padding: 14px; }
+  .stock-card canvas { width: 100% !important; height: 44px !important; }
+  .glossary-term { color: var(--accent); font-weight: 700; }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); }
+  ::-webkit-scrollbar-thumb:hover { background: #333; }
+</style>
+</head>
+<body>
+
+<!-- Header bar -->
+<header class="border-b border-[var(--border)] bg-[#050505] sticky top-0 z-40">
+  <div class="max-w-[1400px] mx-auto px-6 py-4 flex items-center justify-between flex-wrap gap-3">
+    <div class="flex items-center gap-6 flex-wrap">
+      <div>
+        <div class="text-[9px] tracking-[0.2em] text-[var(--text-faint)] uppercase">Fantasy Football Terminal</div>
+        <div class="display-font text-2xl font-light tracking-tight">DYNASTY·DESK</div>
+      </div>
+      <div class="hidden md:block w-px h-10 bg-[var(--border-bright)]"></div>
+      <div class="hidden md:flex gap-6 text-xs">
+        <div><span class="text-[var(--text-faint)]">LEAGUE</span> <span class="text-[var(--accent)]">12-TEAM</span></div>
+        <div><span class="text-[var(--text-faint)]">SCORING</span> PPR</div>
+        <div><span class="text-[var(--text-faint)]">MODE</span> 1QB</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="btn-ghost" title="Roth IRA Terminal">💰 Roth IRA Terminal</a>
+      <div class="text-right">
+        <div class="text-[9px] tracking-[0.2em] text-[var(--text-faint)] uppercase">Live</div>
+        <div class="flex items-center gap-2 justify-end">
+          <span class="w-2 h-2 rounded-full bg-[var(--green)] risk-pulse"></span>
+          <span class="text-xs mono" id="liveTime">--:--:--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Global ticker: top movers -->
+<div class="ticker-tape py-2 text-xs">
+  <div class="ticker-content" id="globalTicker"></div>
+</div>
+
+<main class="max-w-[1400px] mx-auto px-6 py-8">
+
+  <!-- Hero stats -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border)] mb-8 border border-[var(--border)]">
+    <div class="bg-[var(--bg-card)] p-6">
+      <div class="stat-label">Ranked Assets</div>
+      <div class="stat-value display-font" id="statAssetCount">—</div>
+      <div class="text-xs text-[var(--text-faint)] mt-2">QB · RB · WR · TE</div>
+    </div>
+    <div class="bg-[var(--bg-card)] p-6">
+      <div class="stat-label">Biggest Riser (30d)</div>
+      <div class="stat-value display-font text-[var(--green)]" id="statRiser">—</div>
+      <div class="text-xs text-[var(--green)] mt-2" id="statRiserPct">—</div>
+    </div>
+    <div class="bg-[var(--bg-card)] p-6">
+      <div class="stat-label">Biggest Faller (30d)</div>
+      <div class="stat-value display-font text-[var(--red)]" id="statFaller">—</div>
+      <div class="text-xs text-[var(--red)] mt-2" id="statFallerPct">—</div>
+    </div>
+    <div class="bg-[var(--bg-card)] p-6">
+      <div class="stat-label">Data Refreshed</div>
+      <div class="stat-value display-font text-[var(--accent)]" style="font-size:20px;">Jul 28, 2026</div>
+      <div class="text-xs text-[var(--text-faint)] mt-2">Rosters via ESPN · training camp</div>
+    </div>
+  </section>
+
+  <!-- Tabs -->
+  <nav class="flex border-b border-[var(--border-bright)] mb-6 overflow-x-auto">
+    <div class="tab active" data-tab="rankings">Rankings</div>
+    <div class="tab" data-tab="trade">Trade Calculator</div>
+    <div class="tab" data-tab="adp">Startup ADP</div>
+    <div class="tab" data-tab="stock">Stock Market</div>
+    <div class="tab" data-tab="strategy">Strategy Hub</div>
+  </nav>
+
+  <!-- TAB: Rankings -->
+  <section id="tab-rankings" class="tab-content">
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
+      <div>
+        <h2 class="display-font text-2xl">Dynasty Rankings</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1">12-team, PPR, 1QB — ranked by Dynasty Desk Value (DDV). Click <span class="text-[var(--accent)]">Strategy Hub</span> for methodology.</p>
+      </div>
+      <input id="rankSearch" type="text" placeholder="Search player…" style="width:220px" />
+    </div>
+    <div class="flex gap-2 flex-wrap mb-4" id="rankPosFilter">
+      <div class="pill active" data-pos="ALL">All</div>
+      <div class="pill" data-pos="QB">QB</div>
+      <div class="pill" data-pos="RB">RB</div>
+      <div class="pill" data-pos="WR">WR</div>
+      <div class="pill" data-pos="TE">TE</div>
+    </div>
+    <div class="card overflow-x-auto">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>Age</th><th>Tier</th><th>DDV</th><th>30d</th></tr>
+        </thead>
+        <tbody id="rankBody"></tbody>
+      </table>
+    </div>
+    <div class="text-center text-[10px] text-[var(--text-faint)] mt-3" id="rankCount"></div>
+  </section>
+
+  <!-- TAB: Trade Calculator -->
+  <section id="tab-trade" class="tab-content hidden">
+    <div class="mb-6">
+      <h2 class="display-font text-2xl">Trade Calculator</h2>
+      <p class="text-xs text-[var(--text-faint)] mt-1">Add players and rookie picks to each side. Values come from the same DDV model as the rankings tab.</p>
+    </div>
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="card p-5">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="display-font text-lg">Side A</h3>
+          <div class="text-xs text-[var(--text-faint)]">Total <span class="mono text-[var(--text)]" id="totalA">$0.00</span></div>
+        </div>
+        <div class="combo-wrap mb-3">
+          <input id="searchA" type="text" placeholder="Add a player or pick…" autocomplete="off">
+          <div class="combo-list" id="listA"></div>
+        </div>
+        <div id="chipsA"></div>
+        <div class="text-center text-[10px] text-[var(--text-faint)] py-6" id="emptyA">No assets added</div>
+      </div>
+      <div class="card p-5">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="display-font text-lg">Side B</h3>
+          <div class="text-xs text-[var(--text-faint)]">Total <span class="mono text-[var(--text)]" id="totalB">$0.00</span></div>
+        </div>
+        <div class="combo-wrap mb-3">
+          <input id="searchB" type="text" placeholder="Add a player or pick…" autocomplete="off">
+          <div class="combo-list" id="listB"></div>
+        </div>
+        <div id="chipsB"></div>
+        <div class="text-center text-[10px] text-[var(--text-faint)] py-6" id="emptyB">No assets added</div>
+      </div>
+    </div>
+
+    <div class="card-elevated p-6 mt-6">
+      <div class="flex justify-between items-center mb-3 text-xs text-[var(--text-dim)]">
+        <span>Side A</span><span>Side B</span>
+      </div>
+      <div class="h-3 bg-[var(--border)] overflow-hidden flex rounded-sm">
+        <div id="barA" style="width:50%; background: var(--blue);"></div>
+        <div id="barB" style="width:50%; background: var(--accent);"></div>
+      </div>
+      <div class="text-center mt-5">
+        <div class="display-font text-2xl" id="verdictText">Add assets to both sides to evaluate this trade</div>
+        <div class="text-xs text-[var(--text-faint)] mt-2" id="verdictSub"></div>
+      </div>
+      <div class="text-center mt-4">
+        <button class="btn-ghost" onclick="resetTrade()">⟲ Reset Trade</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: Startup ADP -->
+  <section id="tab-adp" class="tab-content hidden">
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
+      <div>
+        <h2 class="display-font text-2xl">Startup Draft ADP</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1">Projected pick-by-pick order for a fresh 12-team, PPR, 1QB startup draft. <span class="rookie-badge">R</span> marks true rookies.</p>
+      </div>
+      <label class="flex items-center gap-2 text-xs text-[var(--text-dim)] cursor-pointer select-none">
+        <input type="checkbox" id="rookieOnly" style="width:auto;"> Rookies only
+      </label>
+    </div>
+    <div class="flex gap-2 flex-wrap mb-4" id="adpPosFilter">
+      <div class="pill active" data-pos="ALL">All</div>
+      <div class="pill" data-pos="QB">QB</div>
+      <div class="pill" data-pos="RB">RB</div>
+      <div class="pill" data-pos="WR">WR</div>
+      <div class="pill" data-pos="TE">TE</div>
+    </div>
+    <div class="card overflow-x-auto">
+      <table>
+        <thead>
+          <tr><th>Pick</th><th>Player</th><th>Pos</th><th>Team</th><th>Age</th></tr>
+        </thead>
+        <tbody id="adpBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- TAB: Stock Market -->
+  <section id="tab-stock" class="tab-content hidden">
+    <div class="mb-4">
+      <h2 class="display-font text-2xl">Player Stock Market</h2>
+      <p class="text-xs text-[var(--text-faint)] mt-1">Dynasty value treated like a ticker — price = DDV ÷ 10, change = 30-day trend.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+      <div>
+        <div class="flex items-baseline gap-2 mb-3">
+          <div class="display-font text-lg text-[var(--green)]">▲ Risers</div>
+          <div class="flex-1 h-px bg-[var(--border)]"></div>
+        </div>
+        <div class="grid gap-3" id="risersGrid"></div>
+      </div>
+      <div>
+        <div class="flex items-baseline gap-2 mb-3">
+          <div class="display-font text-lg text-[var(--red)]">▼ Fallers</div>
+          <div class="flex-1 h-px bg-[var(--border)]"></div>
+        </div>
+        <div class="grid gap-3" id="fallersGrid"></div>
+      </div>
+    </div>
+
+    <div class="flex items-baseline gap-3 mb-4">
+      <div class="display-font text-xl">Market News</div>
+      <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--blue)]">Live from ESPN</div>
+      <div class="flex-1 h-px bg-[var(--border)]"></div>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="newsGrid"></div>
+  </section>
+
+  <!-- TAB: Strategy Hub -->
+  <section id="tab-strategy" class="tab-content hidden">
+    <div class="mb-6">
+      <h2 class="display-font text-2xl">Strategy Hub</h2>
+      <p class="text-xs text-[var(--text-faint)] mt-1">How this tool thinks, how to draft, and how to work the trade market — for a 12-team PPR 1QB dynasty league</p>
+    </div>
+
+    <div class="card-elevated p-5 mb-8 border-l-2" style="border-left-color: var(--accent);">
+      <div class="text-[10px] tracking-[0.2em] uppercase text-[var(--accent)] mb-2">How To Read This Site</div>
+      <p class="text-sm text-[var(--text-dim)] leading-relaxed">
+        Every ranking on this site is expressed as <strong class="text-[var(--text)]">Dynasty Desk Value (DDV)</strong>, a 0–1000 scale editorial model built for this format only: 12 teams, PPR, one starting QB. It blends age, situation, opportunity and current NFL news (rosters and headlines pulled live via ESPN) into a single number. It is <strong class="text-[var(--text)]">not</strong> a scrape of KeepTradeCut, FantasyCalc, or any other live market — treat it as one well-reasoned opinion, refreshed as of <span class="text-[var(--text)]">July 28, 2026</span>, and sanity-check big decisions against the live consensus tools linked below.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+      <div class="card p-6">
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-2">Draft Strategy</div>
+        <h3 class="display-font text-xl mb-3">Startup Draft Priorities</h3>
+        <ul class="text-xs text-[var(--text-dim)] leading-relaxed space-y-2 list-disc pl-4">
+          <li>In 1QB, quarterback is streamable — do not reach for one in round 1–2 unless it's a true top-5 rusher (Daniels, Allen, Jackson). Elite young RB/WR outproduce mid QBs on your bench.</li>
+          <li>Spend your first 4–5 picks on 23-and-under WR/RB with a clear path to touches. Age is the scarcest resource in dynasty.</li>
+          <li>Tight end is a wasteland after the top 5–6 names. Either pay up early for a true weekly starter or ignore the position until the last few rounds.</li>
+          <li>Rookie picks are lottery tickets, not promises — value a 1st-round rookie pick like a low-end WR3/RB3, not a guaranteed hit.</li>
+          <li>Handcuffing (drafting the backup to your own RB1) is a contender's move, not a rebuilder's. Rebuilders should draft the best player available instead.</li>
+        </ul>
+      </div>
+      <div class="card p-6">
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-2">Roster Construction</div>
+        <h3 class="display-font text-xl mb-3">Contend vs. Rebuild Framework</h3>
+        <table class="text-xs">
+          <thead><tr><th>Signal</th><th>Contend</th><th>Rebuild</th></tr></thead>
+          <tbody>
+            <tr><td class="text-[var(--text-dim)]">Core age</td><td>Mostly 24–29</td><td>Mostly 30+ or unproven</td></tr>
+            <tr><td class="text-[var(--text-dim)]">Trade direction</td><td>Picks → players</td><td>Players → picks</td></tr>
+            <tr><td class="text-[var(--text-dim)]">Target assets</td><td>Proven WR1/RB1 in their prime</td><td>2027–2028 1sts, 23-and-under upside</td></tr>
+            <tr><td class="text-[var(--text-dim)]">Aging vets</td><td>Ride them one more year</td><td>Sell before the cliff</td></tr>
+          </tbody>
+        </table>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed mt-3">Middle-of-the-pack rosters are the worst place to sit — pick a lane. A 6-8 team is neither close enough to win nor bad enough to own a great pick.</p>
+      </div>
+    </div>
+
+    <div class="mb-8">
+      <div class="flex items-baseline gap-3 mb-4">
+        <div class="display-font text-xl">Buy-Low / Sell-High Board</div>
+        <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--green)]">Current Reads</div>
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="card p-5">
+          <div class="text-xs text-[var(--green)] uppercase tracking-wider mb-2">★ Buy-Low Candidates</div>
+          <ul class="text-xs text-[var(--text-dim)] leading-relaxed space-y-2 list-disc pl-4">
+            <li><strong class="text-[var(--text)]">Tyreek Hill (MIA)</strong> — coming off a serious knee injury with Miami's QB room unsettled after the Tua trade. The talent didn't disappear; the price did.</li>
+            <li><strong class="text-[var(--text)]">Anthony Richardson Sr. (IND)</strong> — Daniel Jones being cleared for camp tanked the price, but the rushing ceiling is unmatched if Richardson wins the job.</li>
+            <li><strong class="text-[var(--text)]">Michael Penix Jr. / Tua Tagovailoa (ATL)</strong> — whichever QB loses Atlanta's camp battle becomes a depressed asset worth stashing on talent alone.</li>
+            <li><strong class="text-[var(--text)]">Isiah Pacheco (DET)</strong> — buried behind Jahmyr Gibbs on paper, but a proven early-down back on a good offense rarely stays cheap for long.</li>
+          </ul>
+        </div>
+        <div class="card p-5">
+          <div class="text-xs text-[var(--red)] uppercase tracking-wider mb-2">★ Sell-High Candidates</div>
+          <ul class="text-xs text-[var(--text-dim)] leading-relaxed space-y-2 list-disc pl-4">
+            <li><strong class="text-[var(--text)]">Derrick Henry / Christian McCaffrey / Alvin Kamara</strong> — elite production at 30+ masks how fast the cliff arrives at running back. Sell into the box score, not after it disappears.</li>
+            <li><strong class="text-[var(--text)]">Travis Kelce (KC, age 36)</strong> — name value still outruns actual weekly upside. Trade the name before the league stops paying for it.</li>
+            <li><strong class="text-[var(--text)]">Davante Adams / Mike Evans (LAR / SF)</strong> — both changed teams in their thirties. Good bridge starters, bad long-term holds for a rebuilder.</li>
+            <li><strong class="text-[var(--text)]">Any rookie riding pure draft-season hype</strong> — KC Concepcion, Jordyn Tyson, Carnell Tate and Zachariah Branch are all being drafted ahead of this model's value. Fine buys for a contender needing certainty, great sells for a rebuilder who can wait a year for cheaper cost basis.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-8">
+      <div class="flex items-baseline gap-3 mb-4">
+        <div class="display-font text-xl">Glossary</div>
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 text-xs text-[var(--text-dim)] leading-relaxed">
+        <div class="card p-4"><span class="glossary-term">DDV</span> — Dynasty Desk Value. This site's 0–1000 value score for a 12-team PPR 1QB league.</div>
+        <div class="card p-4"><span class="glossary-term">ADP</span> — Average Draft Position: where a player actually gets picked, which can diverge from true value (see the Buy-Low board).</div>
+        <div class="card p-4"><span class="glossary-term">Startup Draft</span> — the one-time draft that fills an entire new dynasty roster from scratch, players and rookies together.</div>
+        <div class="card p-4"><span class="glossary-term">Rookie Draft</span> — the annual draft of just that year's incoming rookie class, held every subsequent season.</div>
+        <div class="card p-4"><span class="glossary-term">Superflex</span> — a format allowing a 2nd starting QB, which pushes QB value far higher than in 1QB leagues like this one.</div>
+        <div class="card p-4"><span class="glossary-term">TEP</span> — Tight End Premium: bonus points per reception for TEs, which raises the position's dynasty value when in effect.</div>
+        <div class="card p-4"><span class="glossary-term">Contender Window</span> — the 1–2 seasons a roster's talent and age are best suited to win a championship.</div>
+        <div class="card p-4"><span class="glossary-term">Buy-Low / Sell-High</span> — acquiring an undervalued asset before its price recovers, or trading an overvalued one before it falls.</div>
+        <div class="card p-4"><span class="glossary-term">Handcuff</span> — the backup running back who would inherit a starting role if the starter is hurt.</div>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <div class="flex items-baseline gap-3 mb-4">
+        <div class="display-font text-xl">Further Reading</div>
+        <div class="text-[10px] tracking-[0.15em] uppercase text-[var(--green)]">Live Market Consensus</div>
+        <div class="flex-1 h-px bg-[var(--border)]"></div>
+      </div>
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <a href="https://www.fantasypros.com/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Consensus</div>
+          <h4 class="font-semibold mt-1">FantasyPros</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Expert-consensus dynasty rankings & ADP</p>
+        </a>
+        <a href="https://keeptradecut.com/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Crowdsourced</div>
+          <h4 class="font-semibold mt-1">KeepTradeCut</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Real-time crowdsourced trade values</p>
+        </a>
+        <a href="https://dynastyleaguefootball.com/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Editorial</div>
+          <h4 class="font-semibold mt-1">Dynasty League Football</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Long-running dynasty strategy & rankings</p>
+        </a>
+        <a href="https://establishtherun.com/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Premium</div>
+          <h4 class="font-semibold mt-1">Establish The Run</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Analytics-driven fantasy & DFS research</p>
+        </a>
+        <a href="https://dynastyprocess.com/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Open Data</div>
+          <h4 class="font-semibold mt-1">DynastyProcess</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Open-source dynasty values & draft models</p>
+        </a>
+        <a href="https://www.fantasypoints.com/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Analytics</div>
+          <h4 class="font-semibold mt-1">FantasyPoints</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Advanced metrics, PFF-style charting</p>
+        </a>
+        <a href="https://www.playerprofiler.com/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--text-faint)]">Profiles</div>
+          <h4 class="font-semibold mt-1">PlayerProfiler</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Athletic profiles & advanced college metrics</p>
+        </a>
+        <a href="https://www.reddit.com/r/DynastyFF/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+          <div class="text-[10px] tracking-wider uppercase text-[var(--green)]">★ Community</div>
+          <h4 class="font-semibold mt-1">r/DynastyFF</h4>
+          <p class="text-[10px] text-[var(--text-dim)] mt-2">Free · Trade checks & community rankings</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="border-t border-[var(--border)] py-6 mt-8">
+  <div class="max-w-[1400px] mx-auto px-6 text-center text-[10px] text-[var(--text-faint)] uppercase tracking-wider">
+    Dynasty Desk — editorial dynasty model, not affiliated with ESPN, the NFL, or any player. Roster and news data via ESPN. Not betting or financial advice.
+  </div>
+</footer>
+
+<script>
+// ---------- DATA ----------
+const PLAYERS = [
+{n:"Jayden Daniels",p:"QB",t:"WSH",a:25,x:3,v:945,note:"Full workload trust; the rushing floor makes him a true 1QB QB1 despite a stacked WR room."},
+{n:"Josh Allen",p:"QB",t:"BUF",a:30,x:9,v:905},
+{n:"Lamar Jackson",p:"QB",t:"BAL",a:29,x:9,v:875},
+{n:"Jalen Hurts",p:"QB",t:"PHI",a:27,x:7,v:850},
+{n:"Joe Burrow",p:"QB",t:"CIN",a:29,x:7,v:835},
+{n:"Patrick Mahomes",p:"QB",t:"KC",a:30,x:10,v:815},
+{n:"Drake Maye",p:"QB",t:"NE",a:23,x:3,v:800,tp:22,note:"A stacked new-look WR room (A.J. Brown + Stefon Diggs) fuels late helium."},
+{n:"C.J. Stroud",p:"QB",t:"HOU",a:24,x:4,v:760,tp:-14,note:"ESPN camp coverage flags him as Houston's biggest question mark entering the season."},
+{n:"Caleb Williams",p:"QB",t:"CHI",a:24,x:3,v:740},
+{n:"Justin Herbert",p:"QB",t:"LAC",a:28,x:7,v:730},
+{n:"Bo Nix",p:"QB",t:"DEN",a:26,x:3,v:705},
+{n:"Jordan Love",p:"QB",t:"GB",a:27,x:7,v:670},
+{n:"Jaxson Dart",p:"QB",t:"NYG",a:23,x:2,v:650,tp:16,note:"Full-time starter with a rushing floor in a Nabers-led offense."},
+{n:"Brock Purdy",p:"QB",t:"SF",a:26,x:5,v:640,tp:5,note:"Unaffected by the Shanahan car-accident scare — that kept the coach out, not Purdy."},
+{n:"Cam Ward",p:"QB",t:"TEN",a:24,x:2,v:615},
+{n:"Trevor Lawrence",p:"QB",t:"JAX",a:26,x:6,v:560},
+{n:"Tua Tagovailoa",p:"QB",t:"ATL",a:28,x:7,v:510,tp:-18,note:"Traded to Atlanta into a timeshare with 2024 first-rounder Michael Penix Jr — the job is unresolved."},
+{n:"Dak Prescott",p:"QB",t:"DAL",a:32,x:11,v:500},
+{n:"Michael Penix Jr.",p:"QB",t:"ATL",a:26,x:3,v:480,tp:-22,note:"Tua's arrival muddies the starting job Atlanta handed him a year ago."},
+{n:"Anthony Richardson Sr.",p:"QB",t:"IND",a:24,x:4,v:520,tp:-20,note:"Daniel Jones says he is fully cleared from his Achilles tear — real camp competition returns."},
+{n:"J.J. McCarthy",p:"QB",t:"MIN",a:23,x:3,v:460,tp:-25,note:"Minnesota added Kyler Murray this offseason — camp competition, not a lock."},
+{n:"Kyler Murray",p:"QB",t:"MIN",a:28,x:8,v:445,tp:-10,note:"Fresh start via Minnesota after Arizona moved on; must beat out McCarthy for the job."},
+{n:"Baker Mayfield",p:"QB",t:"TB",a:31,x:9,v:440},
+{n:"Sam Darnold",p:"QB",t:"SEA",a:29,x:9,v:420},
+{n:"Shedeur Sanders",p:"QB",t:"CLE",a:24,x:2,v:390,tp:12,note:"Battling Dillon Gabriel for the Cleveland job in year two."},
+{n:"Dillon Gabriel",p:"QB",t:"CLE",a:25,x:2,v:340},
+{n:"Matthew Stafford",p:"QB",t:"LAR",a:38,x:18,v:330,tp:-8,note:"Rookie Ty Simpson waits in the wings as a developmental arm."},
+{n:"Daniel Jones",p:"QB",t:"IND",a:29,x:8,v:320,tp:19,note:"Fully cleared from the Achilles injury that ended his 2025 season — back in the QB1 mix."},
+{n:"Geno Smith",p:"QB",t:"NYJ",a:35,x:14,v:280},
+
+{n:"Bijan Robinson",p:"RB",t:"ATL",a:24,x:4,v:995},
+{n:"Jahmyr Gibbs",p:"RB",t:"DET",a:24,x:4,v:965},
+{n:"Ashton Jeanty",p:"RB",t:"LV",a:22,x:2,v:935,tp:8,note:"Year-two workhorse for Las Vegas; every-down role is secure."},
+{n:"De'Von Achane",p:"RB",t:"MIA",a:24,x:4,v:880},
+{n:"Bucky Irving",p:"RB",t:"TB",a:23,x:3,v:845},
+{n:"Omarion Hampton",p:"RB",t:"LAC",a:23,x:2,v:800,tp:14,note:"Bell-cow workload emerging in the Chargers' backfield."},
+{n:"Jonathan Taylor",p:"RB",t:"IND",a:27,x:7,v:790},
+{n:"Breece Hall",p:"RB",t:"NYJ",a:25,x:5,v:775},
+{n:"Kyren Williams",p:"RB",t:"LAR",a:25,x:5,v:745},
+{n:"TreVeyon Henderson",p:"RB",t:"NE",a:23,x:2,v:740,tp:17,note:"Explosive role in New England's suddenly ascending offense."},
+{n:"James Cook III",p:"RB",t:"BUF",a:26,x:5,v:700},
+{n:"Saquon Barkley",p:"RB",t:"PHI",a:29,x:9,v:690},
+{n:"Chase Brown",p:"RB",t:"CIN",a:26,x:4,v:675},
+{n:"RJ Harvey",p:"RB",t:"DEN",a:25,x:2,v:655,tp:11,note:"Emerged as Denver's early-down and passing-down hybrid lead back."},
+{n:"Christian McCaffrey",p:"RB",t:"SF",a:30,x:10,v:610,tp:-12,note:"Still elite on the field, but the tread-wear discount at 30 is real."},
+{n:"Josh Jacobs",p:"RB",t:"GB",a:28,x:8,v:615},
+{n:"Kenneth Walker III",p:"RB",t:"KC",a:25,x:5,v:580,tp:15,note:"Fresh start in Kansas City's offense after an offseason move."},
+{n:"Cam Skattebo",p:"RB",t:"NYG",a:24,x:2,v:565},
+{n:"Quinshon Judkins",p:"RB",t:"CLE",a:22,x:2,v:600},
+{n:"Kaleb Johnson",p:"RB",t:"PIT",a:22,x:2,v:560,tp:9,note:"Earning a bigger early-down share in Pittsburgh."},
+{n:"Bhayshul Tuten",p:"RB",t:"JAX",a:23,x:2,v:545},
+{n:"Derrick Henry",p:"RB",t:"BAL",a:32,x:11,v:540,tp:-9,note:"Still producing, but the cliff always comes fast for a 32-year-old bruiser."},
+{n:"Dylan Sampson",p:"RB",t:"CLE",a:21,x:2,v:490},
+{n:"Woody Marks",p:"RB",t:"HOU",a:25,x:2,v:470},
+{n:"Tyrone Tracy Jr.",p:"RB",t:"NYG",a:26,x:3,v:480},
+{n:"Travis Etienne Jr.",p:"RB",t:"NO",a:27,x:6,v:440,tp:-7,note:"Moved to New Orleans; shares work with Kamara in a muddled backfield."},
+{n:"Chuba Hubbard",p:"RB",t:"CAR",a:27,x:6,v:450},
+{n:"Alvin Kamara",p:"RB",t:"NO",a:31,x:10,v:460},
+{n:"Isiah Pacheco",p:"RB",t:"DET",a:27,x:5,v:420,tp:-6,note:"Change of scenery to Detroit; a timeshare behind Gibbs caps the ceiling for now."},
+{n:"David Montgomery",p:"RB",t:"HOU",a:29,x:8,v:380},
+{n:"Rhamondre Stevenson",p:"RB",t:"NE",a:28,x:6,v:400},
+{n:"Zach Charbonnet",p:"RB",t:"SEA",a:25,x:4,v:430},
+{n:"Tony Pollard",p:"RB",t:"TEN",a:29,x:8,v:380},
+{n:"Aaron Jones Sr.",p:"RB",t:"MIN",a:31,x:10,v:360},
+{n:"Joe Mixon",p:"RB",t:"HOU",a:30,x:9,v:330,note:"Three-man Houston timeshare alongside Montgomery and Marks."},
+{n:"Javonte Williams",p:"RB",t:"DAL",a:26,x:6,v:370},
+{n:"Jaylen Warren",p:"RB",t:"PIT",a:27,x:5,v:390},
+{n:"J.K. Dobbins",p:"RB",t:"DEN",a:27,x:7,v:350},
+{n:"James Conner",p:"RB",t:"ARI",a:31,x:10,v:380},
+{n:"Trey Benson",p:"RB",t:"ARI",a:24,x:3,v:360},
+{n:"Rachaad White",p:"RB",t:"WSH",a:27,x:5,v:340,tp:-8,note:"Traded into a crowded Washington backfield alongside Ford and Croskey-Merritt."},
+{n:"Jerome Ford",p:"RB",t:"WSH",a:26,x:5,v:300,tp:-8,note:"Also new to Washington's crowded committee."},
+{n:"Jordan Mason",p:"RB",t:"MIN",a:27,x:5,v:320},
+{n:"Brian Robinson Jr.",p:"RB",t:"ATL",a:27,x:5,v:310},
+{n:"Tyjae Spears",p:"RB",t:"TEN",a:25,x:4,v:350},
+{n:"Tank Bigsby",p:"RB",t:"PHI",a:23,x:4,v:330},
+{n:"Jaydon Blue",p:"RB",t:"DAL",a:22,x:2,v:340},
+{n:"Braelon Allen",p:"RB",t:"NYJ",a:22,x:3,v:320},
+{n:"Trevor Etienne",p:"RB",t:"CAR",a:22,x:2,v:300},
+{n:"Devin Singletary",p:"RB",t:"NYG",a:28,x:8,v:260},
+{n:"Justice Hill",p:"RB",t:"BAL",a:28,x:8,v:240},
+{n:"Blake Corum",p:"RB",t:"LAR",a:25,x:3,v:310},
+{n:"Jarquez Hunter",p:"RB",t:"LAR",a:23,x:2,v:290},
+{n:"MarShawn Lloyd",p:"RB",t:"GB",a:25,x:3,v:280},
+{n:"Ray Davis",p:"RB",t:"BUF",a:26,x:3,v:290},
+{n:"Tyler Allgeier",p:"RB",t:"ARI",a:26,x:5,v:260},
+{n:"Jaylen Wright",p:"RB",t:"MIA",a:23,x:3,v:270},
+{n:"Ollie Gordon II",p:"RB",t:"MIA",a:22,x:2,v:250},
+{n:"Kendre Miller",p:"RB",t:"NO",a:24,x:4,v:220},
+{n:"Sean Tucker",p:"RB",t:"TB",a:24,x:4,v:250},
+{n:"Kimani Vidal",p:"RB",t:"LAC",a:24,x:3,v:240},
+{n:"DJ Giddens",p:"RB",t:"IND",a:22,x:2,v:260},
+{n:"Jordan James",p:"RB",t:"SF",a:22,x:2,v:250},
+{n:"Devin Neal",p:"RB",t:"NO",a:22,x:2,v:230},
+{n:"Nicholas Singleton",p:"RB",t:"TEN",a:21,x:0,v:270,note:"2026 draftee behind Tony Pollard and Tyjae Spears; early-camp stash."},
+
+{n:"Ja'Marr Chase",p:"WR",t:"CIN",a:26,x:6,v:985},
+{n:"Justin Jefferson",p:"WR",t:"MIN",a:27,x:7,v:960},
+{n:"Malik Nabers",p:"WR",t:"NYG",a:22,x:3,v:935,tp:6},
+{n:"Puka Nacua",p:"WR",t:"LAR",a:25,x:4,v:910},
+{n:"CeeDee Lamb",p:"WR",t:"DAL",a:27,x:7,v:900},
+{n:"Amon-Ra St. Brown",p:"WR",t:"DET",a:26,x:6,v:890},
+{n:"Marvin Harrison Jr.",p:"WR",t:"ARI",a:23,x:3,v:865},
+{n:"Brian Thomas Jr.",p:"WR",t:"JAX",a:23,x:3,v:845},
+{n:"Jaxon Smith-Njigba",p:"WR",t:"SEA",a:24,x:4,v:815},
+{n:"Drake London",p:"WR",t:"ATL",a:25,x:5,v:805},
+{n:"Nico Collins",p:"WR",t:"HOU",a:27,x:6,v:800},
+{n:"Ladd McConkey",p:"WR",t:"LAC",a:24,x:3,v:795},
+{n:"Garrett Wilson",p:"WR",t:"NYJ",a:26,x:5,v:770},
+{n:"Tetairoa McMillan",p:"WR",t:"CAR",a:23,x:2,v:755,tp:13,note:"Bell-cow target share as a true No. 1 in year two."},
+{n:"Rome Odunze",p:"WR",t:"CHI",a:24,x:3,v:730},
+{n:"Xavier Worthy",p:"WR",t:"KC",a:23,x:3,v:690},
+{n:"Jameson Williams",p:"WR",t:"DET",a:25,x:5,v:670},
+{n:"Tee Higgins",p:"WR",t:"CIN",a:27,x:7,v:715},
+{n:"Zay Flowers",p:"WR",t:"BAL",a:25,x:4,v:700},
+{n:"DeVonta Smith",p:"WR",t:"PHI",a:27,x:6,v:685},
+{n:"A.J. Brown",p:"WR",t:"NE",a:29,x:8,v:650,tp:10,note:"Traded to New England; camp friction with Vrabel is noise, the target share is the signal."},
+{n:"Travis Hunter",p:"WR",t:"JAX",a:23,x:2,v:600,tp:7,note:"Two-way phenom locked into a true WR1 role in Jacksonville."},
+{n:"Chris Olave",p:"WR",t:"NO",a:26,x:5,v:640},
+{n:"DK Metcalf",p:"WR",t:"PIT",a:28,x:8,v:620},
+{n:"Jaylen Waddle",p:"WR",t:"DEN",a:27,x:6,v:600,tp:-5,note:"Traded from Miami to Denver — new QB room, new timeline."},
+{n:"Jordan Addison",p:"WR",t:"MIN",a:24,x:4,v:580},
+{n:"George Pickens",p:"WR",t:"DAL",a:25,x:5,v:560},
+{n:"Jayden Reed",p:"WR",t:"GB",a:26,x:4,v:560},
+{n:"Emeka Egbuka",p:"WR",t:"TB",a:23,x:2,v:560},
+{n:"Terry McLaurin",p:"WR",t:"WSH",a:30,x:8,v:540},
+{n:"Matthew Golden",p:"WR",t:"GB",a:22,x:2,v:520},
+{n:"Stefon Diggs",p:"WR",t:"NE",a:32,x:11,v:520,tp:9,note:"Landed in New England alongside A.J. Brown — suddenly one of the league's best WR rooms."},
+{n:"Jaylin Noel",p:"WR",t:"HOU",a:23,x:2,v:480},
+{n:"Deebo Samuel",p:"WR",t:"WSH",a:29,x:8,v:470,note:"Now a Commander, sharing targets with McLaurin in Jayden Daniels' offense."},
+{n:"Jayden Higgins",p:"WR",t:"HOU",a:23,x:2,v:470},
+{n:"Mike Evans",p:"WR",t:"SF",a:32,x:13,v:430,note:"Joined San Francisco this offseason — a 32-year-old WR1 learning a new offense."},
+{n:"DJ Moore",p:"WR",t:"BUF",a:29,x:9,v:440,note:"Traded to Buffalo; a timeline reset inside Josh Allen's offense."},
+{n:"Davante Adams",p:"WR",t:"LAR",a:33,x:13,v:450},
+{n:"Courtland Sutton",p:"WR",t:"DEN",a:30,x:9,v:460},
+{n:"Luther Burden III",p:"WR",t:"CHI",a:22,x:2,v:440},
+{n:"Khalil Shakir",p:"WR",t:"BUF",a:26,x:5,v:430},
+{n:"KC Concepcion",p:"WR",t:"CLE",a:21,x:0,v:420,note:"2026 rookie thrown into Cleveland's rebuilt WR room."},
+{n:"Carnell Tate",p:"WR",t:"TEN",a:21,x:0,v:410,note:"2026 rookie with a clear path to targets in Tennessee."},
+{n:"Ricky Pearsall",p:"WR",t:"SF",a:25,x:3,v:420},
+{n:"Jordyn Tyson",p:"WR",t:"NO",a:21,x:0,v:400,note:"2026 rookie penciled in as a WR1-in-waiting for New Orleans."},
+{n:"Josh Downs",p:"WR",t:"IND",a:24,x:4,v:400},
+{n:"Marvin Mims Jr.",p:"WR",t:"DEN",a:24,x:4,v:390},
+{n:"Zachariah Branch",p:"WR",t:"ATL",a:22,x:0,v:380,note:"2026 rookie joining a crowded Atlanta receiver room."},
+{n:"Jerry Jeudy",p:"WR",t:"CLE",a:27,x:7,v:380},
+{n:"Tyreek Hill",p:"WR",t:"MIA",a:32,x:10,v:380,tp:-35,note:"Coming off a serious knee injury with Miami's QB room in flux post-Tua trade — buy-low or bust."},
+{n:"Calvin Ridley",p:"WR",t:"TEN",a:31,x:8,v:380},
+{n:"Denzel Boston",p:"WR",t:"CLE",a:22,x:0,v:340},
+{n:"Makai Lemon",p:"WR",t:"PHI",a:22,x:0,v:340,note:"2026 rookie fighting for early looks in a crowded Philly room."},
+{n:"Troy Franklin",p:"WR",t:"DEN",a:23,x:3,v:360},
+{n:"Isaiah Bond",p:"WR",t:"CLE",a:22,x:2,v:320},
+{n:"Darnell Mooney",p:"WR",t:"NYG",a:28,x:7,v:310},
+{n:"Cedric Tillman",p:"WR",t:"CLE",a:26,x:4,v:290},
+{n:"Christian Watson",p:"WR",t:"GB",a:27,x:5,v:310},
+{n:"Alec Pierce",p:"WR",t:"IND",a:26,x:5,v:300},
+{n:"Tre' Harris",p:"WR",t:"LAC",a:24,x:2,v:340},
+{n:"Quentin Johnston",p:"WR",t:"LAC",a:24,x:4,v:300},
+{n:"Xavier Legette",p:"WR",t:"CAR",a:25,x:3,v:290},
+{n:"Jacob Cowing",p:"WR",t:"SF",a:25,x:3,v:280},
+{n:"Jalen Coker",p:"WR",t:"CAR",a:24,x:3,v:270},
+{n:"Elic Ayomanor",p:"WR",t:"TEN",a:23,x:2,v:280},
+{n:"Adonai Mitchell",p:"WR",t:"NYJ",a:23,x:3,v:270},
+{n:"Dont'e Thornton Jr.",p:"WR",t:"LV",a:23,x:2,v:260},
+{n:"Chimere Dike",p:"WR",t:"TEN",a:23,x:2,v:260},
+{n:"Jimmy Horn Jr.",p:"WR",t:"CAR",a:23,x:2,v:230},
+
+{n:"Brock Bowers",p:"TE",t:"LV",a:23,x:3,v:860},
+{n:"Trey McBride",p:"TE",t:"ARI",a:26,x:5,v:800},
+{n:"Sam LaPorta",p:"TE",t:"DET",a:25,x:4,v:700},
+{n:"George Kittle",p:"TE",t:"SF",a:32,x:10,v:620},
+{n:"Kyle Pitts Sr.",p:"TE",t:"ATL",a:25,x:5,v:600},
+{n:"Tucker Kraft",p:"TE",t:"GB",a:25,x:4,v:580},
+{n:"Colston Loveland",p:"TE",t:"CHI",a:22,x:2,v:540,tp:12,note:"Ascending fast as Caleb Williams' top red-zone target."},
+{n:"Tyler Warren",p:"TE",t:"IND",a:24,x:2,v:520,tp:9,note:"Every-down role as Indy's top receiving option at the position."},
+{n:"Dalton Kincaid",p:"TE",t:"BUF",a:26,x:4,v:480},
+{n:"T.J. Hockenson",p:"TE",t:"MIN",a:29,x:8,v:450},
+{n:"David Njoku",p:"TE",t:"LAC",a:30,x:12,v:460,note:"Traded to the Chargers this offseason — new offense, new role."},
+{n:"Mark Andrews",p:"TE",t:"BAL",a:30,x:9,v:440},
+{n:"Travis Kelce",p:"TE",t:"KC",a:36,x:14,v:420,tp:-15,note:"Still productive, but 36 years old is 36 years old — name value now exceeds field value."},
+{n:"Harold Fannin Jr.",p:"TE",t:"CLE",a:22,x:2,v:400},
+{n:"Jake Ferguson",p:"TE",t:"DAL",a:27,x:5,v:380},
+{n:"Mason Taylor",p:"TE",t:"NYJ",a:22,x:2,v:370},
+{n:"Terrance Ferguson",p:"TE",t:"LAR",a:23,x:2,v:350},
+{n:"Ja'Tavion Sanders",p:"TE",t:"CAR",a:23,x:3,v:340},
+{n:"Evan Engram",p:"TE",t:"DEN",a:31,x:10,v:340},
+{n:"Elijah Arroyo",p:"TE",t:"SEA",a:23,x:2,v:330},
+{n:"Dallas Goedert",p:"TE",t:"PHI",a:31,x:9,v:320},
+{n:"Chig Okonkwo",p:"TE",t:"WSH",a:26,x:5,v:310},
+{n:"Cade Otton",p:"TE",t:"TB",a:27,x:5,v:300},
+{n:"Brenton Strange",p:"TE",t:"JAX",a:25,x:4,v:290},
+];
+
+const PICKS = [
+{id:"27e",label:"2027 1st (Early)",v:700},
+{id:"27m",label:"2027 1st (Mid)",v:520},
+{id:"27l",label:"2027 1st (Late)",v:380},
+{id:"272",label:"2027 2nd",v:220},
+{id:"273",label:"2027 3rd",v:120},
+{id:"274",label:"2027 4th",v:60},
+{id:"28e",label:"2028 1st (Early)",v:650},
+{id:"28m",label:"2028 1st (Mid)",v:480},
+{id:"28l",label:"2028 1st (Late)",v:340},
+{id:"282",label:"2028 2nd",v:190},
+{id:"283",label:"2028 3rd",v:100},
+];
+
+const NEWS = [
+{h:"Brock Purdy, 49ers practice with 'leader' Shanahan watching", s:"San Francisco quarterback Brock Purdy and the 49ers practiced Monday as coach Kyle Shanahan continues recovering from a July 14 car accident.", u:"https://www.espn.com/nfl/story/_/id/49465052/brock-purdy-49ers-practice-leader-shanahan-watching"},
+{h:"Colts' Daniel Jones says he's fully cleared for training camp", s:"Jones said he is fully cleared to participate in camp from the Achilles injury that ended his 2025 season — real competition for Anthony Richardson.", u:"https://www.espn.com/nfl/story/_/id/49463610/colts-daniel-jones-says-fully-cleared-achilles-injury"},
+{h:"Is C.J. Stroud the biggest question mark for the Texans?", s:"Camp analysts weigh in on whether Houston's young QB is the team's largest variable entering the season.", u:"https://www.espn.com/video/clip/_/id/49462940/is-cj-stroud-biggest-question-mark-texans"},
+{h:"Patriots' Brown knows Vrabel's rip comes from 'great place'", s:"A.J. Brown couldn't corral the first pass of camp from Drake Maye, drawing a pointed reaction from coach Mike Vrabel.", u:"https://www.espn.com/nfl/story/_/id/49464454/patriots-brown-knows-vrabel-rip-comes-great-place"},
+{h:"2026 NFL training camp: Latest news, intel for all 32 teams", s:"ESPN's team of reporters tracks camp battles, breakouts and injury news across the league.", u:"https://www.espn.com/nfl/story/_/id/49368181/training-camp-2026-latest-news-intel-updates-buzz-all-32-teams"},
+{h:"Are the Cowboys legit Super Bowl contenders?", s:"Dallas enters camp with George Pickens added to a CeeDee Lamb-led receiver room and questions about whether the roster can compete.", u:"https://www.espn.com/video/clip/_/id/49462644/are-cowboys-legit-super-bowl-contenders"},
+];
+
+// ---------- HELPERS ----------
+function tierOf(v){
+  if(v>=850) return ["Elite Cornerstone","t1"];
+  if(v>=700) return ["Top-12 Asset","t2"];
+  if(v>=550) return ["Strong Starter","t3"];
+  if(v>=400) return ["Solid Starter","t4"];
+  if(v>=280) return ["Flex / Upside","t5"];
+  if(v>=150) return ["Bench Stash","t6"];
+  return ["Deep Stash","t7"];
+}
+function price(v){ return "$" + (v/10).toFixed(2); }
+function hashTrend(str){
+  let h = 0;
+  for(let i=0;i<str.length;i++){ h = (h*31 + str.charCodeAt(i)) >>> 0; }
+  return ((h % 1000) / 1000) * 10 - 5;
+}
+function trendOf(p){ return p.tp !== undefined ? p.tp : hashTrend(p.n); }
+function fmtPct(x){ const s = x>=0 ? "+" : ""; return s + x.toFixed(1) + "%"; }
+
+const RANKED = [...PLAYERS].sort((a,b)=>b.v-a.v).map((p,i)=>Object.assign({}, p, {rank:i+1}));
+
+const ADP_ADJ = {
+  "Christian McCaffrey":15, "Travis Kelce":10, "Derrick Henry":8, "Alvin Kamara":6,
+  "KC Concepcion":18, "Jordyn Tyson":16, "Carnell Tate":14, "Zachariah Branch":12, "Makai Lemon":10,
+  "Davante Adams":-10, "Mike Evans":-8, "Tyreek Hill":-12, "Matthew Stafford":-6, "Joe Mixon":-5
+};
+const BY_ADP = [...RANKED]
+  .map(p => Object.assign({}, p, {adpRaw: p.rank - (ADP_ADJ[p.n] || 0)}))
+  .sort((a,b)=>a.adpRaw-b.adpRaw)
+  .map((p,i)=>Object.assign({}, p, {adp:i+1}));
+
+function roundPick(adp){
+  const round = Math.floor((adp-1)/12) + 1;
+  const pick = ((adp-1) % 12) + 1;
+  return round + "." + String(pick).padStart(2,"0");
+}
+
+// ---------- RANKINGS TAB ----------
+let rankPos = "ALL";
+function renderRankings(){
+  const q = document.getElementById("rankSearch").value.trim().toLowerCase();
+  const body = document.getElementById("rankBody");
+  const rows = RANKED.filter(p => (rankPos==="ALL" || p.p===rankPos) && (!q || p.n.toLowerCase().includes(q)));
+  body.innerHTML = rows.map(p => {
+    const [tierLabel, tierCls] = tierOf(p.v);
+    const trend = trendOf(p);
+    const trendCls = trend >= 0 ? "trend-up" : "trend-down";
+    const rookie = p.x === 0 ? '<span class="rookie-badge">R</span>' : "";
+    const note = p.note ? '<div class="text-[10px] text-[var(--text-faint)] italic mt-1">'+p.note+'</div>' : "";
+    return '<tr><td class="mono text-[var(--text-faint)]">'+p.rank+'</td>'
+      + '<td><div class="font-medium">'+p.n+rookie+'</div>'+note+'</td>'
+      + '<td><span class="pos-badge pos-'+p.p+'">'+p.p+'</span></td>'
+      + '<td class="text-[var(--text-dim)]">'+p.t+'</td>'
+      + '<td class="text-[var(--text-dim)]">'+p.a+'</td>'
+      + '<td><span class="tier-pill '+tierCls+'">'+tierLabel+'</span></td>'
+      + '<td class="mono">'+price(p.v)+'</td>'
+      + '<td class="mono '+trendCls+'">'+fmtPct(trend)+'</td></tr>';
+  }).join("");
+  document.getElementById("rankCount").textContent = rows.length + " of " + RANKED.length + " ranked assets shown";
+}
+document.getElementById("rankSearch").addEventListener("input", renderRankings);
+document.querySelectorAll("#rankPosFilter .pill").forEach(el => {
+  el.addEventListener("click", () => {
+    document.querySelectorAll("#rankPosFilter .pill").forEach(p=>p.classList.remove("active"));
+    el.classList.add("active");
+    rankPos = el.dataset.pos;
+    renderRankings();
+  });
+});
+
+// ---------- ADP TAB ----------
+let adpPos = "ALL";
+function renderAdp(){
+  const rookieOnly = document.getElementById("rookieOnly").checked;
+  const body = document.getElementById("adpBody");
+  const rows = BY_ADP.filter(p => (adpPos==="ALL" || p.p===adpPos) && (!rookieOnly || p.x===0));
+  body.innerHTML = rows.map(p => {
+    const rookie = p.x === 0 ? '<span class="rookie-badge">R</span>' : "";
+    return '<tr><td class="mono text-[var(--accent)]">'+roundPick(p.adp)+'</td>'
+      + '<td><div class="font-medium">'+p.n+rookie+'</div></td>'
+      + '<td><span class="pos-badge pos-'+p.p+'">'+p.p+'</span></td>'
+      + '<td class="text-[var(--text-dim)]">'+p.t+'</td>'
+      + '<td class="text-[var(--text-dim)]">'+p.a+'</td></tr>';
+  }).join("");
+}
+document.getElementById("rookieOnly").addEventListener("change", renderAdp);
+document.querySelectorAll("#adpPosFilter .pill").forEach(el => {
+  el.addEventListener("click", () => {
+    document.querySelectorAll("#adpPosFilter .pill").forEach(p=>p.classList.remove("active"));
+    el.classList.add("active");
+    adpPos = el.dataset.pos;
+    renderAdp();
+  });
+});
+
+// ---------- STOCK MARKET TAB ----------
+function sparkSeries(current, trendPct){
+  const start = current / (1 + trendPct/100);
+  const n = 8;
+  const pts = [];
+  for(let i=0;i<n;i++){
+    const t = i/(n-1);
+    const base = start + (current-start)*t;
+    const wobble = Math.sin(i*1.7 + current) * current * 0.02;
+    pts.push(Math.max(1, base + wobble));
+  }
+  pts[n-1] = current;
+  return pts;
+}
+function renderStockCard(p, kind){
+  const trend = trendOf(p);
+  const cls = trend >= 0 ? "trend-up" : "trend-down";
+  const arrow = trend >= 0 ? "▲" : "▼";
+  const div = document.createElement("div");
+  div.className = "stock-card";
+  div.innerHTML = '<div class="flex justify-between items-start mb-1">'
+    + '<div><div class="font-medium text-sm">'+p.n+'</div>'
+    + '<div class="text-[10px] text-[var(--text-faint)]"><span class="pos-badge pos-'+p.p+'">'+p.p+'</span> '+p.t+'</div></div>'
+    + '<div class="text-right"><div class="mono text-sm">'+price(p.v)+'</div>'
+    + '<div class="mono text-xs '+cls+'">'+arrow+' '+fmtPct(trend)+'</div></div></div>'
+    + (p.note ? '<div class="text-[10px] text-[var(--text-faint)] italic mt-1 mb-1">'+p.note+'</div>' : "")
+    + '<canvas></canvas>';
+  const grid = document.getElementById(kind==="riser" ? "risersGrid" : "fallersGrid");
+  grid.appendChild(div);
+  if (typeof Chart === "undefined") return;
+  try {
+    const ctx = div.querySelector("canvas").getContext("2d");
+    const series = sparkSeries(p.v, trend);
+    new Chart(ctx, {
+      type: "line",
+      data: { labels: series.map((_,i)=>i), datasets: [{ data: series, borderColor: trend>=0 ? "#00d97e" : "#ff3b30", borderWidth: 2, pointRadius: 0, tension: 0.35, fill:false }] },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}, tooltip:{enabled:false}}, scales:{x:{display:false}, y:{display:false}} }
+    });
+  } catch (e) { /* chart.js unavailable — sparkline is decorative, card still renders */ }
+}
+function renderStock(){
+  document.getElementById("risersGrid").innerHTML = "";
+  document.getElementById("fallersGrid").innerHTML = "";
+  const withTrend = PLAYERS.map(p => Object.assign({}, p, {_t: trendOf(p)}));
+  const risers = [...withTrend].sort((a,b)=>b._t-a._t).slice(0,8);
+  const fallers = [...withTrend].sort((a,b)=>a._t-b._t).slice(0,8);
+  risers.forEach(p => renderStockCard(p, "riser"));
+  fallers.forEach(p => renderStockCard(p, "faller"));
+
+  const newsGrid = document.getElementById("newsGrid");
+  newsGrid.innerHTML = NEWS.map(a =>
+    '<a href="'+a.u+'" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">'
+    + '<h4 class="font-semibold text-sm">'+a.h+'</h4>'
+    + '<p class="text-[11px] text-[var(--text-dim)] mt-2 leading-relaxed">'+a.s+'</p>'
+    + '<div class="text-[9px] text-[var(--accent)] mt-2 uppercase tracking-wider">ESPN →</div></a>'
+  ).join("");
+}
+
+// ---------- GLOBAL TICKER + HERO STATS ----------
+function renderTicker(){
+  const withTrend = PLAYERS.map(p => Object.assign({}, p, {_t: trendOf(p)}));
+  const sorted = [...withTrend].sort((a,b)=>Math.abs(b._t)-Math.abs(a._t)).slice(0,14);
+  const ticker = document.getElementById("globalTicker");
+  ticker.innerHTML = sorted.map(p => {
+    const cls = p._t>=0 ? "text-[var(--green)]" : "text-[var(--red)]";
+    const arrow = p._t>=0 ? "▲" : "▼";
+    return '<span class="mx-6"><span class="text-[var(--text-faint)]">'+p.n+'</span> <span class="text-[var(--text)]">'+price(p.v)+'</span> <span class="'+cls+'">'+arrow+' '+fmtPct(p._t)+'</span></span>';
+  }).join("") + '<span class="mx-6 text-[var(--accent)]">► SEE THE STOCK MARKET TAB FOR FULL RISERS &amp; FALLERS</span>';
+
+  const riser = sorted.filter(p=>p._t>=0).sort((a,b)=>b._t-a._t)[0];
+  const faller = sorted.filter(p=>p._t<0).sort((a,b)=>a._t-b._t)[0];
+  document.getElementById("statAssetCount").textContent = PLAYERS.length;
+  if(riser){ document.getElementById("statRiser").textContent = riser.n; document.getElementById("statRiserPct").textContent = fmtPct(riser._t) + " · " + price(riser.v); }
+  if(faller){ document.getElementById("statFaller").textContent = faller.n; document.getElementById("statFallerPct").textContent = fmtPct(faller._t) + " · " + price(faller.v); }
+}
+
+// ---------- TRADE CALCULATOR ----------
+const ASSETS = [
+  ...PLAYERS.map(p => ({ key:"p_"+p.n, label:p.n, sub:p.p+" · "+p.t, value:p.v })),
+  ...PICKS.map(pk => ({ key:"k_"+pk.id, label:pk.label, sub:"Rookie Pick", value:pk.v })),
+].sort((a,b)=>b.value-a.value);
+
+let sideA = [];
+let sideB = [];
+
+function setupCombo(inputId, listId, sideGetter, sideSetter){
+  const input = document.getElementById(inputId);
+  const list = document.getElementById(listId);
+  input.addEventListener("input", () => {
+    const q = input.value.trim().toLowerCase();
+    if(!q){ list.classList.remove("open"); list.innerHTML=""; return; }
+    const matches = ASSETS.filter(a => a.label.toLowerCase().includes(q)).slice(0,8);
+    list.innerHTML = matches.map(a =>
+      '<div class="combo-item" data-key="'+a.key+'"><span>'+a.label+' <span class="text-[var(--text-faint)]">— '+a.sub+'</span></span><span class="mono text-[var(--text-faint)]">'+price(a.value)+'</span></div>'
+    ).join("");
+    list.classList.toggle("open", matches.length>0);
+    list.querySelectorAll(".combo-item").forEach(el => {
+      el.addEventListener("click", () => {
+        const asset = ASSETS.find(a=>a.key===el.dataset.key);
+        sideSetter([...sideGetter(), asset]);
+        input.value = "";
+        list.innerHTML = "";
+        list.classList.remove("open");
+        renderTrade();
+      });
+    });
+  });
+  document.addEventListener("click", (e) => {
+    if(!input.contains(e.target) && !list.contains(e.target)) list.classList.remove("open");
+  });
+}
+setupCombo("searchA","listA", ()=>sideA, (v)=>sideA=v);
+setupCombo("searchB","listB", ()=>sideB, (v)=>sideB=v);
+
+function renderChips(side, containerId, emptyId, sideSetter){
+  const el = document.getElementById(containerId);
+  el.innerHTML = side.map((a,i) =>
+    '<div class="asset-chip"><span>'+a.label+' <span class="text-[var(--text-faint)]">'+price(a.value)+'</span></span><button data-i="'+i+'">✕</button></div>'
+  ).join("");
+  document.getElementById(emptyId).style.display = side.length ? "none" : "block";
+  el.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const i = parseInt(btn.dataset.i,10);
+      const next = side.slice(); next.splice(i,1);
+      sideSetter(next);
+      renderTrade();
+    });
+  });
+}
+function renderTrade(){
+  renderChips(sideA, "chipsA", "emptyA", (v)=>sideA=v);
+  renderChips(sideB, "chipsB", "emptyB", (v)=>sideB=v);
+  const totalA = sideA.reduce((s,a)=>s+a.value,0);
+  const totalB = sideB.reduce((s,a)=>s+a.value,0);
+  document.getElementById("totalA").textContent = price(totalA);
+  document.getElementById("totalB").textContent = price(totalB);
+  const sum = totalA + totalB;
+  const pctA = sum ? (totalA/sum*100) : 50;
+  document.getElementById("barA").style.width = pctA + "%";
+  document.getElementById("barB").style.width = (100-pctA) + "%";
+
+  const verdict = document.getElementById("verdictText");
+  const sub = document.getElementById("verdictSub");
+  if(sideA.length===0 && sideB.length===0){
+    verdict.textContent = "Add assets to both sides to evaluate this trade";
+    sub.textContent = "";
+    return;
+  }
+  const diff = totalA - totalB;
+  const diffPct = sum ? Math.abs(diff)/Math.max(totalA,totalB,1)*100 : 0;
+  if(diffPct < 6){
+    verdict.innerHTML = '<span class="text-[var(--green)]">Fair Trade</span>';
+    sub.textContent = "Within " + diffPct.toFixed(1) + "% — both sides give up roughly equal value.";
+  } else {
+    const winner = diff > 0 ? "Side A" : "Side B";
+    const label = diffPct < 15 ? "Slight Edge to " : "Lopsided Toward ";
+    verdict.innerHTML = '<span class="text-[var(--amber)]">'+label+winner+'</span>';
+    sub.textContent = winner + " receives " + diffPct.toFixed(1) + "% more value in this deal.";
+  }
+}
+function resetTrade(){ sideA=[]; sideB=[]; renderTrade(); }
+
+// ---------- TABS ----------
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+    tab.classList.add("active");
+    document.getElementById("tab-" + tab.dataset.tab).classList.remove("hidden");
+  });
+});
+
+// ---------- CLOCK ----------
+function updateClock(){
+  const d = new Date();
+  document.getElementById("liveTime").textContent = d.toLocaleTimeString("en-US", { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ---------- INIT ----------
+renderRankings();
+renderAdp();
+renderStock();
+renderTicker();
+renderTrade();
+</script>
+</body>
+</html>
