@@ -479,7 +479,7 @@ const PLAYERS = [
 {n:"Jalen Hurts",p:"QB",t:"PHI",a:27,x:7,v:850},
 {n:"Joe Burrow",p:"QB",t:"CIN",a:29,x:7,v:835},
 {n:"Patrick Mahomes",p:"QB",t:"KC",a:30,x:10,v:815},
-{n:"Drake Maye",p:"QB",t:"NE",a:23,x:3,v:800,tp:22,note:"A stacked new-look WR room (A.J. Brown + Stefon Diggs) fuels late helium."},
+{n:"Drake Maye",p:"QB",t:"NE",a:23,x:3,v:800,tp:22,note:"A.J. Brown gives him a real WR1; helium after a strong camp."},
 {n:"C.J. Stroud",p:"QB",t:"HOU",a:24,x:4,v:760,tp:-14,note:"ESPN camp coverage flags him as Houston's biggest question mark entering the season."},
 {n:"Caleb Williams",p:"QB",t:"CHI",a:24,x:3,v:740},
 {n:"Justin Herbert",p:"QB",t:"LAC",a:28,x:7,v:730},
@@ -552,6 +552,10 @@ const PLAYERS = [
 {n:"Jaydon Blue",p:"RB",t:"DAL",a:22,x:2,v:340},
 {n:"Braelon Allen",p:"RB",t:"NYJ",a:22,x:3,v:320},
 {n:"Trevor Etienne",p:"RB",t:"CAR",a:22,x:2,v:300},
+{n:"Jonathon Brooks",p:"RB",t:"CAR",a:23,x:3,v:310},
+{n:"D'Andre Swift",p:"RB",t:"CHI",a:27,x:7,v:320},
+{n:"Rico Dowdle",p:"RB",t:"PIT",a:28,x:7,v:260},
+{n:"Kenny Gainwell",p:"RB",t:"TB",a:27,x:6,v:200},
 {n:"Devin Singletary",p:"RB",t:"NYG",a:28,x:8,v:260},
 {n:"Justice Hill",p:"RB",t:"BAL",a:28,x:8,v:240},
 {n:"Blake Corum",p:"RB",t:"LAR",a:25,x:3,v:310},
@@ -599,8 +603,9 @@ const PLAYERS = [
 {n:"Jayden Reed",p:"WR",t:"GB",a:26,x:4,v:560},
 {n:"Emeka Egbuka",p:"WR",t:"TB",a:23,x:2,v:560},
 {n:"Terry McLaurin",p:"WR",t:"WSH",a:30,x:8,v:540},
+{n:"Rashee Rice",p:"WR",t:"KC",a:26,x:4,v:540},
 {n:"Matthew Golden",p:"WR",t:"GB",a:22,x:2,v:520},
-{n:"Stefon Diggs",p:"WR",t:"NE",a:32,x:11,v:520,tp:9,note:"Landed in New England alongside A.J. Brown — suddenly one of the league's best WR rooms."},
+{n:"Stefon Diggs",p:"WR",t:"FA",a:32,x:11,v:320,tp:-20,note:"Unsigned as of late July, deep into camp — no team means no clear role. Track his signing before valuing him higher."},
 {n:"Jaylin Noel",p:"WR",t:"HOU",a:23,x:2,v:480},
 {n:"Deebo Samuel",p:"WR",t:"WSH",a:29,x:8,v:470,note:"Now a Commander, sharing targets with McLaurin in Jayden Daniels' offense."},
 {n:"Jayden Higgins",p:"WR",t:"HOU",a:23,x:2,v:470},
@@ -613,6 +618,7 @@ const PLAYERS = [
 {n:"KC Concepcion",p:"WR",t:"CLE",a:21,x:0,v:420,note:"2026 rookie thrown into Cleveland's rebuilt WR room."},
 {n:"Carnell Tate",p:"WR",t:"TEN",a:21,x:0,v:410,note:"2026 rookie with a clear path to targets in Tennessee."},
 {n:"Ricky Pearsall",p:"WR",t:"SF",a:25,x:3,v:420},
+{n:"Chris Godwin Jr.",p:"WR",t:"TB",a:30,x:10,v:420},
 {n:"Jordyn Tyson",p:"WR",t:"NO",a:21,x:0,v:400,note:"2026 rookie penciled in as a WR1-in-waiting for New Orleans."},
 {n:"Josh Downs",p:"WR",t:"IND",a:24,x:4,v:400},
 {n:"Marvin Mims Jr.",p:"WR",t:"DEN",a:24,x:4,v:390},
@@ -724,9 +730,10 @@ const BY_ADP = [...RANKED]
 // redraft only cares about this season's actual production, not long-term upside.
 const REDRAFT_ADJ = {
   "Christian McCaffrey":60, "Derrick Henry":40, "Travis Kelce":40, "Davante Adams":30, "Mike Evans":30,
-  "Aaron Jones Sr.":20, "Alvin Kamara":30, "Stefon Diggs":20, "Joe Mixon":15,
+  "Aaron Jones Sr.":20, "Alvin Kamara":30, "Joe Mixon":15,
   "Daniel Jones":50, "Kyler Murray":20, "Anthony Richardson Sr.":-60, "Tua Tagovailoa":-30,
-  "Michael Penix Jr.":-20, "J.J. McCarthy":-40, "Tyreek Hill":-20
+  "Michael Penix Jr.":-20, "J.J. McCarthy":-40, "Tyreek Hill":-20,
+  "Marvin Harrison Jr.":-300, "Trey McBride":-60
 };
 function redraftValueOf(p){
   let rv = p.v;
