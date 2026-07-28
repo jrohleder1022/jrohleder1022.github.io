@@ -256,7 +256,7 @@
       </div>
       <div class="hidden md:block w-px h-10 bg-[var(--border-bright)]"></div>
       <div class="hidden md:flex gap-6 text-xs">
-        <div><span class="text-[var(--text-faint)]">ACCT</span> <span class="text-[var(--accent)]">237971896</span></div>
+        <div><span class="text-[var(--text-faint)]">ACCT</span> <span class="text-[var(--accent)]">••••••</span></div>
         <div><span class="text-[var(--text-faint)]">VINT</span> 2026</div>
         <div><span class="text-[var(--text-faint)]">LIMIT</span> $7,000</div>
       </div>
@@ -284,16 +284,8 @@
 
 <!-- Ticker tape -->
 <div class="ticker-tape py-2 text-xs">
-  <div class="ticker-content">
-    <span class="mx-6"><span class="text-[var(--text-faint)]">GOOGL</span> <span class="text-[var(--text)]">$396.78</span> <span class="text-[var(--red)]">−1.07%</span></span>
-    <span class="mx-6"><span class="text-[var(--text-faint)]">NVDA</span> <span class="text-[var(--text)]">$225.32</span> <span class="text-[var(--red)]">−4.43%</span></span>
-    <span class="mx-6"><span class="text-[var(--text-faint)]">AMZN</span> <span class="text-[var(--text)]">$264.14</span> <span class="text-[var(--red)]">−1.16%</span></span>
-    <span class="mx-6"><span class="text-[var(--text-faint)]">NOW</span> <span class="text-[var(--text)]">$95.07</span> <span class="text-[var(--green)]">+5.04%</span></span>
-    <span class="mx-6 text-[var(--amber)]">⚠ CONCENTRATION RISK: 77.7% IN 2 NAMES</span>
-    <span class="mx-6"><span class="text-[var(--text-faint)]">SPX</span> <span class="text-[var(--text)]">−</span></span>
-    <span class="mx-6"><span class="text-[var(--text-faint)]">QQQ</span> <span class="text-[var(--text)]">−</span></span>
-    <span class="mx-6 text-[var(--accent)]">► UPDATE PRICES MANUALLY IN POSITIONS TAB</span>
-  </div>
+  <!-- Rendered from live state by renderTicker() — never hardcode holdings here. -->
+  <div class="ticker-content" id="tickerContent"></div>
 </div>
 
 <main class="max-w-[1400px] mx-auto px-6 py-8">
@@ -565,12 +557,11 @@
         <div class="display-font text-4xl mt-2" id="hhiBig">3,338</div>
         <div class="divider my-4"></div>
         <p class="text-xs text-[var(--text-dim)] leading-relaxed">
-          HHI = Σ(weight²) × 10,000. A diversified index ETF scores ~50-200. Your portfolio of 4 stocks scores in the "highly concentrated" range (&gt;2,500). 
+          HHI = Σ(weight²) × 10,000. A diversified index ETF scores ~50-200. Anything
+          &gt;2,500 is "highly concentrated." <span id="hhiVerdict"></span>
           Maximum possible (all-in-one-stock) = 10,000.
         </p>
-        <div class="mt-4 text-[10px] mono text-[var(--text-faint)]">
-          GOOGL² + NVDA² + AMZN² + NOW² = 0.42² + 0.36² + 0.17² + 0.06² ≈ 0.334
-        </div>
+        <div class="mt-4 text-[10px] mono text-[var(--text-faint)]" id="hhiWorkings"></div>
       </div>
 
       <div class="card p-6">
@@ -578,8 +569,8 @@
         <div class="display-font text-4xl mt-2" id="effectiveN">2.99</div>
         <div class="divider my-4"></div>
         <p class="text-xs text-[var(--text-dim)] leading-relaxed">
-          N_eff = 1 / Σ(weight²). Tells you how many "equal-weight" stocks your portfolio behaves like. 
-          You hold 4 names but they function like ~3 equally-weighted bets because of your concentration.
+          N_eff = 1 / Σ(weight²). Tells you how many "equal-weight" stocks your portfolio behaves like.
+          <span id="nEffVerdict"></span>
         </p>
       </div>
 
@@ -624,7 +615,7 @@
     <div class="card-elevated p-5 mb-6 border-l-2" style="border-left-color: var(--accent);">
       <div class="text-[10px] tracking-[0.2em] uppercase text-[var(--accent)] mb-2">Why a Macro Desk Matters For You</div>
       <p class="text-sm text-[var(--text-dim)] leading-relaxed">
-        You hold 77% in two AI/tech names. Tech is the <strong class="text-[var(--text)]">highest-duration equity asset class</strong> — meaning rates and inflation hit it hardest. When the 10-year yield rises 50bps, NVDA and GOOGL typically drop 5-10% before earnings even change. You don't need to predict the Fed. You just need to <strong class="text-[var(--text)]">know what's coming and how it's priced</strong>.
+        <span id="macroWhyConcentration"></span> Tech is the <strong class="text-[var(--text)]">highest-duration equity asset class</strong> — meaning rates and inflation hit it hardest. When the 10-year yield rises 50bps, high-multiple growth names typically drop 5-10% before earnings even change. You don't need to predict the Fed. You just need to <strong class="text-[var(--text)]">know what's coming and how it's priced</strong>.
       </p>
     </div>
 
@@ -804,7 +795,7 @@
         </div>
         <div class="card p-4 hover:border-[var(--accent)] transition-colors">
           <h4 class="font-semibold mb-1">DXY (Dollar Index)</h4>
-          <p class="text-[11px] text-[var(--text-dim)] mb-3">Strong $ hurts GOOGL/AMZN intl revenue. Watch for 105+.</p>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Strong $ hurts international revenue at large-cap tech. Watch for 105+.</p>
           <a href="https://fred.stlouisfed.org/series/DTWEXBGS" target="_blank" rel="noopener" class="btn-ghost text-[10px]">FRED →</a>
         </div>
         <div class="card p-4 hover:border-[var(--accent)] transition-colors">
@@ -846,7 +837,7 @@
         </div>
         <div class="card p-4 hover:border-[var(--accent)] transition-colors">
           <h4 class="font-semibold mb-1">UMich Consumer Sentiment</h4>
-          <p class="text-[11px] text-[var(--text-dim)] mb-3">Spending intent. Drops = AMZN concerns.</p>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Spending intent. Drops pressure consumer-exposed names.</p>
           <a href="http://www.sca.isr.umich.edu/" target="_blank" rel="noopener" class="btn-ghost text-[10px]">UMich →</a>
         </div>
         <div class="card p-4 hover:border-[var(--accent)] transition-colors">
@@ -856,7 +847,7 @@
         </div>
         <div class="card p-4 hover:border-[var(--accent)] transition-colors">
           <h4 class="font-semibold mb-1">Retail Sales</h4>
-          <p class="text-[11px] text-[var(--text-dim)] mb-3">Direct AMZN read-through. Census Bureau monthly.</p>
+          <p class="text-[11px] text-[var(--text-dim)] mb-3">Direct read-through for consumer/retail names. Census Bureau monthly.</p>
           <a href="https://www.census.gov/retail/index.html" target="_blank" rel="noopener" class="btn-ghost text-[10px]">Census →</a>
         </div>
         <div class="card p-4 hover:border-[var(--accent)] transition-colors">
@@ -927,24 +918,8 @@
         <div class="flex-1 h-px bg-[var(--border)]"></div>
       </div>
 
-      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
-        <a href="https://abc.xyz/investor/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
-          <h4 class="font-semibold">GOOGL — Alphabet IR</h4>
-          <p class="text-[10px] text-[var(--text-dim)] mt-2">Earnings late Jan / Apr / Jul / Oct</p>
-        </a>
-        <a href="https://investor.nvidia.com/home/default.aspx" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
-          <h4 class="font-semibold">NVDA — Nvidia IR</h4>
-          <p class="text-[10px] text-[var(--text-dim)] mt-2">Earnings late Feb / May / Aug / Nov</p>
-        </a>
-        <a href="https://ir.aboutamazon.com/" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
-          <h4 class="font-semibold">AMZN — Amazon IR</h4>
-          <p class="text-[10px] text-[var(--text-dim)] mt-2">Earnings early Feb / Apr / Jul / Oct</p>
-        </a>
-        <a href="https://www.servicenow.com/company/investor-relations.html" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
-          <h4 class="font-semibold">NOW — ServiceNow IR</h4>
-          <p class="text-[10px] text-[var(--text-dim)] mt-2">Earnings late Jan / Apr / Jul / Oct</p>
-        </a>
-      </div>
+      <!-- Rendered from live holdings by renderEarningsWatch() -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3" id="earningsWatch"></div>
     </div>
 
     <!-- Observation Logger -->
@@ -1361,14 +1336,17 @@ function detectStorage() {
 }
 detectStorage();
 
+// PLACEHOLDER DATA ONLY — this file is published publicly via GitHub Pages, so no
+// real holdings, quantities, or cost basis belong here. Load your actual book with
+// "↑ Restore" (a local JSON backup); it lives in browser storage on your device only.
 const defaultState = {
   positions: [
-    { symbol: 'GOOGL', qty: 20.016, avgCost: 278.55, lastPrice: 396.78, target: 25 },
-    { symbol: 'NVDA',  qty: 30.005, avgCost: 159.02, lastPrice: 225.32, target: 25 },
-    { symbol: 'AMZN',  qty: 12,     avgCost: 242.91, lastPrice: 264.14, target: 20 },
-    { symbol: 'NOW',   qty: 11,     avgCost: 92.62,  lastPrice: 95.07,  target: 15 },
+    { symbol: 'AAA', qty: 10, avgCost: 100, lastPrice: 110, target: 25 },
+    { symbol: 'BBB', qty: 10, avgCost: 100, lastPrice: 105, target: 25 },
+    { symbol: 'CCC', qty: 10, avgCost: 100, lastPrice: 95,  target: 25 },
+    { symbol: 'DDD', qty: 10, avgCost: 100, lastPrice: 90,  target: 25 },
   ],
-  cash: 0.72,
+  cash: 0,
   contributions: [],
   transactions: [],
   macroLog: [],
@@ -1553,8 +1531,15 @@ function getCurrentPrice(symbol) {
 // ==========================================
 // RENDERING
 // ==========================================
-function fmt(n) { return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-function fmtShort(n) { return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+// Sign goes outside the $ ("−$107.03"), not inside it ("$-107.03").
+function fmt(n) {
+  const s = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (n < 0 ? '−$' : '$') + s;
+}
+function fmtShort(n) {
+  const s = Math.abs(n).toLocaleString('en-US', { maximumFractionDigits: 0 });
+  return (n < 0 ? '−$' : '$') + s;
+}
 function fmtPct(n, decimals = 2) { return n.toFixed(decimals) + '%'; }
 
 function renderPositions() {
@@ -1923,8 +1908,102 @@ function renderScorecard() {
     ? `${macroPos}/${macroEntries.length} (${(macroPos / macroEntries.length * 100).toFixed(0)}%)` : '—';
 }
 
+// Scrolling ticker built from whatever book is currently loaded. Uses dayChangePct
+// when a live fetch supplied it, otherwise falls back to total return vs cost basis.
+function renderTicker() {
+  const el = document.getElementById('tickerContent');
+  if (!el) return;
+  const t = calcTotals();
+  const open = t.positions.filter(p => p.qty > 0.001);
+  let html = '';
+  open.forEach(p => {
+    const hasDay = typeof p.dayChangePct === 'number';
+    const pct = hasDay ? p.dayChangePct : p.plPct;
+    const color = pct >= 0 ? 'var(--green)' : 'var(--red)';
+    const tag = hasDay ? '' : ' <span style="opacity:.5;font-size:9px">TOT</span>';
+    html += `<span class="mx-6"><span class="text-[var(--text-faint)]">${p.symbol}</span> `
+         +  `<span class="text-[var(--text)]">${fmt(p.lastPrice)}</span> `
+         +  `<span style="color:${color}">${pct >= 0 ? '+' : '−'}${Math.abs(pct).toFixed(2)}%</span>${tag}</span>`;
+  });
+  // Live concentration warning — recomputed, not a stale hardcoded string.
+  const top2 = open.map(p => p.value / t.totalValue).sort((a, b) => b - a).slice(0, 2)
+                   .reduce((s, w) => s + w, 0) * 100;
+  if (top2 > 50) {
+    html += `<span class="mx-6 text-[var(--amber)]">⚠ CONCENTRATION RISK: ${top2.toFixed(1)}% IN TOP 2 NAMES</span>`;
+  }
+  html += `<span class="mx-6 text-[var(--text-faint)]">HHI ${Math.round(t.hhi).toLocaleString()}</span>`;
+  html += `<span class="mx-6 text-[var(--text-faint)]">N_eff ${t.nEff.toFixed(2)}</span>`;
+  html += '<span class="mx-6 text-[var(--accent)]">► ⚡ FETCH LIVE OR ✎ MANUAL TO UPDATE PRICES</span>';
+  el.innerHTML = html;
+}
+
+// Investor-relations links for names the user actually holds. Unknown tickers get a
+// search fallback rather than being dropped, so a new position never silently vanishes.
+const IR_LINKS = {
+  GOOGL: ['Alphabet',   'https://abc.xyz/investor/',                                   'late Jan / Apr / Jul / Oct'],
+  META:  ['Meta',       'https://investor.atmeta.com/',                                'late Jan / Apr / Jul / Oct'],
+  NOW:   ['ServiceNow', 'https://www.servicenow.com/company/investor-relations.html',  'late Jan / Apr / Jul / Oct'],
+  NVDA:  ['Nvidia',     'https://investor.nvidia.com/home/default.aspx',               'late Feb / May / Aug / Nov'],
+  SNPS:  ['Synopsys',   'https://investor.synopsys.com/',                              'Feb / May / Aug / Dec'],
+  VST:   ['Vistra',     'https://investors.vistracorp.com/',                           'late Feb / May / Aug / Nov'],
+  AMZN:  ['Amazon',     'https://ir.aboutamazon.com/',                                 'early Feb / Apr / Jul / Oct'],
+  QNT:   ['Quantum-Si', 'https://ir.quantum-si.com/',                                  'varies'],
+  SYM:   ['Symbotic',   'https://ir.symbotic.com/',                                    'varies'],
+};
+
+function renderEarningsWatch() {
+  const el = document.getElementById('earningsWatch');
+  if (!el) return;
+  const open = calcTotals().positions.filter(p => p.qty > 0.001);
+  if (open.length === 0) { el.innerHTML = '<div class="text-xs text-[var(--text-faint)]">No positions loaded.</div>'; return; }
+  el.innerHTML = open.map(p => {
+    const meta = IR_LINKS[p.symbol];
+    const name = meta ? meta[0] : p.symbol;
+    const href = meta ? meta[1] : `https://www.google.com/search?q=${encodeURIComponent(p.symbol + ' investor relations')}`;
+    const when = meta ? meta[2] : 'check IR page';
+    return `<a href="${href}" target="_blank" rel="noopener" class="card p-4 hover:border-[var(--accent)] transition-colors block">
+        <h4 class="font-semibold">${p.symbol} — ${name} IR</h4>
+        <p class="text-[10px] text-[var(--text-dim)] mt-2">Earnings ${when}</p>
+      </a>`;
+  }).join('');
+}
+
+// Concentration prose that reflects the book actually loaded, rather than a stale
+// sentence that silently goes wrong the moment positions change.
+function renderConcentrationCopy() {
+  const t = calcTotals();
+  const open = t.positions.filter(p => p.qty > 0.001);
+  const n = open.length;
+
+  const verdict = document.getElementById('hhiVerdict');
+  if (verdict) {
+    const band = t.hhi > 2500 ? 'highly concentrated' : t.hhi > 1500 ? 'moderately concentrated' : 'reasonably diversified';
+    verdict.textContent = `Your ${n} ${n === 1 ? 'name' : 'names'} score ${Math.round(t.hhi).toLocaleString()} — ${band}.`;
+  }
+
+  const workings = document.getElementById('hhiWorkings');
+  if (workings) {
+    const terms = open.map(p => `${p.symbol}²`).join(' + ');
+    const nums  = open.map(p => (p.value / t.totalValue).toFixed(2) + '²').join(' + ');
+    workings.textContent = open.length ? `${terms} = ${nums} ≈ ${(t.hhi / 10000).toFixed(3)}` : '';
+  }
+
+  const nEffEl = document.getElementById('nEffVerdict');
+  if (nEffEl) {
+    nEffEl.textContent = `You hold ${n} ${n === 1 ? 'name' : 'names'}, but they function like ~${t.nEff.toFixed(1)} equally-weighted bets.`;
+  }
+
+  const why = document.getElementById('macroWhyConcentration');
+  if (why) {
+    const top2 = open.map(p => p.value / t.totalValue).sort((a, b) => b - a).slice(0, 2)
+                     .reduce((s, w) => s + w, 0) * 100;
+    why.textContent = `You hold ${top2.toFixed(0)}% in your top two names.`;
+  }
+}
+
 function renderAll() {
   renderHero();
+  renderTicker();
   renderRisk();
   renderPositions();
   renderContributions();
@@ -1935,6 +2014,8 @@ function renderAll() {
   renderPriceForm();
   renderSellSymbols();
   renderMacro();
+  renderEarningsWatch();
+  renderConcentrationCopy();
   updateStorageBadge();
   renderStorageWarning();
   updateLastFetchInfo();
