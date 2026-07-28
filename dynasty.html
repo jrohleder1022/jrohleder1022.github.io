@@ -175,10 +175,15 @@
   <section id="tab-rankings" class="tab-content">
     <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
       <div>
-        <h2 class="display-font text-2xl">Dynasty Rankings</h2>
-        <p class="text-xs text-[var(--text-faint)] mt-1">12-team, PPR, 1QB — ranked by Dynasty Desk Value (DDV). Click <span class="text-[var(--accent)]">Strategy Hub</span> for methodology.</p>
+        <h2 class="display-font text-2xl" id="rankTitle">Dynasty Rankings</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1" id="rankDesc">12-team, PPR, 1QB — ranked by Dynasty Desk Value (DDV). Click <span class="text-[var(--accent)]">Strategy Hub</span> for methodology.</p>
       </div>
       <input id="rankSearch" type="text" placeholder="Search player…" style="width:220px" />
+    </div>
+    <div class="flex items-center gap-2 flex-wrap mb-3">
+      <span class="text-[9px] uppercase tracking-wider text-[var(--text-faint)] mr-1">Format</span>
+      <div class="pill active mode-pill" data-mode="dynasty">Dynasty</div>
+      <div class="pill mode-pill" data-mode="redraft">Redraft · Regular PPR</div>
     </div>
     <div class="flex gap-2 flex-wrap mb-4" id="rankPosFilter">
       <div class="pill active" data-pos="ALL">All</div>
@@ -190,7 +195,7 @@
     <div class="card overflow-x-auto">
       <table>
         <thead>
-          <tr><th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>Age</th><th>Tier</th><th>DDV</th><th>30d</th></tr>
+          <tr><th>#</th><th>Player</th><th>Pos</th><th>Team</th><th>Age</th><th>Tier</th><th id="rankValueHeader">DDV</th><th>30d</th></tr>
         </thead>
         <tbody id="rankBody"></tbody>
       </table>
@@ -253,12 +258,17 @@
   <section id="tab-adp" class="tab-content hidden">
     <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
       <div>
-        <h2 class="display-font text-2xl">Startup Draft ADP</h2>
-        <p class="text-xs text-[var(--text-faint)] mt-1">Projected pick-by-pick order for a fresh 12-team, PPR, 1QB startup draft. <span class="rookie-badge">R</span> marks true rookies.</p>
+        <h2 class="display-font text-2xl" id="adpTitle">Startup Draft ADP</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1" id="adpDesc">Projected pick-by-pick order for a fresh 12-team, PPR, 1QB startup draft. <span class="rookie-badge">R</span> marks true rookies.</p>
       </div>
       <label class="flex items-center gap-2 text-xs text-[var(--text-dim)] cursor-pointer select-none">
         <input type="checkbox" id="rookieOnly" style="width:auto;"> Rookies only
       </label>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap mb-3">
+      <span class="text-[9px] uppercase tracking-wider text-[var(--text-faint)] mr-1">Format</span>
+      <div class="pill active mode-pill" data-mode="dynasty">Dynasty</div>
+      <div class="pill mode-pill" data-mode="redraft">Redraft · Regular PPR</div>
     </div>
     <div class="flex gap-2 flex-wrap mb-4" id="adpPosFilter">
       <div class="pill active" data-pos="ALL">All</div>
@@ -320,6 +330,9 @@
       <div class="text-[10px] tracking-[0.2em] uppercase text-[var(--accent)] mb-2">How To Read This Site</div>
       <p class="text-sm text-[var(--text-dim)] leading-relaxed">
         Every ranking on this site is expressed as <strong class="text-[var(--text)]">Dynasty Desk Value (DDV)</strong>, a 0–1000 scale editorial model built for this format only: 12 teams, PPR, one starting QB. It blends age, situation, opportunity and current NFL news (rosters and headlines pulled live via ESPN) into a single number. It is <strong class="text-[var(--text)]">not</strong> a scrape of KeepTradeCut, FantasyCalc, or any other live market — treat it as one well-reasoned opinion, refreshed as of <span class="text-[var(--text)]">July 28, 2026</span>, and sanity-check big decisions against the live consensus tools linked below.
+      </p>
+      <p class="text-sm text-[var(--text-dim)] leading-relaxed mt-3">
+        The <strong class="text-[var(--text)]">Rankings</strong> and <strong class="text-[var(--text)]">Startup ADP</strong> tabs both have a <strong class="text-[var(--accent)]">Dynasty / Redraft</strong> format toggle. Dynasty weighs age and long-term outlook; Redraft (regular, season-long, 12-team PPR) ignores age entirely and ranks purely on this year's expected role — proven veterans move up, unproven rookies and unclear backfields move down.
       </p>
     </div>
 
@@ -394,6 +407,7 @@
         <div class="card p-4"><span class="glossary-term">Contender Window</span> — the 1–2 seasons a roster's talent and age are best suited to win a championship.</div>
         <div class="card p-4"><span class="glossary-term">Buy-Low / Sell-High</span> — acquiring an undervalued asset before its price recovers, or trading an overvalued one before it falls.</div>
         <div class="card p-4"><span class="glossary-term">Handcuff</span> — the backup running back who would inherit a starting role if the starter is hurt.</div>
+        <div class="card p-4"><span class="glossary-term">Redraft (Regular League)</span> — a season-long league that drafts a brand new roster every year; no keepers, no rookie picks, no dynasty value. Use the Redraft toggle on Rankings/ADP for this view.</div>
       </div>
     </div>
 
@@ -705,24 +719,70 @@ const BY_ADP = [...RANKED]
   .sort((a,b)=>a.adpRaw-b.adpRaw)
   .map((p,i)=>Object.assign({}, p, {adp:i+1}));
 
+// Redraft (regular, season-long) values: age stops being a penalty, proven veterans
+// with a real job get credit back, and unproven rookies/backups get discounted since
+// redraft only cares about this season's actual production, not long-term upside.
+const REDRAFT_ADJ = {
+  "Christian McCaffrey":60, "Derrick Henry":40, "Travis Kelce":40, "Davante Adams":30, "Mike Evans":30,
+  "Aaron Jones Sr.":20, "Alvin Kamara":30, "Stefon Diggs":20, "Joe Mixon":15,
+  "Daniel Jones":50, "Kyler Murray":20, "Anthony Richardson Sr.":-60, "Tua Tagovailoa":-30,
+  "Michael Penix Jr.":-20, "J.J. McCarthy":-40, "Tyreek Hill":-20
+};
+function redraftValueOf(p){
+  let rv = p.v;
+  if(p.p==="QB" && p.x>=5) rv += 40;
+  if(p.a>=30) rv += Math.min((p.a-29)*16, 85);
+  if(p.x<=1) rv -= 85;
+  rv += REDRAFT_ADJ[p.n] || 0;
+  return Math.max(20, Math.min(999, Math.round(rv)));
+}
+const RANKED_REDRAFT = [...PLAYERS]
+  .map(p => Object.assign({}, p, {v: redraftValueOf(p)}))
+  .sort((a,b)=>b.v-a.v)
+  .map((p,i)=>Object.assign({}, p, {rank:i+1}));
+const BY_ADP_REDRAFT = [...RANKED_REDRAFT].map((p,i)=>Object.assign({}, p, {adp:i+1}));
+
 function roundPick(adp){
   const round = Math.floor((adp-1)/12) + 1;
   const pick = ((adp-1) % 12) + 1;
   return round + "." + String(pick).padStart(2,"0");
 }
 
+// ---------- FORMAT TOGGLE (Dynasty / Redraft) ----------
+let leagueMode = "dynasty";
+function setLeagueMode(mode){
+  leagueMode = mode;
+  document.querySelectorAll(".mode-pill").forEach(el => el.classList.toggle("active", el.dataset.mode===mode));
+  const isDynasty = mode === "dynasty";
+  document.getElementById("rankTitle").textContent = isDynasty ? "Dynasty Rankings" : "Redraft Rankings";
+  document.getElementById("rankDesc").innerHTML = isDynasty
+    ? '12-team, PPR, 1QB — ranked by Dynasty Desk Value (DDV). Click <span class="text-[var(--accent)]">Strategy Hub</span> for methodology.'
+    : "12-team, PPR, 1QB, season-long — ranked purely on this season's expected production. Age and long-term outlook don't matter here.";
+  document.getElementById("rankValueHeader").textContent = isDynasty ? "DDV" : "RV";
+  document.getElementById("adpTitle").textContent = isDynasty ? "Startup Draft ADP" : "Redraft Draft ADP";
+  document.getElementById("adpDesc").innerHTML = isDynasty
+    ? 'Projected pick-by-pick order for a fresh 12-team, PPR, 1QB startup draft. <span class="rookie-badge">R</span> marks true rookies.'
+    : 'Projected pick-by-pick order for a 12-team, PPR, 1QB season-long redraft. <span class="rookie-badge">R</span> marks true rookies.';
+  renderRankings();
+  renderAdp();
+}
+document.querySelectorAll(".mode-pill").forEach(el => {
+  el.addEventListener("click", () => setLeagueMode(el.dataset.mode));
+});
+
 // ---------- RANKINGS TAB ----------
 let rankPos = "ALL";
 function renderRankings(){
   const q = document.getElementById("rankSearch").value.trim().toLowerCase();
   const body = document.getElementById("rankBody");
-  const rows = RANKED.filter(p => (rankPos==="ALL" || p.p===rankPos) && (!q || p.n.toLowerCase().includes(q)));
+  const source = leagueMode==="dynasty" ? RANKED : RANKED_REDRAFT;
+  const rows = source.filter(p => (rankPos==="ALL" || p.p===rankPos) && (!q || p.n.toLowerCase().includes(q)));
   body.innerHTML = rows.map(p => {
     const [tierLabel, tierCls] = tierOf(p.v);
     const trend = trendOf(p);
     const trendCls = trend >= 0 ? "trend-up" : "trend-down";
     const rookie = p.x === 0 ? '<span class="rookie-badge">R</span>' : "";
-    const note = p.note ? '<div class="text-[10px] text-[var(--text-faint)] italic mt-1">'+p.note+'</div>' : "";
+    const note = (p.note && leagueMode==="dynasty") ? '<div class="text-[10px] text-[var(--text-faint)] italic mt-1">'+p.note+'</div>' : "";
     return '<tr><td class="mono text-[var(--text-faint)]">'+p.rank+'</td>'
       + '<td><div class="font-medium">'+p.n+rookie+'</div>'+note+'</td>'
       + '<td><span class="pos-badge pos-'+p.p+'">'+p.p+'</span></td>'
@@ -732,7 +792,7 @@ function renderRankings(){
       + '<td class="mono">'+price(p.v)+'</td>'
       + '<td class="mono '+trendCls+'">'+fmtPct(trend)+'</td></tr>';
   }).join("");
-  document.getElementById("rankCount").textContent = rows.length + " of " + RANKED.length + " ranked assets shown";
+  document.getElementById("rankCount").textContent = rows.length + " of " + source.length + " ranked assets shown";
 }
 document.getElementById("rankSearch").addEventListener("input", renderRankings);
 document.querySelectorAll("#rankPosFilter .pill").forEach(el => {
@@ -749,7 +809,8 @@ let adpPos = "ALL";
 function renderAdp(){
   const rookieOnly = document.getElementById("rookieOnly").checked;
   const body = document.getElementById("adpBody");
-  const rows = BY_ADP.filter(p => (adpPos==="ALL" || p.p===adpPos) && (!rookieOnly || p.x===0));
+  const source = leagueMode==="dynasty" ? BY_ADP : BY_ADP_REDRAFT;
+  const rows = source.filter(p => (adpPos==="ALL" || p.p===adpPos) && (!rookieOnly || p.x===0));
   body.innerHTML = rows.map(p => {
     const rookie = p.x === 0 ? '<span class="rookie-badge">R</span>' : "";
     return '<tr><td class="mono text-[var(--accent)]">'+roundPick(p.adp)+'</td>'
