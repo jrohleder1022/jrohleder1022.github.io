@@ -400,6 +400,8 @@
     <div class="tab" data-tab="transactions">Transactions</div>
     <div class="tab" data-tab="analytics">Analytics</div>
     <div class="tab" data-tab="macro">Macro Desk</div>
+    <div class="tab" data-tab="futures">Futures &amp; O/N</div>
+    <div class="tab" data-tab="options">Options Sim</div>
     <div class="tab" data-tab="theory">Theory Reference</div>
   </nav>
 
@@ -960,6 +962,161 @@
   </section>
 
   <!-- Tab: Theory -->
+  <!-- Tab: Futures & Overnight -->
+  <section id="tab-futures" class="tab-content hidden">
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
+      <div>
+        <h2 class="display-font text-2xl">Futures &amp; Overnight Desk</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1">Equity index futures trade ~23h/day. They set where your book opens before you wake up.</p>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn-ghost" onclick="openModal('futuresModal')">✎ Update Levels</button>
+        <button class="btn-ghost" onclick="snapshotOvernight()" title="Store tonight's closing marks as the overnight baseline">⏱ Mark Close</button>
+      </div>
+    </div>
+
+    <div class="card-elevated p-4 mb-6 border-l-2" style="border-left-color: var(--amber);">
+      <p class="text-[11px] text-[var(--text-dim)] leading-relaxed">
+        <strong class="text-[var(--amber)]">Data note:</strong> CME index futures (ES/NQ) are not on Finnhub's free tier, so futures levels here are
+        <strong class="text-[var(--text)]">manual entry</strong>. The ETF proxies (SPY/QQQ/IWM) <em>can</em> be fetched and track the same exposure closely
+        during regular hours. Nothing here auto-refreshes while the tab is closed — this page has no backend.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-4 gap-px bg-[var(--border)] mb-6 border border-[var(--border)]" id="futuresGrid"></div>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+      <div class="card p-6">
+        <div class="stat-label">Implied Overnight Impact On Your Book</div>
+        <div class="display-font text-4xl mt-2" id="onImpact">—</div>
+        <div class="divider my-4"></div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed" id="onImpactExplain">
+          Enter a futures level and its prior settle to estimate tomorrow's open.
+        </p>
+        <div class="mt-4 text-[10px] mono text-[var(--text-faint)]" id="onImpactMath"></div>
+      </div>
+      <div class="card p-6">
+        <div class="stat-label">Overnight Gap Risk</div>
+        <div class="display-font text-4xl mt-2" id="gapRisk">—</div>
+        <div class="divider my-4"></div>
+        <p class="text-xs text-[var(--text-dim)] leading-relaxed">
+          You cannot trade your way out of a gap — it happens while the market is closed and you are asleep.
+          This is the share of your risk that is structurally unhedgeable in a cash account.
+          <span id="gapRiskNote"></span>
+        </p>
+      </div>
+    </div>
+
+    <div class="card overflow-x-auto mb-6">
+      <table>
+        <thead>
+          <tr><th>Session Marked</th><th>Book Value At Close</th><th>Next Value Seen</th><th>Overnight Δ</th><th>Δ %</th><th></th></tr>
+        </thead>
+        <tbody id="overnightBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card p-5">
+      <div class="stat-label mb-3">Beta-Weighted Overnight Sensitivity</div>
+      <div class="space-y-3" id="betaBars"></div>
+      <div class="text-[10px] text-[var(--text-faint)] mt-4 leading-relaxed">
+        Estimated move in each position per 1% move in index futures, using the sector betas below. Betas are rough
+        defaults, not regression estimates — treat as order-of-magnitude.
+      </div>
+    </div>
+  </section>
+
+  <!-- Tab: Options Simulator -->
+  <section id="tab-options" class="tab-content hidden">
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
+      <div>
+        <h2 class="display-font text-2xl">Options Practice</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1">Paper-trade options on your real tickers with fake money. Black-Scholes priced, fully offline.</p>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn-primary" onclick="openModal('optTradeModal')">+ New Trade</button>
+        <button class="btn-ghost" onclick="openModal('optSettleModal')">⏩ Advance Time</button>
+        <button class="btn-ghost" onclick="resetOptionsGame()">⟲ Reset Game</button>
+      </div>
+    </div>
+
+    <div class="card-elevated p-4 mb-6 border-l-2" style="border-left-color: var(--red);">
+      <p class="text-[11px] text-[var(--text-dim)] leading-relaxed">
+        <strong class="text-[var(--red)]">This is a simulator, not advice.</strong> It is deliberately separate from your real book — no trade here
+        touches your positions. Note that <strong class="text-[var(--text)]">options are not permitted in most Roth IRAs beyond covered calls and
+        cash-secured puts</strong>, and naked short options are generally prohibited outright. Practice here; check with Fidelity before assuming
+        you can do any of it in the actual account.
+      </p>
+    </div>
+
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--border)] mb-6 border border-[var(--border)]">
+      <div class="bg-[var(--bg-card)] p-5">
+        <div class="stat-label">Sim Cash</div>
+        <div class="display-font text-2xl mt-1" id="optCash">$25,000</div>
+      </div>
+      <div class="bg-[var(--bg-card)] p-5">
+        <div class="stat-label">Open Position Value</div>
+        <div class="display-font text-2xl mt-1" id="optPosValue">$0</div>
+      </div>
+      <div class="bg-[var(--bg-card)] p-5">
+        <div class="stat-label">Total Equity</div>
+        <div class="display-font text-2xl mt-1" id="optEquity">$25,000</div>
+      </div>
+      <div class="bg-[var(--bg-card)] p-5">
+        <div class="stat-label">Realized + Unrealized</div>
+        <div class="display-font text-2xl mt-1" id="optPL">$0</div>
+      </div>
+    </section>
+
+    <div class="grid md:grid-cols-3 gap-px bg-[var(--border)] mb-6 border border-[var(--border)]">
+      <div class="bg-[var(--bg-card)] p-4">
+        <div class="stat-label">Net Delta</div>
+        <div class="display-font text-xl mt-1" id="optDelta">0.00</div>
+        <div class="text-[10px] text-[var(--text-faint)] mt-1">Share-equivalent directional exposure</div>
+      </div>
+      <div class="bg-[var(--bg-card)] p-4">
+        <div class="stat-label">Net Theta / day</div>
+        <div class="display-font text-xl mt-1" id="optTheta">$0.00</div>
+        <div class="text-[10px] text-[var(--text-faint)] mt-1">Time decay P/L per calendar day</div>
+      </div>
+      <div class="bg-[var(--bg-card)] p-4">
+        <div class="stat-label">Net Vega</div>
+        <div class="display-font text-xl mt-1" id="optVega">$0.00</div>
+        <div class="text-[10px] text-[var(--text-faint)] mt-1">P/L per 1 vol point move in IV</div>
+      </div>
+    </div>
+
+    <div class="card overflow-x-auto mb-6">
+      <table>
+        <thead>
+          <tr>
+            <th>Opened</th><th>Contract</th><th>Side</th><th>Qty</th>
+            <th>Entry</th><th>Mark</th><th>DTE</th><th>Δ</th><th>P/L</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="optPositionsBody"></tbody>
+      </table>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="card p-5">
+        <div class="stat-label mb-3">Payoff At Expiry — Open Book</div>
+        <canvas id="payoffChart" height="220"></canvas>
+        <div class="text-[10px] text-[var(--text-faint)] mt-3" id="payoffNote">
+          Combined P/L across open positions in the selected underlying at expiration.
+        </div>
+      </div>
+      <div class="card p-5">
+        <div class="stat-label mb-3">Closed Trades — Scorecard</div>
+        <div class="space-y-2 text-xs mono" id="optScorecard"></div>
+        <div class="divider my-4"></div>
+        <div class="max-h-[220px] overflow-y-auto">
+          <table><tbody id="optHistoryBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <section id="tab-theory" class="tab-content hidden">
     <div class="mb-6">
       <h2 class="display-font text-2xl">Theory Reference</h2>
@@ -1247,6 +1404,142 @@
   </div>
 </div>
 
+<!-- FUTURES LEVELS MODAL -->
+<div class="modal-backdrop" id="futuresModal">
+  <div class="modal p-6">
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] tracking-wider uppercase text-[var(--accent)] mb-1">Overnight</div>
+        <h3 class="display-font text-2xl">Update Futures Levels</h3>
+      </div>
+      <button onclick="closeModal('futuresModal')" class="text-[var(--text-dim)] hover:text-[var(--text)] text-xl">×</button>
+    </div>
+    <form id="futuresForm" class="space-y-3"></form>
+    <div class="text-[10px] text-[var(--text-faint)] mt-4 leading-relaxed">
+      Pull from CME, Barchart, or your broker's futures quote. "Prior settle" is the previous session's official close —
+      the gap is measured against that, not against the equity cash close.
+    </div>
+  </div>
+</div>
+
+<!-- OPTIONS TRADE MODAL -->
+<div class="modal-backdrop" id="optTradeModal">
+  <div class="modal p-6">
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] tracking-wider uppercase text-[var(--green)] mb-1">Simulator</div>
+        <h3 class="display-font text-2xl">Open Options Trade</h3>
+      </div>
+      <button onclick="closeModal('optTradeModal')" class="text-[var(--text-dim)] hover:text-[var(--text)] text-xl">×</button>
+    </div>
+    <form id="optTradeForm" class="space-y-4">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Underlying</label>
+          <select id="optSymbol" required onchange="onOptSymbolChange()"></select>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Spot Price</label>
+          <input type="number" step="0.01" id="optSpot" required onchange="refreshOptQuote()">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Type</label>
+          <select id="optType" onchange="refreshOptQuote()"><option value="call">Call</option><option value="put">Put</option></select>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Side</label>
+          <select id="optSide" onchange="refreshOptQuote()"><option value="long">Buy (long)</option><option value="short">Sell (short)</option></select>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Strike</label>
+          <input type="number" step="0.5" id="optStrike" required onchange="refreshOptQuote()">
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Days To Expiry</label>
+          <input type="number" step="1" id="optDTE" value="30" required onchange="refreshOptQuote()">
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Contracts</label>
+          <input type="number" step="1" id="optQty" value="1" required onchange="refreshOptQuote()">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Implied Vol %</label>
+          <input type="number" step="1" id="optIV" value="35" required onchange="refreshOptQuote()">
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Risk-Free %</label>
+          <input type="number" step="0.1" id="optRF" value="4.0" onchange="refreshOptQuote()">
+        </div>
+      </div>
+
+      <div class="bg-black p-4 border-l-2 border-[var(--accent)]">
+        <div class="text-[9px] tracking-[0.2em] uppercase text-[var(--accent)] mb-2">Black-Scholes Quote</div>
+        <div class="grid grid-cols-2 gap-y-1 text-[11px] mono" id="optQuoteBox">
+          <span class="text-[var(--text-dim)]">Premium / contract</span><span id="qPrem">—</span>
+          <span class="text-[var(--text-dim)]">Total cost / credit</span><span id="qTotal">—</span>
+          <span class="text-[var(--text-dim)]">Delta</span><span id="qDelta">—</span>
+          <span class="text-[var(--text-dim)]">Gamma</span><span id="qGamma">—</span>
+          <span class="text-[var(--text-dim)]">Theta / day</span><span id="qTheta">—</span>
+          <span class="text-[var(--text-dim)]">Vega / vol pt</span><span id="qVega">—</span>
+          <span class="text-[var(--text-dim)]">Breakeven at expiry</span><span id="qBE">—</span>
+        </div>
+      </div>
+      <div id="optWarn" class="hidden bg-[#0a0a0a] border-l-2 border-[var(--red)] p-3 text-[11px] text-[var(--text-dim)] leading-relaxed"></div>
+
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Thesis <span class="text-[var(--amber)]">(required)</span></label>
+        <textarea id="optReason" rows="3" required placeholder="What are you expressing? Direction, vol, or time? What makes this wrong?"></textarea>
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button type="button" class="btn-ghost" onclick="closeModal('optTradeModal')">Cancel</button>
+        <button type="submit" class="btn-primary">Open Position</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- OPTIONS ADVANCE-TIME MODAL -->
+<div class="modal-backdrop" id="optSettleModal">
+  <div class="modal p-6">
+    <div class="flex justify-between items-start mb-5">
+      <div>
+        <div class="text-[10px] tracking-wider uppercase text-[var(--amber)] mb-1">Simulator</div>
+        <h3 class="display-font text-2xl">Advance Time &amp; Reprice</h3>
+      </div>
+      <button onclick="closeModal('optSettleModal')" class="text-[var(--text-dim)] hover:text-[var(--text)] text-xl">×</button>
+    </div>
+    <form id="optSettleForm" class="space-y-4">
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Advance by (days)</label>
+        <input type="number" step="1" id="settleDays" value="7" required>
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Move underlyings by (%)</label>
+        <input type="number" step="0.1" id="settleMove" value="0" required>
+        <div class="text-[10px] text-[var(--text-faint)] mt-1">Applies to every simulated underlying. Use negative for a selloff.</div>
+      </div>
+      <div>
+        <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Change IV by (vol points)</label>
+        <input type="number" step="1" id="settleVol" value="0" required>
+        <div class="text-[10px] text-[var(--text-faint)] mt-1">Selloffs usually raise IV. Try −10% move with +8 vol to see vol convexity.</div>
+      </div>
+      <div class="bg-[#0a0a0a] border-l-2 border-[var(--amber)] p-3 text-[11px] text-[var(--text-dim)] leading-relaxed">
+        Positions reaching 0 DTE settle automatically at intrinsic value and move to your trade history.
+      </div>
+      <div class="flex gap-2 justify-end">
+        <button type="button" class="btn-ghost" onclick="closeModal('optSettleModal')">Cancel</button>
+        <button type="submit" class="btn-primary">Advance</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- API KEY MODAL -->
 <div class="modal-backdrop" id="apiKeyModal">
   <div class="modal p-6">
@@ -1352,7 +1645,26 @@ const defaultState = {
   macroLog: [],
   contribLimit: 7000,
   contribYear: 2026,
+  // Index futures levels. Manual entry — CME data is not on any free browser-callable
+  // tier. `last` is the current print, `settle` the prior session's official settle.
+  futures: [
+    { symbol: 'ES',  name: 'S&P 500 E-mini',  last: 0, settle: 0, proxy: 'SPY' },
+    { symbol: 'NQ',  name: 'Nasdaq 100 E-mini', last: 0, settle: 0, proxy: 'QQQ' },
+    { symbol: 'RTY', name: 'Russell 2000',    last: 0, settle: 0, proxy: 'IWM' },
+    { symbol: 'VX',  name: 'VIX Futures',     last: 0, settle: 0, proxy: null  },
+  ],
+  overnightLog: [],
+  options: null, // lazily initialised by ensureOptionsGame()
 };
+
+// Rough index betas by ticker for beta-weighting overnight futures moves onto the
+// book. Deliberately coarse — these are priors, not regression output.
+const BETA_MAP = {
+  GOOGL: 1.05, META: 1.20, NVDA: 1.75, NOW: 1.30, SNPS: 1.35,
+  VST: 1.40, AMZN: 1.15, QNT: 1.60, SYM: 1.80, SPY: 1.00, QQQ: 1.10,
+};
+const DEFAULT_BETA = 1.20;
+function betaFor(sym) { return BETA_MAP[sym] ?? DEFAULT_BETA; }
 
 function loadState() {
   try {
@@ -1367,6 +1679,11 @@ function loadState() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (!parsed.macroLog) parsed.macroLog = [];
+      // Backfill fields added after this save was written, so older backups and
+      // older localStorage payloads keep loading instead of throwing on access.
+      if (!parsed.futures) parsed.futures = JSON.parse(JSON.stringify(defaultState.futures));
+      if (!parsed.overnightLog) parsed.overnightLog = [];
+      if (parsed.options === undefined) parsed.options = null;
       console.log(`✓ Loaded from ${STORAGE_MODE}`);
       return parsed;
     }
@@ -1474,6 +1791,9 @@ function importData(file) {
       if (!confirm('Replace current data with imported backup?')) return;
       state = imported;
       if (!state.macroLog) state.macroLog = [];
+      if (!state.futures) state.futures = JSON.parse(JSON.stringify(defaultState.futures));
+      if (!state.overnightLog) state.overnightLog = [];
+      if (state.options === undefined) state.options = null;
       saveState();
       renderAll();
     } catch(err) {
@@ -1849,6 +2169,484 @@ function deleteMacro(idx) {
 }
 
 // ==========================================
+// FUTURES & OVERNIGHT
+// ==========================================
+
+// Overnight gap = futures move since prior settle. That percentage, beta-weighted
+// per position, is the best cheap estimate of where the book reopens.
+function futuresGapPct(f) {
+  if (!f || !f.settle || !f.last) return null;
+  return ((f.last - f.settle) / f.settle) * 100;
+}
+
+// The equity book follows the broad index, so drive impact off ES and fall back to
+// NQ when ES has not been filled in. VIX futures are sentiment, never a beta driver.
+function primaryDriver() {
+  const es = state.futures.find(f => f.symbol === 'ES');
+  const nq = state.futures.find(f => f.symbol === 'NQ');
+  if (futuresGapPct(es) !== null) return es;
+  if (futuresGapPct(nq) !== null) return nq;
+  return null;
+}
+
+function calcOvernightImpact() {
+  const driver = primaryDriver();
+  const gap = futuresGapPct(driver);
+  if (gap === null) return null;
+  const t = calcTotals();
+  let dollar = 0;
+  const rows = t.positions.filter(p => p.qty > 0.001).map(p => {
+    const b = betaFor(p.symbol);
+    const move = (gap / 100) * b;      // beta-weighted expected move
+    const d = p.value * move;
+    dollar += d;
+    return { symbol: p.symbol, beta: b, value: p.value, movePct: move * 100, dollar: d };
+  });
+  return { driver, gap, dollar, pct: t.totalValue ? (dollar / t.totalValue) * 100 : 0, rows };
+}
+
+function renderFutures() {
+  const grid = document.getElementById('futuresGrid');
+  if (!grid) return;
+
+  grid.innerHTML = state.futures.map(f => {
+    const gap = futuresGapPct(f);
+    const has = gap !== null;
+    const color = !has ? 'var(--text-faint)' : gap >= 0 ? 'var(--green)' : 'var(--red)';
+    return `<div class="bg-[var(--bg-card)] p-5">
+      <div class="stat-label">${f.symbol} <span class="text-[var(--text-faint)]">${f.name}</span></div>
+      <div class="display-font text-2xl mt-1">${f.last ? f.last.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '—'}</div>
+      <div class="text-xs mt-1 mono" style="color:${color}">
+        ${has ? (gap >= 0 ? '+' : '') + gap.toFixed(2) + '% vs settle' : 'not set'}
+      </div>
+      ${f.proxy ? `<div class="text-[10px] text-[var(--text-faint)] mt-1">proxy ${f.proxy}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  const imp = calcOvernightImpact();
+  const impEl = document.getElementById('onImpact');
+  const expEl = document.getElementById('onImpactExplain');
+  const mathEl = document.getElementById('onImpactMath');
+  if (imp) {
+    impEl.textContent = (imp.dollar >= 0 ? '+' : '') + fmt(imp.dollar);
+    impEl.style.color = imp.dollar >= 0 ? 'var(--green)' : 'var(--red)';
+    expEl.innerHTML = `${imp.driver.symbol} is ${imp.gap >= 0 ? 'up' : 'down'} `
+      + `<strong class="text-[var(--text)]">${Math.abs(imp.gap).toFixed(2)}%</strong> against prior settle. `
+      + `Beta-weighted across your ${imp.rows.length} positions, that implies roughly `
+      + `<strong style="color:${imp.dollar >= 0 ? 'var(--green)' : 'var(--red)'}">${(imp.dollar >= 0 ? '+' : '') + fmt(imp.dollar)}</strong> `
+      + `(${(imp.pct >= 0 ? '+' : '') + imp.pct.toFixed(2)}%) at the open.`;
+    mathEl.textContent = imp.rows.map(r => `${r.symbol}·β${r.beta.toFixed(2)}→${(r.dollar>=0?'+':'')+fmt(r.dollar)}`).join('   ');
+  } else {
+    impEl.textContent = '—';
+    impEl.style.color = 'var(--text)';
+    expEl.textContent = 'Enter an ES or NQ level and its prior settle to estimate tomorrow\'s open.';
+    mathEl.textContent = '';
+  }
+
+  // Gap risk: overnight variance share. Equities trade ~6.5h of a 24h day, but a
+  // large share of index variance historically arrives outside that window.
+  const t = calcTotals();
+  const gapEl = document.getElementById('gapRisk');
+  const noteEl = document.getElementById('gapRiskNote');
+  const dailySigma = 0.38 / Math.sqrt(252);            // from the ~38% annualised vol used elsewhere
+  const overnightShare = 0.55;                          // rough share of daily variance arriving overnight
+  const onSigmaDollar = t.totalValue * dailySigma * Math.sqrt(overnightShare);
+  gapEl.textContent = '±' + fmtShort(onSigmaDollar);
+  gapEl.style.color = 'var(--amber)';
+  noteEl.textContent = ` A typical overnight 1σ move on your current book is about ${fmtShort(onSigmaDollar)}; `
+    + `a 3σ gap would be near ${fmtShort(onSigmaDollar * 3)}.`;
+
+  // Beta bars
+  const barsEl = document.getElementById('betaBars');
+  const open = t.positions.filter(p => p.qty > 0.001);
+  const maxB = Math.max(...open.map(p => betaFor(p.symbol)), 1);
+  barsEl.innerHTML = open.map(p => {
+    const b = betaFor(p.symbol);
+    const perOne = p.value * (b / 100);
+    return `<div>
+      <div class="flex justify-between text-xs mb-1">
+        <span><strong>${p.symbol}</strong> <span class="text-[var(--text-faint)]">β ${b.toFixed(2)}</span></span>
+        <span class="mono text-[var(--text-dim)]">${fmt(perOne)} per 1% index move</span>
+      </div>
+      <div class="h-2 bg-[var(--border)]"><div class="h-full" style="width:${(b/maxB)*100}%;background:var(--blue);opacity:.8"></div></div>
+    </div>`;
+  }).join('') || '<div class="text-xs text-[var(--text-faint)]">No positions loaded.</div>';
+
+  renderOvernightLog();
+}
+
+function renderOvernightLog() {
+  const body = document.getElementById('overnightBody');
+  if (!body) return;
+  const log = state.overnightLog || [];
+  if (log.length === 0) {
+    body.innerHTML = '<tr><td colspan="6" class="text-center text-[var(--text-faint)] py-8">No sessions marked. Hit "⏱ Mark Close" at the end of a session to start tracking overnight moves.</td></tr>';
+    return;
+  }
+  const cur = calcTotals().totalValue;
+  body.innerHTML = [...log].reverse().map((s, i) => {
+    const realIdx = log.length - 1 - i;
+    // The newest mark is still open — compare it to the book's value right now.
+    const next = s.closedValue != null ? s.closedValue : (realIdx === log.length - 1 ? cur : null);
+    if (next == null) {
+      return `<tr><td class="mono text-xs">${s.date}</td><td class="mono">${fmt(s.value)}</td>
+        <td class="text-[var(--text-faint)]">—</td><td class="text-[var(--text-faint)]">—</td><td class="text-[var(--text-faint)]">—</td>
+        <td><button class="btn-ghost" onclick="deleteOvernight(${realIdx})">×</button></td></tr>`;
+    }
+    const d = next - s.value;
+    const pct = s.value ? (d / s.value) * 100 : 0;
+    const c = d >= 0 ? 'var(--green)' : 'var(--red)';
+    return `<tr>
+      <td class="mono text-xs">${s.date}</td>
+      <td class="mono">${fmt(s.value)}</td>
+      <td class="mono">${fmt(next)}${s.closedValue == null ? ' <span class="text-[10px] text-[var(--text-faint)]">live</span>' : ''}</td>
+      <td class="mono" style="color:${c}">${d >= 0 ? '+' : ''}${fmt(d)}</td>
+      <td class="mono" style="color:${c}">${d >= 0 ? '+' : ''}${pct.toFixed(2)}%</td>
+      <td><button class="btn-ghost" onclick="deleteOvernight(${realIdx})">×</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function snapshotOvernight() {
+  const t = calcTotals();
+  const log = state.overnightLog;
+  // Close out the previous open mark so each row spans exactly one overnight.
+  if (log.length > 0 && log[log.length - 1].closedValue == null) {
+    log[log.length - 1].closedValue = t.totalValue;
+  }
+  log.push({ date: new Date().toISOString().slice(0, 16).replace('T', ' '), value: t.totalValue, closedValue: null });
+  saveState();
+  renderFutures();
+}
+
+function deleteOvernight(idx) {
+  if (!confirm('Delete this session mark?')) return;
+  state.overnightLog.splice(idx, 1);
+  saveState();
+  renderFutures();
+}
+
+function renderFuturesForm() {
+  const form = document.getElementById('futuresForm');
+  if (!form) return;
+  form.innerHTML = state.futures.map(f => `
+    <div class="grid grid-cols-3 gap-3 items-center">
+      <div class="text-xs"><strong>${f.symbol}</strong><div class="text-[10px] text-[var(--text-faint)]">${f.name}</div></div>
+      <div>
+        <label class="text-[9px] uppercase tracking-wider text-[var(--text-faint)]">Last</label>
+        <input type="number" step="0.01" class="fut-last" data-symbol="${f.symbol}" value="${f.last || ''}">
+      </div>
+      <div>
+        <label class="text-[9px] uppercase tracking-wider text-[var(--text-faint)]">Prior settle</label>
+        <input type="number" step="0.01" class="fut-settle" data-symbol="${f.symbol}" value="${f.settle || ''}">
+      </div>
+    </div>`).join('')
+    + `<div class="flex gap-2 justify-end pt-3">
+         <button type="button" class="btn-ghost" onclick="closeModal('futuresModal')">Cancel</button>
+         <button type="button" class="btn-primary" onclick="saveFutures()">Update</button>
+       </div>`;
+}
+
+function saveFutures() {
+  document.querySelectorAll('.fut-last').forEach(i => {
+    const f = state.futures.find(x => x.symbol === i.dataset.symbol);
+    if (f) f.last = parseFloat(i.value) || 0;
+  });
+  document.querySelectorAll('.fut-settle').forEach(i => {
+    const f = state.futures.find(x => x.symbol === i.dataset.symbol);
+    if (f) f.settle = parseFloat(i.value) || 0;
+  });
+  saveState();
+  renderFutures();
+  closeModal('futuresModal');
+}
+
+// ==========================================
+// OPTIONS SIMULATOR — Black-Scholes engine
+// ==========================================
+
+// Abramowitz & Stegun 7.1.26 error-function approximation; ~1e-7 accurate, which is
+// far tighter than the input assumptions (a guessed IV) ever justify.
+function normCdf(x) {
+  const a1=0.254829592, a2=-0.284496736, a3=1.421413741, a4=-1.453152027, a5=1.061405429, p=0.3275911;
+  const sign = x < 0 ? -1 : 1;
+  const ax = Math.abs(x) / Math.sqrt(2);
+  const t = 1 / (1 + p * ax);
+  const y = 1 - (((((a5*t + a4)*t) + a3)*t + a2)*t + a1) * t * Math.exp(-ax*ax);
+  return 0.5 * (1 + sign * y);
+}
+function normPdf(x) { return Math.exp(-0.5*x*x) / Math.sqrt(2*Math.PI); }
+
+// Standard Black-Scholes with continuous compounding and no dividend yield.
+// S spot, K strike, tYears time, vol decimal IV, r decimal risk-free.
+// Greeks are returned per share, scaled to per-contract/per-day at the call sites.
+function blackScholes(type, S, K, tYears, vol, r) {
+  // At/after expiry there is no optionality left — collapse to intrinsic.
+  if (tYears <= 0 || vol <= 0 || S <= 0 || K <= 0) {
+    const intrinsic = type === 'call' ? Math.max(0, S - K) : Math.max(0, K - S);
+    return { price: intrinsic, delta: type === 'call' ? (S > K ? 1 : 0) : (S < K ? -1 : 0),
+             gamma: 0, theta: 0, vega: 0 };
+  }
+  const sqrtT = Math.sqrt(tYears);
+  const d1 = (Math.log(S / K) + (r + 0.5 * vol * vol) * tYears) / (vol * sqrtT);
+  const d2 = d1 - vol * sqrtT;
+  const disc = Math.exp(-r * tYears);
+  const Nd1 = normCdf(d1), Nd2 = normCdf(d2);
+  const nd1 = normPdf(d1);
+
+  let price, delta, theta;
+  if (type === 'call') {
+    price = S * Nd1 - K * disc * Nd2;
+    delta = Nd1;
+    theta = (-(S * nd1 * vol) / (2 * sqrtT) - r * K * disc * Nd2) / 365;
+  } else {
+    price = K * disc * normCdf(-d2) - S * normCdf(-d1);
+    delta = Nd1 - 1;
+    theta = (-(S * nd1 * vol) / (2 * sqrtT) + r * K * disc * normCdf(-d2)) / 365;
+  }
+  const gamma = nd1 / (S * vol * sqrtT);
+  const vega  = S * nd1 * sqrtT / 100;   // per 1 vol point
+  return { price, delta, gamma, theta, vega };
+}
+
+const OPT_START_CASH = 25000;
+const CONTRACT_MULT = 100;
+
+function ensureOptionsGame() {
+  if (!state.options) {
+    state.options = { cash: OPT_START_CASH, positions: [], history: [], day: 0 };
+  }
+  return state.options;
+}
+
+// Current mark for a simulated position, given elapsed sim time.
+function markPosition(pos) {
+  const t = Math.max(0, pos.dte) / 365;
+  const bs = blackScholes(pos.type, pos.spot, pos.strike, t, pos.iv / 100, pos.rf / 100);
+  const dir = pos.side === 'long' ? 1 : -1;
+  const mark = bs.price * CONTRACT_MULT * pos.qty;
+  const cost = pos.entryPrice * CONTRACT_MULT * pos.qty;
+  return {
+    ...bs,
+    markPerContract: bs.price,
+    value: dir * mark,                     // signed mark-to-market value
+    pl: dir * (mark - cost),               // long gains when price rises, short when it falls
+    netDelta: dir * bs.delta * CONTRACT_MULT * pos.qty,
+    netTheta: dir * bs.theta * CONTRACT_MULT * pos.qty,
+    netVega:  dir * bs.vega  * CONTRACT_MULT * pos.qty,
+  };
+}
+
+function renderOptions() {
+  const g = ensureOptionsGame();
+  const body = document.getElementById('optPositionsBody');
+  if (!body) return;
+
+  let posValue = 0, unreal = 0, netD = 0, netT = 0, netV = 0;
+  if (g.positions.length === 0) {
+    body.innerHTML = '<tr><td colspan="10" class="text-center text-[var(--text-faint)] py-8">No open positions. Hit "+ New Trade" to start practising.</td></tr>';
+  } else {
+    body.innerHTML = g.positions.map((p, i) => {
+      const m = markPosition(p);
+      posValue += m.value; unreal += m.pl; netD += m.netDelta; netT += m.netTheta; netV += m.netVega;
+      const c = m.pl >= 0 ? 'var(--green)' : 'var(--red)';
+      return `<tr>
+        <td class="mono text-xs">${p.date}</td>
+        <td><strong>${p.symbol}</strong> ${p.strike} ${p.type === 'call' ? 'C' : 'P'}</td>
+        <td><span class="badge ${p.side === 'long' ? 'badge-buy' : 'badge-sell'}">${p.side}</span></td>
+        <td class="mono">${p.qty}</td>
+        <td class="mono">${fmt(p.entryPrice)}</td>
+        <td class="mono">${fmt(m.markPerContract)}</td>
+        <td class="mono">${p.dte}</td>
+        <td class="mono">${m.netDelta.toFixed(0)}</td>
+        <td class="mono" style="color:${c}">${m.pl >= 0 ? '+' : ''}${fmt(m.pl)}</td>
+        <td><button class="btn-sell" onclick="closeOptionPosition(${i})">Close</button></td>
+      </tr>`;
+    }).join('');
+  }
+
+  const realized = g.history.reduce((s, h) => s + h.pl, 0);
+  const equity = g.cash + posValue;
+  document.getElementById('optCash').textContent = fmt(g.cash);
+  document.getElementById('optPosValue').textContent = fmt(posValue);
+  document.getElementById('optEquity').textContent = fmt(equity);
+  const plEl = document.getElementById('optPL');
+  const totalPL = equity - OPT_START_CASH;
+  plEl.textContent = (totalPL >= 0 ? '+' : '') + fmt(totalPL);
+  plEl.style.color = totalPL >= 0 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('optDelta').textContent = netD.toFixed(0);
+  const tEl = document.getElementById('optTheta');
+  tEl.textContent = (netT >= 0 ? '+' : '') + fmt(netT);
+  tEl.style.color = netT >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('optVega').textContent = (netV >= 0 ? '+' : '') + fmt(netV);
+
+  // Closed-trade scorecard
+  const sc = document.getElementById('optScorecard');
+  const wins = g.history.filter(h => h.pl > 0).length;
+  const n = g.history.length;
+  sc.innerHTML = `
+    <div class="flex justify-between"><span class="text-[var(--text-dim)]">Closed trades</span><span>${n}</span></div>
+    <div class="flex justify-between"><span class="text-[var(--text-dim)]">Win rate</span><span>${n ? `${wins}/${n} (${(wins/n*100).toFixed(0)}%)` : '—'}</span></div>
+    <div class="flex justify-between"><span class="text-[var(--text-dim)]">Realized P/L</span><span style="color:${realized>=0?'var(--green)':'var(--red)'}">${(realized>=0?'+':'')+fmt(realized)}</span></div>
+    <div class="flex justify-between"><span class="text-[var(--text-dim)]">Sim days elapsed</span><span>${g.day}</span></div>`;
+
+  const hist = document.getElementById('optHistoryBody');
+  hist.innerHTML = n === 0
+    ? '<tr><td class="text-[var(--text-faint)] text-xs py-3">No closed trades yet.</td></tr>'
+    : [...g.history].reverse().map(h => `<tr>
+        <td class="text-xs"><strong>${h.symbol}</strong> ${h.strike}${h.type === 'call' ? 'C' : 'P'} <span class="text-[var(--text-faint)]">${h.side}</span>
+          <div class="text-[10px] text-[var(--text-faint)]">${h.outcome}</div></td>
+        <td class="mono text-xs text-right" style="color:${h.pl>=0?'var(--green)':'var(--red)'}">${(h.pl>=0?'+':'')+fmt(h.pl)}</td>
+      </tr>`).join('');
+
+  try { renderPayoffChart(); } catch(e) { console.warn('Payoff chart failed:', e); }
+}
+
+// Payoff at expiry for the most-traded underlying in the open book.
+function renderPayoffChart() {
+  const g = ensureOptionsGame();
+  const ctx = document.getElementById('payoffChart')?.getContext('2d');
+  if (!ctx) return;
+  if (window._payoffChart) { window._payoffChart.destroy(); window._payoffChart = null; }
+
+  const note = document.getElementById('payoffNote');
+  if (g.positions.length === 0) {
+    if (note) note.textContent = 'Open a position to see its expiry payoff.';
+    return;
+  }
+  const sym = g.positions[0].symbol;
+  const legs = g.positions.filter(p => p.symbol === sym);
+  const spot = legs[0].spot;
+  const lo = spot * 0.6, hi = spot * 1.4;
+  const xs = Array.from({length: 61}, (_, i) => lo + (hi - lo) * i / 60);
+  const ys = xs.map(S => legs.reduce((sum, p) => {
+    const intrinsic = p.type === 'call' ? Math.max(0, S - p.strike) : Math.max(0, p.strike - S);
+    const dir = p.side === 'long' ? 1 : -1;
+    return sum + dir * (intrinsic - p.entryPrice) * CONTRACT_MULT * p.qty;
+  }, 0));
+
+  if (note) note.textContent = `${sym} — combined P/L at expiry across ${legs.length} open leg${legs.length>1?'s':''}. Spot ${fmt(spot)}.`;
+
+  window._payoffChart = new Chart(ctx, {
+    type: 'line',
+    data: { labels: xs.map(x => x.toFixed(0)),
+      datasets: [{ label: 'P/L at expiry', data: ys, borderColor: '#d4ff00', borderWidth: 2,
+                   pointRadius: 0, fill: false }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#888', font: { family: 'JetBrains Mono', size: 10 } } } },
+      scales: {
+        x: { ticks: { color: '#555', font: { family: 'JetBrains Mono', size: 9 }, maxTicksLimit: 8 }, grid: { color: '#1f1f1f' } },
+        y: { ticks: { color: '#555', font: { family: 'JetBrains Mono', size: 9 }, callback: v => '$' + v }, grid: { color: '#1f1f1f' } }
+      } }
+  });
+}
+
+// Live Black-Scholes quote inside the trade ticket.
+function refreshOptQuote() {
+  const S = parseFloat(document.getElementById('optSpot').value);
+  const K = parseFloat(document.getElementById('optStrike').value);
+  const dte = parseFloat(document.getElementById('optDTE').value);
+  const qty = parseFloat(document.getElementById('optQty').value);
+  const iv = parseFloat(document.getElementById('optIV').value);
+  const rf = parseFloat(document.getElementById('optRF').value);
+  const type = document.getElementById('optType').value;
+  const side = document.getElementById('optSide').value;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+
+  if (![S,K,dte,qty,iv,rf].every(v => Number.isFinite(v)) || S<=0 || K<=0 || qty<=0) {
+    ['qPrem','qTotal','qDelta','qGamma','qTheta','qVega','qBE'].forEach(id => set(id,'—'));
+    return null;
+  }
+  const bs = blackScholes(type, S, K, Math.max(0,dte)/365, iv/100, rf/100);
+  const dir = side === 'long' ? 1 : -1;
+  const total = bs.price * CONTRACT_MULT * qty;
+  const be = type === 'call' ? K + bs.price : K - bs.price;
+
+  set('qPrem', fmt(bs.price));
+  set('qTotal', (dir > 0 ? '−' : '+') + fmt(total) + (dir > 0 ? ' (debit)' : ' (credit)'));
+  set('qDelta', (dir * bs.delta * CONTRACT_MULT * qty).toFixed(1));
+  set('qGamma', (dir * bs.gamma * CONTRACT_MULT * qty).toFixed(3));
+  set('qTheta', (dir * bs.theta * CONTRACT_MULT * qty >= 0 ? '+' : '') + fmt(dir * bs.theta * CONTRACT_MULT * qty));
+  set('qVega',  (dir * bs.vega  * CONTRACT_MULT * qty >= 0 ? '+' : '') + fmt(dir * bs.vega  * CONTRACT_MULT * qty));
+  set('qBE', fmt(be));
+
+  // Risk warnings — short options carry unbounded/large loss potential and are
+  // mostly disallowed in a Roth. Say so at the point of decision, not in a footnote.
+  const warn = document.getElementById('optWarn');
+  const g = ensureOptionsGame();
+  const msgs = [];
+  if (side === 'short' && type === 'call') {
+    msgs.push('<strong class="text-[var(--red)]">Naked short call:</strong> theoretically unlimited loss. Prohibited in essentially every Roth IRA unless fully covered by shares.');
+  } else if (side === 'short' && type === 'put') {
+    msgs.push(`<strong class="text-[var(--red)]">Short put:</strong> max loss ${fmt((K - bs.price) * CONTRACT_MULT * qty)} if the underlying goes to zero. In a Roth this must be cash-secured — that ties up ${fmt(K * CONTRACT_MULT * qty)}.`);
+  } else {
+    msgs.push(`<strong class="text-[var(--amber)]">Max loss:</strong> ${fmt(total)} — the entire premium — if it expires worthless. Long options decay to zero; ${fmt(Math.abs(bs.theta * CONTRACT_MULT * qty))} per day at current marks.`);
+  }
+  if (dir > 0 && total > g.cash) msgs.push('<strong class="text-[var(--red)]">Insufficient sim cash</strong> for this debit.');
+  if (dir > 0 && total > g.cash * 0.25) msgs.push('This single trade is over 25% of your sim account.');
+  warn.innerHTML = msgs.join('<br>');
+  warn.classList.remove('hidden');
+
+  return { bs, total, dir, S, K, dte, qty, iv, rf, type, side };
+}
+
+function renderOptSymbols() {
+  const sel = document.getElementById('optSymbol');
+  if (!sel) return;
+  const open = calcTotals().positions.filter(p => p.qty > 0.001);
+  const prev = sel.value;
+  sel.innerHTML = open.map(p => `<option value="${p.symbol}" data-price="${p.lastPrice}">${p.symbol}</option>`).join('');
+  if (prev && open.some(p => p.symbol === prev)) sel.value = prev;
+  syncOptSpot();
+}
+
+// Default the ticket's spot/strike to the selected name's last price.
+// resetStrike forces a fresh at-the-money strike, which is what you want when the
+// underlying changes — a strike carried over from another ticker is meaningless.
+function syncOptSpot(resetStrike) {
+  const sel = document.getElementById('optSymbol');
+  const spotEl = document.getElementById('optSpot');
+  const strikeEl = document.getElementById('optStrike');
+  if (!sel || !spotEl || !sel.selectedOptions.length) return;
+  const px = parseFloat(sel.selectedOptions[0].dataset.price);
+  if (!Number.isFinite(px)) return;
+  spotEl.value = px.toFixed(2);
+  if (resetStrike || !strikeEl.value) {
+    // Round to a plausible listed strike increment for the price band.
+    const inc = px < 25 ? 1 : px < 200 ? 5 : 10;
+    strikeEl.value = (Math.round(px / inc) * inc).toFixed(2);
+  }
+}
+
+function onOptSymbolChange() {
+  syncOptSpot(true);
+  refreshOptQuote();
+}
+
+function closeOptionPosition(idx) {
+  const g = ensureOptionsGame();
+  const p = g.positions[idx];
+  if (!p) return;
+  const m = markPosition(p);
+  if (!confirm(`Close ${p.symbol} ${p.strike}${p.type === 'call' ? 'C' : 'P'} for ${(m.pl>=0?'a gain of ':'a loss of ')}${fmt(Math.abs(m.pl))}?`)) return;
+  // Long: sell back at mark. Short: buy back at mark (cost).
+  g.cash += p.side === 'long' ? m.markPerContract * CONTRACT_MULT * p.qty
+                              : -m.markPerContract * CONTRACT_MULT * p.qty;
+  g.history.push({ ...p, pl: m.pl, outcome: `Closed manually at ${fmt(m.markPerContract)} (${p.dte} DTE left)` });
+  g.positions.splice(idx, 1);
+  saveState();
+  renderOptions();
+}
+
+function resetOptionsGame() {
+  if (!confirm('Reset the options simulator? All sim positions and history are cleared. Your real portfolio is untouched.')) return;
+  state.options = { cash: OPT_START_CASH, positions: [], history: [], day: 0 };
+  saveState();
+  renderOptions();
+}
+
+// ==========================================
 // DECISION EFFECTIVENESS SCORECARD
 // Aggregates micro (per-trade) and macro (per-observation) effectiveness
 // into a single set of headline numbers.
@@ -2016,6 +2814,8 @@ function renderAll() {
   renderMacro();
   renderEarningsWatch();
   renderConcentrationCopy();
+  renderFutures();
+  renderOptions();
   updateStorageBadge();
   renderStorageWarning();
   updateLastFetchInfo();
@@ -2042,6 +2842,8 @@ function renderStorageWarning() {
 function openModal(id) {
   if (id === 'priceModal') renderPriceForm();
   if (id === 'sellModal') renderSellSymbols();
+  if (id === 'futuresModal') renderFuturesForm();
+  if (id === 'optTradeModal') { renderOptSymbols(); refreshOptQuote(); }
   if (id === 'apiKeyModal') {
     const key = getApiKey();
     document.getElementById('apiKeyInput').value = key || '';
@@ -2299,6 +3101,65 @@ document.getElementById('macroForm').addEventListener('submit', (e) => {
   e.target.reset();
 });
 
+document.getElementById('optTradeForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const q = refreshOptQuote();
+  if (!q) { alert('Check the trade inputs.'); return; }
+  const g = ensureOptionsGame();
+  const symbol = document.getElementById('optSymbol').value;
+  if (!symbol) { alert('No underlying selected — load a portfolio first.'); return; }
+
+  if (q.dir > 0 && q.total > g.cash) {
+    alert(`Not enough sim cash. Debit ${fmt(q.total)} vs ${fmt(g.cash)} available.`);
+    return;
+  }
+  // Long pays a debit; short receives a credit.
+  g.cash += q.dir > 0 ? -q.total : q.total;
+  g.positions.push({
+    date: new Date().toISOString().split('T')[0],
+    symbol, type: q.type, side: q.side, qty: q.qty, strike: q.K,
+    spot: q.S, dte: q.dte, iv: q.iv, rf: q.rf,
+    entryPrice: q.bs.price,
+    reason: document.getElementById('optReason').value,
+  });
+  saveState();
+  renderOptions();
+  closeModal('optTradeModal');
+  e.target.reset();
+});
+
+document.getElementById('optSettleForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const g = ensureOptionsGame();
+  const days = parseInt(document.getElementById('settleDays').value, 10) || 0;
+  const move = parseFloat(document.getElementById('settleMove').value) || 0;
+  const dVol = parseFloat(document.getElementById('settleVol').value) || 0;
+
+  g.day += days;
+  const expired = [];
+  g.positions.forEach(p => {
+    p.dte -= days;
+    p.spot = p.spot * (1 + move / 100);
+    p.iv = Math.max(1, p.iv + dVol);   // IV floors at 1% — zero would break the pricer
+  });
+  // Settle anything at or past expiry at intrinsic value.
+  g.positions = g.positions.filter(p => {
+    if (p.dte > 0) return true;
+    const intrinsic = p.type === 'call' ? Math.max(0, p.spot - p.strike) : Math.max(0, p.strike - p.spot);
+    const dir = p.side === 'long' ? 1 : -1;
+    const pl = dir * (intrinsic - p.entryPrice) * CONTRACT_MULT * p.qty;
+    g.cash += dir > 0 ? intrinsic * CONTRACT_MULT * p.qty : -intrinsic * CONTRACT_MULT * p.qty;
+    g.history.push({ ...p, pl,
+      outcome: intrinsic > 0 ? `Expired in-the-money at ${fmt(intrinsic)} intrinsic` : 'Expired worthless' });
+    expired.push(`${p.symbol} ${p.strike}${p.type === 'call' ? 'C' : 'P'}: ${(pl>=0?'+':'')+fmt(pl)}`);
+    return false;
+  });
+  saveState();
+  renderOptions();
+  closeModal('optSettleModal');
+  if (expired.length) alert('Settled at expiry:\n\n' + expired.join('\n'));
+});
+
 // Tabs
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -2307,7 +3168,11 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
     if (tab.dataset.tab === 'positions' || tab.dataset.tab === 'analytics') {
-      setTimeout(renderCharts, 50);
+      setTimeout(() => { try { renderCharts(); } catch(e) { console.warn(e); } }, 50);
+    }
+    // Canvases sized while hidden render at zero height, so redraw on reveal.
+    if (tab.dataset.tab === 'options') {
+      setTimeout(() => { try { renderPayoffChart(); } catch(e) { console.warn(e); } }, 50);
     }
   });
 });
