@@ -24,6 +24,8 @@
     --accent: #d4ff00;
   }
   * { box-sizing: border-box; }
+  /* Tab switching must not depend on the Tailwind CDN being reachable. */
+  .hidden { display: none !important; }
   body {
     background: var(--bg);
     color: var(--text);
@@ -167,6 +169,8 @@
     <div class="tab active" data-tab="rankings">Rankings</div>
     <div class="tab" data-tab="trade">Trade Calculator</div>
     <div class="tab" data-tab="adp">Startup ADP</div>
+    <div class="tab" data-tab="statlab">Stat Lab</div>
+    <div class="tab" data-tab="mock">Mock Draft</div>
     <div class="tab" data-tab="stock">Stock Market</div>
     <div class="tab" data-tab="strategy">Strategy Hub</div>
   </nav>
@@ -317,6 +321,137 @@
       <div class="flex-1 h-px bg-[var(--border)]"></div>
     </div>
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="newsGrid"></div>
+  </section>
+
+  <!-- TAB: Stat Lab -->
+  <section id="tab-statlab" class="tab-content hidden">
+    <div class="flex justify-between items-start mb-4 flex-wrap gap-3">
+      <div>
+        <h2 class="display-font text-2xl">Stat Lab</h2>
+        <p class="text-xs text-[var(--text-faint)] mt-1">Real NFL production for QB/RB/WR/TE, converted to 12-team PPR fantasy points. Sort any column.</p>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap">
+        <span id="statSourceBadge" class="text-[9px] tracking-[0.15em] uppercase" style="padding:5px 9px;border-radius:2px;border:1px solid var(--border-bright);color:var(--text-dim);">Checking…</span>
+        <button class="btn-ghost" onclick="tryLiveStats()" id="liveBtn">⟳ Try Live Refresh</button>
+      </div>
+    </div>
+
+    <div class="card-elevated p-4 mb-4 border-l-2" style="border-left-color: var(--blue);">
+      <p class="text-[11px] text-[var(--text-dim)] leading-relaxed" id="statSourceNote">
+        Showing <strong class="text-[var(--text)]">verified 2025 final stats</strong> pulled from ESPN. It's the offseason, so these are the current numbers and won't change until Week 1 — the live refresh matters once games start.
+      </p>
+    </div>
+
+    <div class="flex gap-2 flex-wrap mb-4" id="statPosFilter">
+      <div class="pill active" data-pos="ALL">All</div>
+      <div class="pill" data-pos="QB">QB</div>
+      <div class="pill" data-pos="RB">RB</div>
+      <div class="pill" data-pos="WR">WR</div>
+      <div class="pill" data-pos="TE">TE</div>
+    </div>
+
+    <div class="card overflow-x-auto">
+      <table>
+        <thead>
+          <tr id="statHeadRow"></tr>
+        </thead>
+        <tbody id="statBody"></tbody>
+      </table>
+    </div>
+    <div class="text-[10px] text-[var(--text-faint)] mt-3 leading-relaxed">
+      PPR scoring: 1 pt/reception · 0.1/rec &amp; rush yd · 0.04/pass yd · 6 pts rush/rec TD · 4 pts pass TD · −2 INT. Fumbles excluded (league settings vary). PTS/G uses games actually played.
+    </div>
+  </section>
+
+  <!-- TAB: Mock Draft -->
+  <section id="tab-mock" class="tab-content hidden">
+    <div class="mb-4">
+      <h2 class="display-font text-2xl">Mock Draft Simulator</h2>
+      <p class="text-xs text-[var(--text-faint)] mt-1">12-team snake draft against 11 AI opponents that draft on ADP with positional need and realistic reach/randomness.</p>
+    </div>
+
+    <div class="card p-5 mb-5" id="mockSetup">
+      <div class="grid md:grid-cols-4 gap-4 items-end">
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Your Draft Slot</label>
+          <select id="mockSlot"></select>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Rounds</label>
+          <select id="mockRounds">
+            <option value="10">10</option>
+            <option value="12">12</option>
+            <option value="15" selected>15</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase tracking-wider text-[var(--text-faint)]">Format</label>
+          <select id="mockFormat">
+            <option value="redraft" selected>Redraft (Regular PPR)</option>
+            <option value="dynasty">Dynasty</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn-primary w-full" onclick="startMock()">▶ Start Draft</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="mockLive" class="hidden">
+      <div class="card-elevated p-4 mb-5 flex justify-between items-center flex-wrap gap-3">
+        <div>
+          <div class="text-[9px] tracking-[0.2em] uppercase text-[var(--text-faint)]">On the Clock</div>
+          <div class="display-font text-xl mt-1" id="mockClock">—</div>
+        </div>
+        <div class="text-center">
+          <div class="text-[9px] tracking-[0.2em] uppercase text-[var(--text-faint)]">Pick</div>
+          <div class="mono text-lg mt-1" id="mockPickNum">—</div>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <button class="btn-ghost" onclick="autoPickForUser()" id="mockAutoBtn">⚡ Auto-pick</button>
+          <button class="btn-ghost" onclick="resetMock()">⟲ Restart</button>
+        </div>
+      </div>
+
+      <div class="grid lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2">
+          <div class="flex justify-between items-center mb-2 flex-wrap gap-2">
+            <h3 class="display-font text-lg" id="mockBoardTitle">Best Available</h3>
+            <div class="flex gap-2 flex-wrap" id="mockPosFilter">
+              <div class="pill active" data-pos="ALL">All</div>
+              <div class="pill" data-pos="QB">QB</div>
+              <div class="pill" data-pos="RB">RB</div>
+              <div class="pill" data-pos="WR">WR</div>
+              <div class="pill" data-pos="TE">TE</div>
+            </div>
+          </div>
+          <div class="card overflow-x-auto" style="max-height:520px;overflow-y:auto;">
+            <table>
+              <thead><tr><th>ADP</th><th>Player</th><th>Pos</th><th>Team</th><th>Age</th><th></th></tr></thead>
+              <tbody id="mockAvailBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="display-font text-lg mb-2">Your Roster</h3>
+          <div class="card p-4 mb-4">
+            <div id="mockRoster" class="text-xs"></div>
+            <div class="divider my-3"></div>
+            <div class="text-[10px] text-[var(--text-faint)]" id="mockNeeds"></div>
+          </div>
+          <h3 class="display-font text-lg mb-2">Draft Log</h3>
+          <div class="card p-4" style="max-height:300px;overflow-y:auto;">
+            <div id="mockLog" class="text-[11px] space-y-1"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="mockDone" class="hidden card-elevated p-6 mt-5">
+      <h3 class="display-font text-2xl mb-3">Draft Complete</h3>
+      <div id="mockSummary" class="text-xs text-[var(--text-dim)] leading-relaxed"></div>
+    </div>
   </section>
 
   <!-- TAB: Strategy Hub -->
@@ -1017,12 +1152,373 @@ function updateClock(){
 setInterval(updateClock, 1000);
 updateClock();
 
+// ================= STAT LAB =================
+// ESPN athlete IDs, each verified by name match via ESPN search (not guessed).
+const ESPN_IDS = {
+  "Jalen Hurts":4040715, "Jayden Daniels":4426348, "Josh Allen":3918298, "Lamar Jackson":3916387,
+  "Joe Burrow":3915511, "Patrick Mahomes":3139477, "Tua Tagovailoa":4241479,
+  "Jahmyr Gibbs":4429795, "Bijan Robinson":4430807, "Breece Hall":4427366, "Chase Brown":4362238,
+  "Ashton Jeanty":4890973, "De'Von Achane":4429160, "Saquon Barkley":3929630, "Bucky Irving":4596448,
+  "Kyren Williams":4430737, "Omarion Hampton":4685382, "Jonathan Taylor":4242335,
+  "Justin Jefferson":4262921, "Jaylen Waddle":4372016, "Marvin Harrison Jr.":4432708,
+  "Brian Thomas Jr.":4432773, "Luther Burden III":4685278, "Travis Hunter":4685415,
+  "Ja'Marr Chase":4362628, "Malik Nabers":4595348, "Puka Nacua":4426515, "CeeDee Lamb":4241389,
+  "Amon-Ra St. Brown":4374302, "Ladd McConkey":4612826, "Stefon Diggs":2976212,
+  "Trey McBride":4361307, "Harold Fannin Jr.":5083076, "Brock Bowers":4432665,
+  "Sam LaPorta":4430027, "George Kittle":3040151
+};
+
+// Verified 2025 final season stats pulled from ESPN.
+// py=pass yds pt=pass TD in=INT ry=rush yds rt=rush TD rc=rec tg=targets cy=rec yds ct=rec TD
+const SNAP2025 = {
+  "Jalen Hurts":       {gp:16, py:3224, pt:25, in:6, ry:421, rt:8},
+  "Josh Allen":        {gp:17, py:3668, pt:25, in:10, ry:579, rt:14},
+  "Lamar Jackson":     {gp:13, py:2549, pt:21, in:7, ry:349, rt:2},
+  "Tua Tagovailoa":    {gp:14, py:2660, pt:20, in:15, ry:43, rt:0},
+  "Jahmyr Gibbs":      {gp:17, ry:1223, rt:13, rc:77, tg:94, cy:616, ct:5},
+  "Bijan Robinson":    {gp:17, ry:1478, rt:7, rc:79, tg:103, cy:820, ct:4},
+  "Chase Brown":       {gp:17, ry:1019, rt:6, rc:69, tg:88, cy:437, ct:5},
+  "Breece Hall":       {gp:16, ry:1065, rt:4, rc:36, tg:48, cy:350, ct:1},
+  "Ashton Jeanty":     {gp:17, ry:975, rt:5, rc:55, tg:73, cy:346, ct:5},
+  "Justin Jefferson":  {gp:17, rc:84, tg:141, cy:1048, ct:2, ry:7, rt:0},
+  "Ja'Marr Chase":     {gp:16, rc:125, tg:185, cy:1412, ct:8, ry:14, rt:0},
+  "Jaylen Waddle":     {gp:16, rc:64, tg:100, cy:910, ct:6, ry:28, rt:0},
+  "Marvin Harrison Jr.":{gp:12, rc:41, tg:73, cy:608, ct:4},
+  "Trey McBride":      {gp:17, rc:126, tg:169, cy:1239, ct:11},
+  "Brock Bowers":      {gp:12, rc:64, tg:86, cy:680, ct:7, ry:2, rt:0},
+  "Sam LaPorta":       {gp:9, rc:40, tg:49, cy:489, ct:3}
+};
+
+let statRows = [];       // working set, may be replaced by live data
+let statSource = "snapshot";
+let statPos = "ALL";
+let statSort = {key:"ppg", dir:-1};
+
+function pprPoints(s){
+  if(!s) return 0;
+  return (s.py||0)*0.04 + (s.pt||0)*4 - (s.in||0)*2
+       + (s.ry||0)*0.1 + (s.rt||0)*6
+       + (s.rc||0)*1 + (s.cy||0)*0.1 + (s.ct||0)*6;
+}
+function buildStatRows(){
+  const rows = [];
+  Object.keys(SNAP2025).forEach(name => {
+    const meta = PLAYERS.find(p => p.n === name);
+    if(!meta) return;
+    const s = SNAP2025[name];
+    const pts = pprPoints(s);
+    rows.push({
+      n:name, p:meta.p, t:meta.t, a:meta.a, gp:s.gp||0,
+      py:s.py||0, pt:s.pt||0, in:s.in||0, ry:s.ry||0, rt:s.rt||0,
+      rc:s.rc||0, tg:s.tg||0, cy:s.cy||0, ct:s.ct||0,
+      pts: pts, ppg: s.gp ? pts/s.gp : 0
+    });
+  });
+  return rows;
+}
+
+const STAT_COLS = {
+  QB: [["n","Player"],["t","Tm"],["gp","GP"],["py","Pass Yd"],["pt","Pass TD"],["in","INT"],["ry","Rush Yd"],["rt","Rush TD"],["pts","PPR"],["ppg","PTS/G"]],
+  RB: [["n","Player"],["t","Tm"],["gp","GP"],["ry","Rush Yd"],["rt","Rush TD"],["rc","Rec"],["tg","Tgt"],["cy","Rec Yd"],["ct","Rec TD"],["pts","PPR"],["ppg","PTS/G"]],
+  WR: [["n","Player"],["t","Tm"],["gp","GP"],["rc","Rec"],["tg","Tgt"],["cy","Rec Yd"],["ct","Rec TD"],["ry","Rush Yd"],["pts","PPR"],["ppg","PTS/G"]],
+  TE: [["n","Player"],["t","Tm"],["gp","GP"],["rc","Rec"],["tg","Tgt"],["cy","Rec Yd"],["ct","Rec TD"],["pts","PPR"],["ppg","PTS/G"]],
+  ALL:[["n","Player"],["p","Pos"],["t","Tm"],["gp","GP"],["pts","PPR"],["ppg","PTS/G"]]
+};
+
+function renderStatLab(){
+  const cols = STAT_COLS[statPos] || STAT_COLS.ALL;
+  document.getElementById("statHeadRow").innerHTML =
+    cols.map(c => '<th style="cursor:pointer" data-sk="'+c[0]+'">'+c[1]+(statSort.key===c[0] ? (statSort.dir<0?" ▾":" ▴") : "")+'</th>').join("");
+
+  let rows = statRows.filter(r => statPos==="ALL" || r.p===statPos);
+  rows.sort((a,b) => {
+    const k = statSort.key;
+    if(k==="n" || k==="t" || k==="p") return String(a[k]).localeCompare(String(b[k])) * statSort.dir * -1;
+    return ((a[k]||0) - (b[k]||0)) * statSort.dir;
+  });
+
+  document.getElementById("statBody").innerHTML = rows.map(r =>
+    "<tr>" + cols.map(c => {
+      const k = c[0];
+      if(k==="n") return '<td><div class="font-medium">'+r.n+'</div></td>';
+      if(k==="p") return '<td><span class="pos-badge pos-'+r.p+'">'+r.p+'</span></td>';
+      if(k==="t") return '<td class="text-[var(--text-dim)]">'+r.t+'</td>';
+      if(k==="pts") return '<td class="mono text-[var(--accent)]">'+r.pts.toFixed(1)+'</td>';
+      if(k==="ppg") return '<td class="mono text-[var(--accent)]">'+r.ppg.toFixed(2)+'</td>';
+      return '<td class="mono text-[var(--text-dim)]">'+(r[k]||0).toLocaleString()+'</td>';
+    }).join("") + "</tr>"
+  ).join("") || '<tr><td colspan="'+cols.length+'" class="text-center text-[var(--text-faint)] py-8">No players at this position in the stat pool yet.</td></tr>';
+
+  document.getElementById("statHeadRow").querySelectorAll("th").forEach(th => {
+    th.addEventListener("click", () => {
+      const k = th.dataset.sk;
+      if(statSort.key===k) statSort.dir *= -1; else statSort = {key:k, dir:-1};
+      renderStatLab();
+    });
+  });
+}
+function setStatBadge(kind, text){
+  const b = document.getElementById("statSourceBadge");
+  b.textContent = text;
+  if(kind==="live"){ b.style.color="var(--green)"; b.style.borderColor="var(--green)"; }
+  else if(kind==="err"){ b.style.color="var(--amber)"; b.style.borderColor="var(--amber)"; }
+  else { b.style.color="var(--text-dim)"; b.style.borderColor="var(--border-bright)"; }
+}
+document.querySelectorAll("#statPosFilter .pill").forEach(el => {
+  el.addEventListener("click", () => {
+    document.querySelectorAll("#statPosFilter .pill").forEach(p=>p.classList.remove("active"));
+    el.classList.add("active");
+    statPos = el.dataset.pos;
+    renderStatLab();
+  });
+});
+
+// Live refresh. ESPN's public API may or may not permit cross-origin browser
+// requests; this attempts it, validates the shape, and only replaces the
+// verified snapshot if the parsed numbers are actually sane.
+function pickStat(labels, stats, names){
+  for(const nm of names){
+    const i = labels.findIndex(l => String(l).toUpperCase() === nm);
+    if(i >= 0){
+      const v = parseFloat(String(stats[i]).replace(/,/g,""));
+      if(Number.isFinite(v)) return v;
+    }
+  }
+  return 0;
+}
+async function fetchOne(name, id){
+  const url = "https://site.web.api.espn.com/apis/common/v3/sports/football/nfl/athletes/"+id+"/stats";
+  const res = await fetch(url, {mode:"cors"});
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const j = await res.json();
+  if(!j || !Array.isArray(j.categories)) throw new Error("unexpected shape");
+  const out = {gp:0};
+  j.categories.forEach(cat => {
+    const labels = cat.labels || cat.names || [];
+    const block = (cat.statistics || [])[0];
+    if(!block || !Array.isArray(block.stats)) return;
+    const st = block.stats;
+    const cn = String(cat.name || "").toLowerCase();
+    const gp = pickStat(labels, st, ["GP"]);
+    if(gp > out.gp) out.gp = gp;
+    if(cn.includes("passing")){
+      out.py = pickStat(labels, st, ["YDS"]); out.pt = pickStat(labels, st, ["TD"]); out.in = pickStat(labels, st, ["INT"]);
+    } else if(cn.includes("rushing")){
+      out.ry = pickStat(labels, st, ["YDS"]); out.rt = pickStat(labels, st, ["TD"]);
+    } else if(cn.includes("receiving")){
+      out.rc = pickStat(labels, st, ["REC"]); out.tg = pickStat(labels, st, ["TGTS","TGT"]);
+      out.cy = pickStat(labels, st, ["YDS"]); out.ct = pickStat(labels, st, ["TD"]);
+    }
+  });
+  // Sanity gate — refuse absurd values rather than display wrong numbers.
+  if(out.gp < 0 || out.gp > 25) throw new Error("bad GP");
+  if((out.py||0) > 7000 || (out.ry||0) > 3000 || (out.cy||0) > 3000) throw new Error("bad yardage");
+  if(!out.gp && !out.py && !out.ry && !out.rc) throw new Error("empty");
+  return out;
+}
+async function tryLiveStats(){
+  const btn = document.getElementById("liveBtn");
+  btn.disabled = true; btn.textContent = "⟳ Fetching…";
+  setStatBadge("", "Fetching…");
+  const names = Object.keys(ESPN_IDS);
+  const results = await Promise.allSettled(names.map(n => fetchOne(n, ESPN_IDS[n])));
+  const live = {};
+  let ok = 0;
+  results.forEach((r, i) => { if(r.status === "fulfilled"){ live[names[i]] = r.value; ok++; } });
+
+  if(ok === 0){
+    statSource = "snapshot";
+    setStatBadge("err", "Snapshot");
+    document.getElementById("statSourceNote").innerHTML =
+      "<strong class='text-[var(--amber)]'>Live refresh didn't go through</strong> — your browser couldn't reach ESPN's API (most likely cross-origin restrictions, which a static site can't work around without a small proxy). Still showing <strong class='text-[var(--text)]'>verified 2025 final stats</strong>, which are accurate and unchanged through the offseason.";
+  } else {
+    const rows = [];
+    Object.keys(live).forEach(name => {
+      const meta = PLAYERS.find(p => p.n === name);
+      if(!meta) return;
+      const s = live[name];
+      const pts = pprPoints(s);
+      rows.push({n:name, p:meta.p, t:meta.t, a:meta.a, gp:s.gp||0,
+        py:s.py||0, pt:s.pt||0, in:s.in||0, ry:s.ry||0, rt:s.rt||0,
+        rc:s.rc||0, tg:s.tg||0, cy:s.cy||0, ct:s.ct||0,
+        pts:pts, ppg:s.gp ? pts/s.gp : 0});
+    });
+    statRows = rows;
+    statSource = "live";
+    setStatBadge("live", "Live · " + new Date().toLocaleTimeString());
+    document.getElementById("statSourceNote").innerHTML =
+      "<strong class='text-[var(--green)]'>Live from ESPN</strong> — refreshed "+ok+" of "+names.length+" players at "+new Date().toLocaleString()+". Hit refresh again any time; during the season this pulls current-week totals.";
+    renderStatLab();
+  }
+  btn.disabled = false; btn.textContent = "⟳ Try Live Refresh";
+}
+
+// ================= MOCK DRAFT SIMULATOR =================
+const MOCK_TEAMS = 12;
+let mk = null;
+
+function mockPool(){
+  const src = document.getElementById("mockFormat").value === "dynasty" ? BY_ADP : BY_ADP_REDRAFT;
+  return src.map(p => ({n:p.n, p:p.p, t:p.t, a:p.a, adp:p.adp}));
+}
+function startMock(){
+  const slot = parseInt(document.getElementById("mockSlot").value, 10);
+  const rounds = parseInt(document.getElementById("mockRounds").value, 10);
+  mk = {
+    slot, rounds, pool: mockPool(), taken: new Set(),
+    rosters: Array.from({length:MOCK_TEAMS}, () => []),
+    log: [], overall: 1, posFilter: "ALL", done: false
+  };
+  document.getElementById("mockLive").classList.remove("hidden");
+  document.getElementById("mockDone").classList.add("hidden");
+  advanceMock();
+}
+function resetMock(){
+  mk = null;
+  document.getElementById("mockLive").classList.add("hidden");
+  document.getElementById("mockDone").classList.add("hidden");
+}
+function teamOnClock(overall){
+  const rd = Math.floor((overall-1)/MOCK_TEAMS);
+  const idx = (overall-1) % MOCK_TEAMS;
+  return (rd % 2 === 0) ? idx+1 : MOCK_TEAMS-idx;   // snake
+}
+function available(){ return mk.pool.filter(p => !mk.taken.has(p.n)); }
+
+const NEED_TARGET = {QB:2, RB:5, WR:6, TE:2};
+function needMultiplier(roster, pos){
+  const have = roster.filter(p => p.p === pos).length;
+  const want = NEED_TARGET[pos] || 2;
+  if(have >= want) return 0.15;              // effectively full
+  if(pos === "QB" && have >= 1) return 0.3;  // one QB is usually enough in 1QB
+  return 1 + (want - have) * 0.12;
+}
+function aiPick(teamIdx){
+  const roster = mk.rosters[teamIdx];
+  const avail = available().slice(0, 30);
+  if(!avail.length) return null;
+  const scored = avail.map((p, i) => ({p, w: Math.max(0.01, (30 - i) * needMultiplier(roster, p.p))}));
+  // Weighted random among the top candidates so AI teams reach a little, like real drafters.
+  const top = scored.sort((a,b) => b.w - a.w).slice(0, 8);
+  const total = top.reduce((s,c) => s + c.w, 0);
+  let r = Math.random() * total;
+  for(const c of top){ r -= c.w; if(r <= 0) return c.p; }
+  return top[0].p;
+}
+function draftPlayer(player, teamNum){
+  mk.taken.add(player.n);
+  mk.rosters[teamNum-1].push(player);
+  const rd = Math.floor((mk.overall-1)/MOCK_TEAMS)+1;
+  const pk = ((mk.overall-1)%MOCK_TEAMS)+1;
+  mk.log.unshift({rd, pk, teamNum, player, mine: teamNum === mk.slot});
+  mk.overall++;
+}
+function advanceMock(){
+  const totalPicks = mk.rounds * MOCK_TEAMS;
+  while(mk.overall <= totalPicks){
+    const team = teamOnClock(mk.overall);
+    if(team === mk.slot) break;           // stop, user is up
+    const p = aiPick(team-1);
+    if(!p) break;
+    draftPlayer(p, team);
+  }
+  if(mk.overall > totalPicks){ finishMock(); return; }
+  renderMock();
+}
+function autoPickForUser(){
+  if(!mk || mk.done) return;
+  const p = aiPick(mk.slot-1);
+  if(p){ draftPlayer(p, mk.slot); advanceMock(); }
+}
+function userPick(name){
+  if(!mk || mk.done) return;
+  if(teamOnClock(mk.overall) !== mk.slot) return;
+  const p = mk.pool.find(x => x.n === name);
+  if(!p || mk.taken.has(name)) return;
+  draftPlayer(p, mk.slot);
+  advanceMock();
+}
+function finishMock(){
+  mk.done = true;
+  renderMock();
+  const mine = mk.rosters[mk.slot-1];
+  const byPos = {QB:[],RB:[],WR:[],TE:[]};
+  mine.forEach(p => (byPos[p.p] = byPos[p.p] || []).push(p));
+  document.getElementById("mockDone").classList.remove("hidden");
+  document.getElementById("mockSummary").innerHTML =
+    '<div class="mb-3">You drafted from slot <strong class="text-[var(--accent)]">'+mk.slot+'</strong> over '+mk.rounds+' rounds.</div>'
+    + ["QB","RB","WR","TE"].map(pos =>
+        '<div class="mb-2"><span class="pos-badge pos-'+pos+'">'+pos+'</span> '
+        + (byPos[pos].length ? byPos[pos].map(p=>p.n).join(", ") : '<span class="text-[var(--text-faint)]">none</span>')
+        + '</div>').join("")
+    + '<div class="mt-3 text-[var(--text-faint)]">Counts — QB '+byPos.QB.length+' · RB '+byPos.RB.length+' · WR '+byPos.WR.length+' · TE '+byPos.TE.length+'</div>';
+}
+function renderMock(){
+  const totalPicks = mk.rounds * MOCK_TEAMS;
+  const onClock = mk.done ? null : teamOnClock(mk.overall);
+  const rd = Math.floor((Math.min(mk.overall,totalPicks)-1)/MOCK_TEAMS)+1;
+  const pk = ((Math.min(mk.overall,totalPicks)-1)%MOCK_TEAMS)+1;
+
+  document.getElementById("mockClock").innerHTML = mk.done
+    ? '<span class="text-[var(--text-dim)]">Draft complete</span>'
+    : (onClock === mk.slot ? '<span class="text-[var(--accent)]">YOUR PICK — take someone</span>' : 'Team '+onClock);
+  document.getElementById("mockPickNum").textContent = mk.done ? "—" : (rd + "." + String(pk).padStart(2,"0") + "  (#" + mk.overall + ")");
+  document.getElementById("mockAutoBtn").style.display = (!mk.done && onClock === mk.slot) ? "" : "none";
+
+  const yourTurn = !mk.done && onClock === mk.slot;
+  const rows = available().filter(p => mk.posFilter==="ALL" || p.p===mk.posFilter).slice(0, 60);
+  document.getElementById("mockAvailBody").innerHTML = rows.map(p =>
+    '<tr><td class="mono text-[var(--text-faint)]">'+roundPick(p.adp)+'</td>'
+    + '<td class="font-medium">'+p.n+'</td>'
+    + '<td><span class="pos-badge pos-'+p.p+'">'+p.p+'</span></td>'
+    + '<td class="text-[var(--text-dim)]">'+p.t+'</td>'
+    + '<td class="text-[var(--text-dim)]">'+p.a+'</td>'
+    + '<td>'+(yourTurn ? '<button class="btn-ghost mock-draft-btn" data-n="'+p.n.replace(/"/g,'&quot;')+'">Draft</button>' : '')+'</td></tr>'
+  ).join("") || '<tr><td colspan="6" class="text-center text-[var(--text-faint)] py-6">No players available.</td></tr>';
+  document.querySelectorAll(".mock-draft-btn").forEach(b => b.addEventListener("click", () => userPick(b.dataset.n)));
+
+  const mine = mk.rosters[mk.slot-1];
+  document.getElementById("mockRoster").innerHTML = mine.length
+    ? mine.map((p,i) => '<div class="flex justify-between py-1 border-b border-[var(--border)]"><span><span class="pos-badge pos-'+p.p+'">'+p.p+'</span> '+p.n+'</span><span class="text-[var(--text-faint)] mono">R'+(i+1)+'</span></div>').join("")
+    : '<div class="text-[var(--text-faint)] text-center py-3">No picks yet</div>';
+  const counts = {QB:0,RB:0,WR:0,TE:0};
+  mine.forEach(p => counts[p.p]++);
+  document.getElementById("mockNeeds").textContent =
+    "QB "+counts.QB+"/"+NEED_TARGET.QB+" · RB "+counts.RB+"/"+NEED_TARGET.RB+" · WR "+counts.WR+"/"+NEED_TARGET.WR+" · TE "+counts.TE+"/"+NEED_TARGET.TE;
+
+  document.getElementById("mockLog").innerHTML = mk.log.slice(0, 40).map(e =>
+    '<div class="'+(e.mine ? 'text-[var(--accent)]' : 'text-[var(--text-dim)]')+'">'
+    + '<span class="mono text-[var(--text-faint)]">'+e.rd+'.'+String(e.pk).padStart(2,"0")+'</span> '
+    + (e.mine ? '<strong>YOU</strong>' : 'Tm '+e.teamNum) + ' — ' + e.player.n
+    + ' <span class="text-[var(--text-faint)]">('+e.player.p+')</span></div>'
+  ).join("") || '<div class="text-[var(--text-faint)]">No picks yet</div>';
+}
+document.querySelectorAll("#mockPosFilter .pill").forEach(el => {
+  el.addEventListener("click", () => {
+    document.querySelectorAll("#mockPosFilter .pill").forEach(p=>p.classList.remove("active"));
+    el.classList.add("active");
+    if(mk){ mk.posFilter = el.dataset.pos; renderMock(); }
+  });
+});
+(function initMockSlots(){
+  const sel = document.getElementById("mockSlot");
+  for(let i=1;i<=MOCK_TEAMS;i++){
+    const o = document.createElement("option");
+    o.value = i; o.textContent = "Pick " + i;
+    if(i === 2) o.selected = true;   // user drafts 2nd overall
+    sel.appendChild(o);
+  }
+})();
+
 // ---------- INIT ----------
 renderRankings();
 renderAdp();
 renderStock();
 renderTicker();
 renderTrade();
+statRows = buildStatRows();
+setStatBadge("", "Snapshot · 2025 final");
+renderStatLab();
 </script>
 </body>
 </html>
