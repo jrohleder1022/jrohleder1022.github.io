@@ -651,7 +651,7 @@ const PLAYERS = [
 {n:"James Cook III",p:"RB",t:"BUF",a:26,x:5,v:700},
 {n:"Saquon Barkley",p:"RB",t:"PHI",a:29,x:9,v:690},
 {n:"Chase Brown",p:"RB",t:"CIN",a:26,x:4,v:675},
-{n:"RJ Harvey",p:"RB",t:"DEN",a:25,x:2,v:655,tp:11,note:"Emerged as Denver's early-down and passing-down hybrid lead back."},
+{n:"RJ Harvey",p:"RB",t:"DEN",a:25,x:2,v:530,tp:-9,note:"Real receiving role (47 catches on 58 targets), but 3.7 YPC behind a top-6 run-blocking line, and only 3.4 as the lead back once Dobbins hit IR. Rookie Jonah Coleman adds goal-line competition."},
 {n:"Christian McCaffrey",p:"RB",t:"SF",a:30,x:10,v:610,tp:-12,note:"Still elite on the field, but the tread-wear discount at 30 is real."},
 {n:"Josh Jacobs",p:"RB",t:"GB",a:28,x:8,v:615},
 {n:"Kenneth Walker III",p:"RB",t:"KC",a:25,x:5,v:580,tp:15,note:"Fresh start in Kansas City's offense after an offseason move."},
@@ -675,7 +675,8 @@ const PLAYERS = [
 {n:"Joe Mixon",p:"RB",t:"HOU",a:30,x:9,v:330,note:"Three-man Houston timeshare alongside Montgomery and Marks."},
 {n:"Javonte Williams",p:"RB",t:"DAL",a:26,x:6,v:370},
 {n:"Jaylen Warren",p:"RB",t:"PIT",a:27,x:5,v:390},
-{n:"J.K. Dobbins",p:"RB",t:"DEN",a:27,x:7,v:350},
+{n:"J.K. Dobbins",p:"RB",t:"DEN",a:27,x:7,v:350,note:"Long injury history; landed on IR in 2025 and handed Harvey the lead role down the stretch."},
+{n:"Jonah Coleman",p:"RB",t:"DEN",a:22,x:0,v:300,tp:6,note:"Broncos' R4 pick (#108). 5'8\"/220 with 15 rushing TDs at Washington — drafted as Dobbins insurance, but the profile threatens Harvey's goal-line work."},
 {n:"James Conner",p:"RB",t:"ARI",a:31,x:10,v:380},
 {n:"Trey Benson",p:"RB",t:"ARI",a:24,x:3,v:360},
 {n:"Rachaad White",p:"RB",t:"WSH",a:27,x:5,v:340,tp:-8,note:"Traded into a crowded Washington backfield alongside Ford and Croskey-Merritt."},
@@ -770,7 +771,9 @@ const PLAYERS = [
 {n:"Christian Watson",p:"WR",t:"GB",a:27,x:5,v:310},
 {n:"Alec Pierce",p:"WR",t:"IND",a:26,x:5,v:300},
 {n:"Tre' Harris",p:"WR",t:"LAC",a:24,x:2,v:340},
-{n:"Quentin Johnston",p:"WR",t:"LAC",a:24,x:4,v:300},
+{n:"Quentin Johnston",p:"WR",t:"LAC",a:24,x:4,v:400,tp:12,note:"Mike McDaniel takes over the Chargers offense — real downfield upside, but McConkey is the alpha and Tre' Harris competes for the same outside role."},
+{n:"Rashid Shaheed",p:"WR",t:"SEA",a:27,x:5,v:350,note:"Now in Seattle. Deep-threat profile — 59-687-2 in 2025, big-play equity but a thin weekly floor."},
+{n:"Jack Bech",p:"WR",t:"LV",a:23,x:2,v:320,tp:8,note:"Quiet rookie line (20-224-0) but real draft capital and a year-2 breakout window."},
 {n:"Xavier Legette",p:"WR",t:"CAR",a:25,x:3,v:290},
 {n:"Jacob Cowing",p:"WR",t:"SF",a:25,x:3,v:280},
 {n:"Jalen Coker",p:"WR",t:"CAR",a:24,x:3,v:270},
@@ -863,17 +866,27 @@ const BY_ADP = [...RANKED]
 // Redraft (regular, season-long) values: age stops being a penalty, proven veterans
 // with a real job get credit back, and unproven rookies/backups get discounted since
 // redraft only cares about this season's actual production, not long-term upside.
+// Name-level corrections that the age/experience curves can't express. The veteran
+// bumps that used to live here (McCaffrey, Henry, Kelce, Adams, Evans, Jones, Kamara,
+// Mixon) are now handled by the prime-age credit below.
 const REDRAFT_ADJ = {
-  "Christian McCaffrey":60, "Derrick Henry":40, "Travis Kelce":40, "Davante Adams":30, "Mike Evans":30,
-  "Aaron Jones Sr.":20, "Alvin Kamara":30, "Joe Mixon":15,
   "Daniel Jones":50, "Kyler Murray":20, "Anthony Richardson Sr.":-60, "Tua Tagovailoa":-30,
   "Michael Penix Jr.":-20, "J.J. McCarthy":-40, "Tyreek Hill":-20,
-  "Marvin Harrison Jr.":-300, "Trey McBride":-60
+  "Marvin Harrison Jr.":-300, "Trey McBride":-60,
+  // Calibrated against ESPN mock drafts (n>50, 12-team PPR, slot 2): these three
+  // consistently last longer than the model's ordering implied.
+  "Brock Bowers":-45, "Trevor Lawrence":-50, "Chris Godwin Jr.":-100
 };
 function redraftValueOf(p){
   let rv = p.v;
   if(p.p==="QB" && p.x>=5) rv += 40;
-  if(p.a>=30) rv += Math.min((p.a-29)*16, 85);
+  // The dynasty values start discounting age in a player's late 20s, but redraft only
+  // cares about this season and production doesn't fall off until later. Give that
+  // discount back across the whole prime-veteran band, not just at 30+. Skill players
+  // only — QB dynasty values are barely age-discounted, so crediting them here would
+  // double-count against the experience bonus above and float QBs to the top of a
+  // 1QB board where they don't belong.
+  if(p.p!=="QB" && p.a>=27) rv += Math.min((p.a-26)*47, 141);
   if(p.x<=1) rv -= 85;
   rv += REDRAFT_ADJ[p.n] || 0;
   return Math.max(20, Math.min(999, Math.round(rv)));
