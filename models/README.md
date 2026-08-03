@@ -151,3 +151,24 @@ take-private precedents $59–89; probability-weighted ~$67; Monte Carlo
 P(value > price) ≈ 100%; and the LBO actually pencils — a sponsor clears 20%+
 IRR paying up to ~$56 (+40%), making the PE bid a live valuation floor. The
 bear case ($32, 35% weight) is legacy decay — the market's central fear.
+
+---
+
+# T1 Energy (TE) — DCF Valuation & 3-Statement Model
+
+`TE_Valuation_Model.xlsx` — built August 2026. US solar manufacturer (formerly
+FREYR Battery). Q2-2026 prelim: revenue $245-255mm on 835 MW, net loss $34-37mm,
+NEGATIVE adj. EBITDA, cash $156.4mm. G2_Austin cell plant Phase 1 capex raised to
+$510mm, first cells delayed to Q1-2027. Price ~$6.81, ~279mm shares, ~$670mm debt.
+
+Architecture adds an explicit **45X production tax credit line and statutory
+phase-out schedule** (100% through 2029 → 75/50/25/0% 2030-33), because the
+credits — not operating margin — are the profit engine. Gap-funding row flags
+external financing needs (dilution not modeled).
+
+Headline outputs (Base): FY29 EBITDA $516mm collapses to $183mm by FY33 as
+credits zero out, even with revenue doubling; FY33 unlevered FCF turns negative.
+DCF $0.82 (Gordon) – $2.61 (exit 7x) vs. $6.81 market; comps $0.60-$12.39
+(EV/revenue vs peak-45X EV/EBITDA); Monte Carlo median $5.13, P(value > price)
+39%, P(equity≈zero) 6%; probability-weighted $7.74. LBO/buyout capacity ≈ $0 —
+a financial buyer cannot underwrite the equity on these assumptions.
