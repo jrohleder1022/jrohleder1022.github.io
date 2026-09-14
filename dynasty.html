@@ -684,7 +684,7 @@ const PLAYERS = [
 {n:"Rachaad White",p:"RB",t:"WSH",a:27,x:5,v:340,tp:-8,note:"Traded into a crowded Washington backfield alongside Ford and Croskey-Merritt."},
 {n:"Jerome Ford",p:"RB",t:"WSH",a:26,x:5,v:300,tp:-8,note:"Also new to Washington's crowded committee."},
 {n:"Jordan Mason",p:"RB",t:"MIN",a:27,x:5,v:480,tp:12,note:"159-758-6 at 4.8 YPC in his first Minnesota season and a 5.1 career average across 395 carries. Led the Vikings in Week 1 rushing at 15-59 with the go-ahead score; 31-year-old Aaron Jones added a short touchdown but is no longer ahead of him on volume."},
-{n:"Brian Robinson Jr.",p:"RB",t:"ATL",a:27,x:5,v:310},
+{n:"Brian Robinson Jr.",p:"RB",t:"ATL",a:27,x:5,v:255,tp:-8,note:"A pure handcuff, and Week 1 priced it: 31 yards behind Bijan's 21 carries and 8 catches. Nothing here until Bijan misses time."},
 {n:"Tyjae Spears",p:"RB",t:"TEN",a:25,x:4,v:350},
 {n:"Tank Bigsby",p:"RB",t:"PHI",a:23,x:4,v:330},
 {n:"Jaydon Blue",p:"RB",t:"DAL",a:22,x:2,v:240,tp:-10,note:"Barely played as a rookie — 5 games, 38 carries, 3.4 YPC, one fumble. Pure handcuff behind a back coming off 1,201 yards."},
@@ -780,7 +780,7 @@ const PLAYERS = [
 {n:"Tre' Harris",p:"WR",t:"LAC",a:24,x:2,v:340},
 {n:"Quentin Johnston",p:"WR",t:"LAC",a:25,x:4,v:560,tp:14,note:"Back-to-back 8-TD seasons — 51-735-8 on 85 targets in 2025, ~12.3 PPR per game. McDaniel now runs the offense, though McConkey is the alpha and Tre' Harris competes outside."},
 {n:"Rashid Shaheed",p:"WR",t:"SEA",a:27,x:5,v:350,note:"Now in Seattle. Deep-threat profile — 59-687-2 in 2025, big-play equity but a thin weekly floor."},
-{n:"Parker Washington",p:"WR",t:"JAX",a:24,x:4,v:560,tp:16,note:"58-847-5 in 2025 plus two punt-return TDs. Standout camp in a contract year, expanded 12/13 personnel role, year two under Coen in an offense that finished 6th in scoring."},
+{n:"Parker Washington",p:"WR",t:"JAX",a:24,x:4,v:610,tp:17,note:"58-847-5 in 2025 plus two punt-return TDs, and the camp hype converted immediately: 5-83-1 in a 34-10 Week 1 win with Lawrence at a 150.6 rating. Contract year, expanded 12/13 personnel role, year two under Coen in an offense that finished 6th in scoring."},
 {n:"Jack Bech",p:"WR",t:"LV",a:23,x:2,v:380,tp:12,note:"Quiet rookie line (20-224-0) but real draft capital, and the year-2 window opened with a 15-yard touchdown in Week 1. Cousins threw for only 160 yards — this is a low-volume passing game built around Jeanty."},
 {n:"Chris Bell",p:"WR",t:"MIA",a:22,x:0,v:470,tp:16,note:"Was a first-round lock and consensus WR4 before tearing his ACL on Nov 22 — Yates had him at pick 32. Fell to R3 (#94) purely on the injury. 6'2\"/220, 72-917-6 as an All-ACC senior, Week 1 was quiet, though — 1-25 on two targets while Caleb Douglas led the team. New OC Bobby Slowik is Shanahan tree and turned Nico Collins into a 1,297-yard X in Houston — and he did it under DeMeco Ryans, also a defensive HC, so Hafley's background is not a strike against him. The real caps are Willis instead of Stroud and a stated ground-and-pound plan around Achane."},
 {n:"Caleb Douglas",p:"WR",t:"MIA",a:22,x:0,v:530,tp:21,note:"R3 (#75), taken 19 picks ahead of Bell, and he led Miami in receiving in Week 1 with 5-94 on 7 targets. The worry was that a 6'4\"/4.39 field-stretcher would not draw catch volume in PPR; seven targets in a 50-play game says otherwise. Ahead of Bell on the field right now."},
@@ -891,7 +891,11 @@ const REDRAFT_ADJ = {
 };
 function redraftValueOf(p){
   let rv = p.v;
-  if(p.p==="QB" && p.x>=5) rv += 40;
+  // 55, not 40: the target league scores passing touchdowns at 6 points, confirmed off
+  // a Week 1 box score (Burrow, 254 yards / 1 TD / 1 INT, scored 14.16 — which only
+  // reconciles at 6). Six-point passing scores move the elite starters up a full round
+  // or two relative to the 4-point assumption the old number was carrying.
+  if(p.p==="QB" && p.x>=5) rv += 55;
   // The dynasty values start discounting age in a player's late 20s, but redraft only
   // cares about this season and production doesn't fall off until later. Give that
   // discount back across the whole prime-veteran band, not just at 30+. Skill players
