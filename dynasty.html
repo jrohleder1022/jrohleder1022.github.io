@@ -647,7 +647,7 @@ const PLAYERS = [
 {n:"Jonathan Taylor",p:"RB",t:"IND",a:27,x:7,v:790},
 {n:"Breece Hall",p:"RB",t:"NYJ",a:25,x:5,v:775},
 {n:"Kyren Williams",p:"RB",t:"LAR",a:26,x:5,v:715,tp:-5,note:"Week 1 carries were 11-10 with Corum, not the 64/36 of 2025 — the rushing share is genuinely narrower. What did not narrow: 14 touches to Corum's 10, all three RB targets, and the goal-line carry. 15.5 PPR in a 27-7 loss is a strong floor."},
-{n:"TreVeyon Henderson",p:"RB",t:"NE",a:23,x:2,v:705,tp:-5,note:"The 2025 line is the case: 180-911-9 at 5.1 YPC plus 35 catches on 42 targets, with games of 148 and 147. Three things cut against it now — a preseason injury kept him inactive in Week 1, Stevenson is a real receiving back (191 career catches, one 69-catch season, 5-44 on six targets in the opener), and New England managed 10 points with Maye throwing three interceptions."},
+{n:"TreVeyon Henderson",p:"RB",t:"NE",a:23,x:2,v:705,tp:-5,out:1,note:"The 2025 line is the case: 180-911-9 at 5.1 YPC plus 35 catches on 42 targets, with games of 148 and 147. Three things cut against it now — a preseason injury kept him inactive in Week 1, Stevenson is a real receiving back (191 career catches, one 69-catch season, 5-44 on six targets in the opener), and New England managed 10 points with Maye throwing three interceptions."},
 {n:"James Cook III",p:"RB",t:"BUF",a:26,x:5,v:700},
 {n:"Saquon Barkley",p:"RB",t:"PHI",a:29,x:9,v:690},
 {n:"Chase Brown",p:"RB",t:"CIN",a:26,x:4,v:675},
@@ -736,7 +736,7 @@ const PLAYERS = [
 {n:"Tee Higgins",p:"WR",t:"CIN",a:27,x:7,v:715},
 {n:"Zay Flowers",p:"WR",t:"BAL",a:25,x:4,v:700},
 {n:"DeVonta Smith",p:"WR",t:"PHI",a:27,x:6,v:685},
-{n:"A.J. Brown",p:"WR",t:"NE",a:29,x:8,v:620,tp:-8,note:"MRI confirmed a high ankle sprain in Week 1 — at least four weeks out, with Week 5 or 6 the realistic return. Same player when healthy; the target share in New England is still the signal."},
+{n:"A.J. Brown",p:"WR",t:"NE",a:29,x:8,v:620,tp:-8,out:5,note:"MRI confirmed a high ankle sprain in Week 1 — at least four weeks out, Week 5 or 6 the realistic return, and reporting since has trended worse rather than better. Same player when healthy, but a third of a redraft season is gone, and high ankle sprains linger in receivers who need to push off. Set out:5; move to 6 or 7 if the return slips."},
 {n:"Travis Hunter",p:"WR",t:"JAX",a:23,x:2,v:300,tp:-18,note:"Not a WR1 — Jacksonville wants him at corner more in 2026, with offensive snaps swinging 40-70% by game plan. Rookie year ended after 7 games (28-298-1) with knee surgery. Projects around WR58 and fourth in the route order."},
 {n:"Chris Olave",p:"WR",t:"NO",a:26,x:5,v:640},
 {n:"DK Metcalf",p:"WR",t:"PIT",a:28,x:8,v:620},
@@ -744,12 +744,12 @@ const PLAYERS = [
 {n:"Jordan Addison",p:"WR",t:"MIN",a:24,x:4,v:420,tp:-19,note:"Zero catches on two targets in Week 1. Kyler Murray was pulled after 3/5 for 18 yards with an interception and a 1.6 QBR; Carson Wentz relieved him and threw three touchdowns, two of them to Jefferson (8-92-2). In a Wentz offense that funnels to Jefferson and Hockenson, Addison is the third read."},
 {n:"George Pickens",p:"WR",t:"DAL",a:25,x:5,v:560},
 {n:"Jayden Reed",p:"WR",t:"GB",a:26,x:4,v:560},
-{n:"Emeka Egbuka",p:"WR",t:"TB",a:23,x:2,v:560},
+{n:"Emeka Egbuka",p:"WR",t:"TB",a:23,x:2,v:625,tp:15,note:"The target tree is his. Mike Evans left for San Francisco, and behind Egbuka the room is a 30-year-old Godwin, Jalen McMillan and three 24-year-old depth pieces. Led Tampa in Week 1 at 5-63 on six of Mayfield's 28 attempts — a 21% share in a game the Bucks turned over four times."},
 {n:"Terry McLaurin",p:"WR",t:"WSH",a:30,x:8,v:415,tp:-16,note:"No longer the target earner in his own offense: 2-14 on four targets in Week 1 while Diggs drew nine and rookie Antonio Williams led the team. Daniels threw 34 times for 164 yards, so there were targets to be had — McLaurin just wasn't getting them."},
 {n:"Antonio Williams",p:"WR",t:"WSH",a:22,x:0,v:475,tp:20,note:"Rookie who led Washington in receiving in his debut, 4-64-1, ahead of both Diggs and McLaurin. The cap is the offense around him — Jayden Daniels went 18/34 for 164 yards, a 4.8 average, so the volume is there but the efficiency is not."},
 {n:"Rashee Rice",p:"WR",t:"KC",a:26,x:4,v:540},
 {n:"Matthew Golden",p:"WR",t:"GB",a:23,x:2,v:575,tp:18,note:"The year-two role arrived in Week 1: 12 targets and 6-95 while Jordan Love threw 42 times. That is a full WR2 workload, and it answers the quiet rookie line (29-361-0) the earlier value was built on. Watson's 6-147-2 makes this a two-man room, not a one-man one."},
-{n:"De'Zhaun Stribling",p:"WR",t:"SF",a:23,x:0,v:300,tp:-22,note:"R2 (#33) — real capital, which explains the 68% rostership. Started Week 1 in Melbourne but went down non-contact with a left ankle injury and was carted off. Timeline unknown; treat as an IR stash until the MRI lands."},
+{n:"De'Zhaun Stribling",p:"WR",t:"SF",a:23,x:0,v:300,tp:-22,out:3,note:"R2 (#33) — real capital, which explains the 68% rostership. Started Week 1 in Melbourne but went down non-contact with a left ankle injury and was carted off. Timeline unknown; treat as an IR stash until the MRI lands."},
 {n:"Stefon Diggs",p:"WR",t:"WSH",a:32,x:11,v:430,tp:18,note:"Signed a one-year deal with Washington in early August — steps in opposite McLaurin with Jayden Daniels throwing. Coming off 85-1,013-4 in New England."},
 {n:"Jaylin Noel",p:"WR",t:"HOU",a:23,x:2,v:440,tp:-6,note:"Opens as the slot starter behind Collins (X) and Hutchinson (Z), with Dell and Higgins on IR. But Houston traded for Kayshon Boutte, who backs up only because he has been in the building two weeks — he is expected to grow into a bigger role, so the window here may be short."},
 {n:"Deebo Samuel",p:"WR",t:"SF",a:30,x:8,v:490,tp:6,note:"Back in San Francisco, not Washington. Led the 49ers in Week 1 targets (6-48-1 on 7, plus a 12-yard carry, 18.0 PPR) in a room that also has Mike Evans and Demarcus Robinson, so Purdy spreads it around — but the target share is his."},
@@ -798,7 +798,7 @@ const PLAYERS = [
 {n:"Chimere Dike",p:"WR",t:"TEN",a:23,x:2,v:260},
 {n:"Jimmy Horn Jr.",p:"WR",t:"CAR",a:23,x:2,v:230},
 
-{n:"Brock Bowers",p:"TE",t:"LV",a:23,x:3,v:860},
+{n:"Brock Bowers",p:"TE",t:"LV",a:23,x:3,v:860,out:2,note:"Inactive for Week 1 with a one-to-two game timeline. Nothing about the player changed; two weeks of a seventeen-week season did."},
 {n:"Trey McBride",p:"TE",t:"ARI",a:26,x:5,v:800},
 {n:"Sam LaPorta",p:"TE",t:"DET",a:25,x:4,v:700},
 {n:"George Kittle",p:"TE",t:"SF",a:32,x:10,v:620},
@@ -910,6 +910,14 @@ function redraftValueOf(p){
   if(p.p!=="QB" && p.a>=27) rv += Math.min((p.a-26)*47, 141);
   if(p.x<=1) rv -= 85;
   rv += REDRAFT_ADJ[p.n] || 0;
+  // Availability. A dynasty value is rightly indifferent to four weeks on IR —
+  // the asset is unchanged next August — so nothing above expresses missed time,
+  // and without this a receiver who plays 12 games priced identically to one who
+  // plays 17. Redraft pays only for games played, so scale by the season share
+  // lost. The 0.85 weight is deliberate: injuries are front-loaded in this
+  // dataset, meaning the games lost are early ones while the fantasy playoffs
+  // come through intact, and those weeks are worth more than a Week 3.
+  if(p.out) rv *= (17 - p.out*0.85) / 17;
   return Math.max(20, Math.min(999, Math.round(rv)));
 }
 const RANKED_REDRAFT = [...PLAYERS]
