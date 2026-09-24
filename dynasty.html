@@ -900,11 +900,11 @@ const REDRAFT_ADJ = {
 };
 function redraftValueOf(p){
   let rv = p.v;
-  // 55, not 40: the target league scores passing touchdowns at 6 points, confirmed off
-  // a Week 1 box score (Burrow, 254 yards / 1 TD / 1 INT, scored 14.16 — which only
-  // reconciles at 6). Six-point passing scores move the elite starters up a full round
-  // or two relative to the 4-point assumption the old number was carrying.
-  if(p.p==="QB" && p.x>=5) rv += 55;
+  // Back to 40. The 55 came from reading Burrow's Week 1 (254 yards, 1 TD, 1 INT, 14.16)
+  // as proof of 6-point passing scores, but that line reconciles both ways — at 4 points
+  // the rushing yards close the gap. Week 2 is unambiguous: 207 yards, 2 TD, -1 rushing,
+  // scored 16.18, which is 4-point touchdowns and nothing else. The league pays 4.
+  if(p.p==="QB" && p.x>=5) rv += 40;
   // The dynasty values start discounting age in a player's late 20s, but redraft only
   // cares about this season and production doesn't fall off until later. Give that
   // discount back across the whole prime-veteran band, not just at 30+. Skill players
