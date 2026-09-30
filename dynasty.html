@@ -609,14 +609,14 @@
 // ---------- DATA ----------
 const PLAYERS = [
 {n:"Jayden Daniels",p:"QB",t:"WSH",a:25,x:3,v:945,note:"Full workload trust; the rushing floor makes him a true 1QB QB1 despite a stacked WR room."},
-{n:"Josh Allen",p:"QB",t:"BUF",a:30,x:9,v:905},
+{n:"Josh Allen",p:"QB",t:"BUF",a:30,x:9,v:950,tp:22,note:"A bare 905 for the highest-scoring player in this dataset. 31.6 PPR a game across three weeks — 35.66, 40.82, 18.36 — and the engine is his legs: six rushing touchdowns in three games, 36 points, twelve a game before he throws. At four points a passing score that is the whole ballgame, because a rushing score pays six. His worst game, two interceptions and no passing touchdowns, still scored 18.36, which is Burrow's season average. 905 -> 950."},
 {n:"Lamar Jackson",p:"QB",t:"BAL",a:29,x:9,v:875},
 {n:"Jalen Hurts",p:"QB",t:"PHI",a:27,x:7,v:850},
-{n:"Joe Burrow",p:"QB",t:"CIN",a:29,x:7,v:835,tp:-6,note:"Reported back tightness on Sept 16 and expects to play Sunday at Houston, calling it \"ridiculous\" that it would keep him out. No games missed and the value holds — but for a manager carrying him as an only quarterback, this is the warning, not the injury."},
+{n:"Joe Burrow",p:"QB",t:"CIN",a:29,x:7,v:880,tp:12,note:"The back tightness from Sept 16 cost him nothing — he has played every week and Week 3 was his best: 28/37 for 282 and 3 touchdowns at a 123.9 rating in Pittsburgh. 18.31 PPR a game across three weeks and rising, 6 touchdowns to 1 interception, 70.9% complete. The one thing capping him is on the ground: 32 rushing yards and no scores all season, which in a four-point-passing-touchdown league is the gap between him and the rushing quarterbacks above him. 835 -> 880."},
 {n:"Patrick Mahomes",p:"QB",t:"KC",a:30,x:10,v:815},
 {n:"Drake Maye",p:"QB",t:"NE",a:24,x:3,v:770,tp:-5,note:"Year two was 4,394 yards, 31 touchdowns to 8 picks, a 113.5 rating and 450 rushing yards — roughly 20.75 fantasy points a game, a top-five season. 2026 has opened badly: 1 TD to 4 INT, a 63.1 rating, 8.92 PPR a game across Seattle and Pittsburgh. The 620 I set was pricing two weeks over a full season and the 770 stands. But the slump has a structural cause the old note missed — A.J. Brown is out until roughly Week 12, so Maye is throwing without his WR1, and that argues the bad form persists rather than correcting next week. The floor underneath it is the rushing: 5.5 carries and 32 yards a game, about 3 points before he throws a pass. Brown returning lines up with the fantasy playoffs."},
 {n:"C.J. Stroud",p:"QB",t:"HOU",a:24,x:4,v:760,tp:-14,note:"ESPN camp coverage flags him as Houston's biggest question mark entering the season."},
-{n:"Caleb Williams",p:"QB",t:"CHI",a:24,x:3,v:740},
+{n:"Caleb Williams",p:"QB",t:"CHI",a:24,x:3,v:660,tp:-12,note:"Did not play Week 3 against Philadelphia — no ESPN game log for it — and that is most of the trim. The two games he did play are a coin flip rather than a trend: 269 yards with 2 passing and 2 rushing scores at Carolina for 37.26, then 138 yards, no touchdowns and a pick against Minnesota for 7.72. The rushing is real, 107 yards in two games, and that matters at four points a passing score. 740 -> 660 until there is a reason he missed a game and a third data point."},
 {n:"Justin Herbert",p:"QB",t:"LAC",a:28,x:7,v:730},
 {n:"Bo Nix",p:"QB",t:"DEN",a:26,x:3,v:705},
 {n:"Jordan Love",p:"QB",t:"GB",a:27,x:7,v:670},
@@ -726,7 +726,7 @@ const PLAYERS = [
 {n:"Puka Nacua",p:"WR",t:"LAR",a:25,x:4,v:910},
 {n:"CeeDee Lamb",p:"WR",t:"DAL",a:27,x:7,v:900},
 {n:"Amon-Ra St. Brown",p:"WR",t:"DET",a:26,x:6,v:890},
-{n:"Marvin Harrison Jr.",p:"WR",t:"ARI",a:23,x:3,v:865},
+{n:"Marvin Harrison Jr.",p:"WR",t:"ARI",a:24,x:3,v:865,tp:-30,note:"The -300 in REDRAFT_ADJ was right and never explained, so here is the reason: 9 targets in three games, 4-73, zero touchdowns, 3.77 PPR. Arizona's passing game runs through Trey McBride, who has 33 targets over the same three weeks. The 865 base is a dynasty price for a 24-year-old with the pedigree and it can stay; the redraft adjustment is now -450, because a receiver seeing three looks a game cannot be rostered in a 12-team league no matter who his father is."},
 {n:"Brian Thomas Jr.",p:"WR",t:"JAX",a:23,x:3,v:845},
 {n:"Jaxon Smith-Njigba",p:"WR",t:"SEA",a:24,x:4,v:815},
 {n:"Drake London",p:"WR",t:"ATL",a:25,x:5,v:805},
@@ -737,7 +737,7 @@ const PLAYERS = [
 {n:"Rome Odunze",p:"WR",t:"CHI",a:24,x:3,v:730},
 {n:"Xavier Worthy",p:"WR",t:"KC",a:23,x:3,v:690},
 {n:"Jameson Williams",p:"WR",t:"DET",a:25,x:5,v:480,tp:-14,note:"The Week 1 nine-target share did not hold: 9, then 4, then 4, for 10-127 and zero touchdowns across three games — 7.57 PPR. The old note had the diagnosis right and the price wrong. Detroit throws short and not much, St. Brown eats, Gibbs carries it, and a field-stretcher in an offense that does not stretch the field is a WR4."},
-{n:"Tee Higgins",p:"WR",t:"CIN",a:27,x:7,v:715},
+{n:"Tee Higgins",p:"WR",t:"CIN",a:27,x:7,v:770,tp:16,note:"Another bare entry, and three games say raise it. 14-244-1 on 23 targets for 14.8 PPR a game, climbing every week: 8.9, then 14.5, then 21.0 at Pittsburgh. 7.7 targets a game alongside Chase, with Burrow throwing at a 106.6 rating and 70.9%. 17.4 a catch means the targets he gets are downfield ones. 715 -> 770."},
 {n:"Zay Flowers",p:"WR",t:"BAL",a:25,x:4,v:700},
 {n:"DeVonta Smith",p:"WR",t:"PHI",a:27,x:6,v:685},
 {n:"A.J. Brown",p:"WR",t:"NE",a:29,x:8,v:620,tp:-8,out:10,note:"Reported back Week 8-9, but New England's bye is Week 11 and a team has no reason to rush a 29-year-old back for two games before it — Week 12 is the realistic return, which is Weeks 2-11 gone and six games played. Durability was never his problem (16, 14, 13, 17, 17, 13, 15 games, a 15.0 average). The problem is the injury: a high ankle sprain costs a receiver separation for weeks past the clearance date, and he is 226 pounds and 29."},
@@ -895,7 +895,7 @@ const BY_ADP = [...RANKED]
 const REDRAFT_ADJ = {
   "Daniel Jones":50, "Kyler Murray":20, "Anthony Richardson Sr.":-60, "Tua Tagovailoa":-30,
   "Michael Penix Jr.":-20, "J.J. McCarthy":-40, "Tyreek Hill":-20,
-  "Marvin Harrison Jr.":-300, "Trey McBride":-60,
+  "Marvin Harrison Jr.":-450, "Trey McBride":-60,
   // Calibrated against ESPN mock drafts (n>50, 12-team PPR, slot 2): these three
   // consistently last longer than the model's ordering implied.
   "Brock Bowers":-45, "Trevor Lawrence":-50, "Chris Godwin Jr.":-100
@@ -907,6 +907,15 @@ function redraftValueOf(p){
   // the rushing yards close the gap. Week 2 is unambiguous: 207 yards, 2 TD, -1 rushing,
   // scored 16.18, which is 4-point touchdowns and nothing else. The league pays 4.
   if(p.p==="QB" && p.x>=5) rv += 40;
+  // Known limitation, not a bug to fix blind: this bonus is flat, so it prices a
+  // pocket passer and a rushing quarterback the same. Through Week 4 that is the
+  // largest error in the model. Josh Allen scores 31.6 a game and Burrow 18.31,
+  // a 13-point weekly gap, while their values sit 70 apart — because a rushing
+  // touchdown pays 6 in this league and a passing one pays 4, and nothing here
+  // expresses that. The compression is deliberate for a draft board, where you
+  // can wait on the position; it is wrong for trades, where the QB slot is one
+  // slot and the gap over a replacement starter is the only thing that matters.
+  // The practical consequence: elite rushing QBs are systematically cheap to buy.
   // The dynasty values start discounting age in a player's late 20s, but redraft only
   // cares about this season and production doesn't fall off until later. Give that
   // discount back across the whole prime-veteran band, not just at 30+. Skill players
