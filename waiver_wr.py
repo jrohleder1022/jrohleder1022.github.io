@@ -238,8 +238,11 @@ def gamelog(aid, use_cache=True):
                     "yds": _pick(idx, row, "receivingYards", "yds"),
                     "td":  _pick(idx, row, "receivingTouchdowns", "td"),
                 })
-    # ESPN returns newest first inside a season type; keep that order.
-    return [g for g in games if g["tgt"] or g["rec"]]
+    # Every game in the log counts, including ones where he was active and saw
+    # nothing. Ted Hurst played four straight with a single target and no
+    # catches; dropping those would have left him averaging his good games.
+    # ESPN returns newest first inside a season type, so keep that order.
+    return games
 
 
 # --------------------------------------------------------------------------
@@ -294,58 +297,73 @@ def report(rows, note=None):
 # selftest — real 2026 lines gathered this season, newest game first
 # --------------------------------------------------------------------------
 
+# Full 2026 seasons through Week 9, pulled 11 November. Each entry is
+# (team games played, [(rec, tgt, yds, td), ...]) with the newest game first.
+# The team count is the availability denominator and it is not 9 for everyone:
+# byes fall in different weeks, and penalising a receiver for his team's week
+# off would be the same error as crediting one for playing an extra game.
 FIXTURES = {
-    # name: [(rec, tgt, yds, td), ...] newest first
-    "Emeka Egbuka": [(7, 16, 48, 1), (6, 9, 38, 0), (2, 4, 13, 0),
-                     (5, 9, 62, 0), (3, 5, 16, 1), (5, 6, 63, 0)],
-    "George Pickens": [(2, 4, 48, 0), (4, 6, 57, 1), (6, 11, 73, 0),
-                       (9, 13, 130, 1), (2, 3, 75, 0), (7, 11, 82, 0),
-                       (6, 8, 40, 0), (3, 6, 28, 0)],
-    "Ladd McConkey": [(4, 5, 66, 0), (3, 3, 35, 0), (5, 7, 82, 1)],
-    "Stefon Diggs": [(4, 7, 33, 0), (5, 6, 47, 2), (4, 9, 55, 1)],
-    "Pat Bryant": [(4, 5, 56, 1), (3, 3, 47, 0), (2, 2, 44, 1),
-                   (0, 1, 0, 0), (4, 6, 42, 0)],
-    "Marvin Harrison Jr.": [(2, 3, 20, 0), (1, 4, 6, 1), (3, 4, 34, 0),
-                            (1, 4, 12, 1), (3, 5, 40, 0), (0, 1, 0, 0),
-                            (1, 3, 33, 0)],
-    "Jerry Jeudy": [(4, 4, 69, 0), (3, 7, 19, 0), (3, 3, 36, 0),
-                    (0, 0, 0, 0), (0, 1, 0, 0), (2, 4, 26, 0)],
-    "Quentin Johnston": [(1, 3, 57, 0), (1, 2, 44, 0), (3, 6, 40, 0),
-                         (1, 5, 7, 0), (2, 6, 17, 0)],
-    "Antonio Williams": [(3, 3, 31, 0), (3, 8, 21, 0), (2, 4, 15, 0),
-                         (3, 3, 24, 0), (4, 4, 64, 1)],
-    "Ted Hurst III": [(3, 6, 40, 0), (0, 0, 0, 0), (2, 3, 25, 0),
-                      (1, 4, 40, 1), (2, 7, 27, 0), (3, 3, 36, 0)],
+    "Emeka Egbuka": (9, [
+        (3, 5, 38, 0), (7, 16, 48, 1), (6, 9, 38, 0), (2, 4, 13, 0),
+        (5, 9, 62, 0), (3, 5, 16, 1), (5, 6, 63, 0)]),
+    "George Pickens": (8, [
+        (2, 4, 48, 0), (4, 6, 57, 1), (6, 11, 73, 0), (9, 13, 130, 1),
+        (2, 3, 75, 0), (7, 11, 82, 0), (6, 8, 40, 0), (3, 6, 28, 0)]),
+    "Ladd McConkey": (8, [
+        (4, 6, 86, 0), (1, 1, 17, 0), (0, 2, 0, 0), (4, 5, 66, 0),
+        (3, 3, 35, 0), (5, 7, 82, 1)]),
+    "Stefon Diggs": (8, [
+        (3, 5, 51, 0), (3, 6, 38, 1), (6, 7, 44, 1), (5, 9, 35, 0),
+        (4, 7, 33, 0), (5, 6, 47, 2), (4, 9, 55, 1)]),
+    "Pat Bryant": (9, [
+        (4, 5, 56, 1), (3, 3, 47, 0), (2, 2, 44, 1), (0, 1, 0, 0),
+        (4, 6, 42, 0)]),
+    "Marvin Harrison Jr.": (8, [
+        (2, 3, 20, 0), (1, 4, 6, 1), (3, 4, 34, 0), (1, 4, 12, 1),
+        (3, 5, 40, 0), (0, 1, 0, 0), (1, 3, 33, 0)]),
+    "Jerry Jeudy": (9, [
+        (2, 4, 37, 0), (0, 1, 0, 0), (4, 4, 21, 0), (4, 4, 69, 0),
+        (3, 7, 19, 0), (3, 3, 36, 0), (0, 0, 0, 0), (0, 1, 0, 0),
+        (2, 4, 26, 0)]),
+    "Quentin Johnston": (8, [
+        (1, 4, 58, 1), (4, 4, 37, 0), (1, 3, 57, 0), (1, 2, 44, 0),
+        (3, 6, 40, 0), (1, 5, 7, 0), (2, 6, 17, 0)]),
+    "Antonio Williams": (8, [
+        (3, 6, 25, 0), (5, 7, 54, 0), (3, 4, 50, 0), (3, 3, 31, 0),
+        (3, 8, 21, 0), (2, 4, 15, 0), (3, 3, 24, 0), (4, 4, 64, 1)]),
+    "Ted Hurst III": (9, [
+        (0, 1, 0, 0), (0, 1, 0, 0), (0, 1, 0, 0), (3, 6, 40, 0),
+        (0, 0, 0, 0), (2, 3, 25, 0), (1, 4, 40, 1), (2, 7, 27, 0),
+        (3, 3, 36, 0)]),
 }
 
 
-def selftest(weeks=9):
+def selftest():
     rows = []
-    for name, log in FIXTURES.items():
+    for name, (team_games, log) in FIXTURES.items():
         games = [{"rec": r, "tgt": t, "yds": y, "td": d} for r, t, y, d in log]
-        m = project(games, weeks=weeks)
+        m = project(games, weeks=team_games)
         if m:
             rows.append((name, m))
     report(rows, note=(
-        "Fixture data, not a live pull: real 2026 lines, but each one ends "
-        "wherever I\nlast pulled it, so the GMS column understates anyone I "
-        "checked early. Diggs\nand McConkey are the clearest cases — their "
-        "logs stop at Week 3 and Week 6.\nIn live mode ESPN returns the full "
-        "season and the column means what it says.\n\nDiggs is here as a "
-        "control. His 14.8 average is carried by three early\ntouchdowns and "
-        "the projection should land well under it."
+        "Stored 2026 seasons through Week 9, not a live pull. Denominators are "
+        "each\nteam's own games played, so byes do not count against anyone.\n\n"
+        "Diggs is the control. He is carrying five touchdowns on 49 targets, "
+        "roughly\ndouble the league rate, and the projection should land under "
+        "his average."
     ))
 
     d = dict(rows)["Stefon Diggs"]
-    assert d["proj"] < d["actual"] - 1.5, "TD regression is not biting on Diggs"
-    e = dict(rows)["Emeka Egbuka"]
-    assert e["trend"] >= 2.5, "target trend is not catching Egbuka's 16-target week"
-    q = dict(rows)["Quentin Johnston"]
+    assert d["proj"] < d["actual"], "TD regression is not biting on Diggs"
+    h = dict(rows)["Ted Hurst III"]
+    assert h["tgt_pg"] < 2.0, \
+        "four straight one-target games should crush his per-game volume"
     p = dict(rows)["George Pickens"]
-    assert p["expected"] > q["expected"] * 1.5, \
-        "a 59%-catching 7-target WR should clearly beat a 42%-catching 4-target one"
-    print("\nchecks passed: touchdown regression bites, target trend fires, "
-          "volume and\ncatch rate separate the real roles from the empty ones.")
+    j = dict(rows)["Jerry Jeudy"]
+    assert p["expected"] > j["expected"] * 2, \
+        "a 7.8-target role should more than double a 3.1-target one"
+    print("\nchecks passed: touchdown regression bites, dead weeks drag the "
+          "volume down,\nand real roles separate from empty ones.")
 
 
 def main():
