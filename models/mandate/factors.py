@@ -494,6 +494,55 @@ CANDIDATES: dict[str, ExposureSet] = {
             Exposure("market_beta", 1.50, "Pre-profit small cap; amplifies the tape sharply."),
         ],
     ),
+    "LUNR": ExposureSet(
+        ticker="LUNR",
+        thesis=(
+            "Lunar landers and space infrastructure services, pivoting toward "
+            "national security and commercial work. Q3 2026 (12 Nov): revenue "
+            "$269M, gross margin 26%, adjusted EBITDA +$8M, FREE CASH FLOW "
+            "+$33M, net loss only $4.0M. Backlog $1.87B against $213M at "
+            "December 2025, though $645M of that came from the Lanteris and "
+            "Goonhilly acquisitions. FY2026 guided $920-950M. National security "
+            "revenue went from 3% to 30% of the mix year over year."
+        ),
+        exposures=[
+            Exposure(
+                "gov_appropriation",
+                0.55,
+                "Backlog is ~32% civil and ~25% defense, so ~57% government "
+                "against 43% commercial. Lower government dependence than its "
+                "NASA-lander reputation implies, and the defense share is "
+                "rising fast.",
+            ),
+            Exposure(
+                "ai_capex",
+                0.05,
+                "Essentially none. Demand comes from lunar programs, space "
+                "communications and defense, not from hyperscaler budgets.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.70,
+                "MATERIALLY LOWER than RKLB's 0.95, and this is the reason to "
+                "prefer it on risk grounds. LUNR is already FCF-positive with a "
+                "near-breakeven loss, so less of its value sits in the far "
+                "future. Compare RKLB: a $79.7M loss that widened from $18.3M, "
+                "with the medium-lift thesis gated on a 2027 first flight.",
+            ),
+            Exposure(
+                "regulatory",
+                0.20,
+                "Launch licensing and ITAR, routine for an established "
+                "contractor.",
+            ),
+            Exposure(
+                "market_beta",
+                1.45,
+                "Small-cap space name; high beta, though less extreme than a "
+                "pre-revenue developer.",
+            ),
+        ],
+    ),
     "INTC": ExposureSet(
         ticker="INTC",
         thesis=(
