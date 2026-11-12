@@ -47,6 +47,7 @@ MODULE_ORDER = [
     "policy.py",
     "rubric.py",
     "valuation.py",
+    "company.py",
     "scenarios.py",
     "risk.py",
     "review.py",

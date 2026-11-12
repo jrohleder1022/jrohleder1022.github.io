@@ -40,7 +40,7 @@ judgment that was never written down and so was never tested.
 
 from __future__ import annotations
 
-from . import factors, policy, risk, rubric, scenarios
+from . import company, factors, policy, risk, rubric, scenarios, valuation
 
-__all__ = ["factors", "policy", "risk", "rubric", "scenarios"]
+__all__ = ["company", "factors", "policy", "risk", "rubric", "scenarios", "valuation"]
 __version__ = "0.1.0"

@@ -101,7 +101,61 @@ for t, v in sorted(worst.items(), key=lambda kv: -kv[1]):
     print(f"  {t:<10} {v:>7.1%}{'   <- current book' if t == 'current' else ''}")
 
 
-# %% 4 — Intrinsic value (DCF). Replace the numbers from the 10-K.
+# %% 4 — COMPANY QUALITY. Settle this before caring what it is worth.
+#
+# The five questions: does it create value (ROIC vs WACC), is the growth real
+# (FCF conversion), can it survive (leverage, coverage), am I being diluted,
+# and what am I paying.
+#
+# ROIC vs WACC is the one that matters. A business earning 8% on capital that
+# costs 9% destroys value every time it reinvests, and growth makes it worse.
+# A low multiple on a negative spread is a value trap with a tidy ratio.
+
+from financial_analysis import Fundamentals, evaluate  # noqa: E402
+
+QUALITY_WACC = WACCInputs(
+    risk_free=0.0415,
+    equity_risk_premium=0.045,
+    beta=1.05,
+    cost_of_debt=0.055,
+    tax_rate=0.21,
+    debt_weight=0.15,
+    basis="rf = 10Y Nov 2026. ERP 4.5%. Beta from factors.py.",
+)
+
+SNPS_FUNDAMENTALS = Fundamentals(
+    ticker="SNPS",
+    # --- income statement -------------------------------------------------
+    revenue=8_700_000_000,
+    revenue_prior=7_100_000_000,
+    gross_profit=6_700_000_000,
+    ebit=1_900_000_000,            # operating income
+    net_income=1_400_000_000,
+    interest_expense=450_000_000,
+    tax_rate=0.17,                 # effective rate, not statutory
+    # --- cash flow statement ---------------------------------------------
+    cfo=2_300_000_000,
+    capex=300_000_000,
+    # --- balance sheet ----------------------------------------------------
+    total_debt=10_000_000_000,
+    cash=4_500_000_000,
+    equity=19_000_000_000,
+    # --- shares and price -------------------------------------------------
+    shares_diluted=188_000_000,
+    shares_diluted_prior=155_000_000,
+    price=400.0,
+    wacc=QUALITY_WACC.value(),
+    basis={
+        "revenue": "APPROXIMATE post-Ansys. REPLACE from the 10-K.",
+        "cfo": "APPROXIMATE. REPLACE.",
+        "total_debt": "APPROXIMATE Ansys financing. REPLACE.",
+    },
+)
+
+print(evaluate(SNPS_FUNDAMENTALS))
+
+
+# %% 5 — Intrinsic value (DCF). Replace the numbers from the 10-K.
 GOOGL_WACC = WACCInputs(
     risk_free=0.0415,
     equity_risk_premium=0.045,
@@ -131,7 +185,7 @@ GOOGL_DCF = DCFAssumptions(
 print(report(GOOGL_DCF, price=290.0))
 
 
-# %% 5 — Multiple convergence. Three inputs, no terminal assumption.
+# %% 6 — Multiple convergence. Three inputs, no terminal assumption.
 # Start here, not with the DCF. Both inputs are observable.
 for target in (18, 22, 26):
     print(
@@ -141,7 +195,7 @@ for target in (18, 22, 26):
     )
 
 
-# %% 6 — Add a company of my own
+# %% 7 — Add a company of my own
 # Factor names: ai_capex, semi_rd, china_policy, rates_duration, enterprise_it,
 # ad_cycle, regulatory, gov_appropriation, saas_disintermediation,
 # digital_services_tax, consumer_spending, market_volatility, market_beta
@@ -163,5 +217,5 @@ CANDIDATES["TICKER"] = ExposureSet(
 # report_candidate(book, "TICKER", contribution)
 
 
-# %% 7 — Print the research brief for a name I'm studying
+# %% 8 — Print the research brief for a name I'm studying
 print(brief("TICKER"))
