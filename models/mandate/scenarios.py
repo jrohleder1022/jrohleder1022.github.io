@@ -271,7 +271,8 @@ SCENARIOS: dict[str, Scenario] = {
     "broad_drawdown": Scenario(
         key="broad_drawdown",
         name="Broad equity drawdown, -25%",
-        shocks={"market_beta": -0.25, "rates_duration": -0.10, "market_volatility": -0.30},
+        shocks={"market_beta": -0.25, "rates_duration": -0.10, "market_volatility": -0.30,
+                "consumer_spending": -0.15},
         rationale=(
             "A garden-variety bear market with no thesis-specific cause. "
             "Included because it is the most likely large loss in any given "

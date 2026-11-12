@@ -201,6 +201,14 @@ FACTORS: dict[str, str] = {
         "precedent spreading across states and stacking with seat compression "
         "on the same budget line."
     ),
+    "consumer_spending": (
+        "Revenue scales with household consumption — retail sales, travel, "
+        "discretionary purchases. Distinct from `market_beta`, which is a "
+        "valuation effect: this one moves the actual revenue line. Softer and "
+        "more persistent than a capital budget, because consumption falls a "
+        "little in a recession rather than stopping outright the way a "
+        "deferred factory does."
+    ),
     "market_volatility": (
         "Exposure to realized volatility itself, separate from market "
         "direction. Positive loading = hurt by rising volatility (most "
@@ -648,6 +656,59 @@ CANDIDATES: dict[str, ExposureSet] = {
                 "simply appear.",
             ),
             Exposure("ai_capex", 0.00, "No connection. Volume is driven by hedging need."),
+        ],
+    ),
+    "V": ExposureSet(
+        ticker="V",
+        thesis=(
+            "A toll on global card payment volume. Visa does not lend or carry "
+            "credit risk; it runs the network and takes a fee per transaction. "
+            "FY2026 (ended 30 Sept): net revenue $45.9B (+15%, +14% constant "
+            "currency), payments volume +9% cc, cross-border volume +15% ex "
+            "intra-Europe, GAAP EPS $12.32 (+21%), non-GAAP $13.27. The moat "
+            "is a two-sided network effect: merchants accept it because "
+            "cardholders carry it, and vice versa, which is close to "
+            "impossible to rebuild from scratch."
+        ),
+        exposures=[
+            Exposure(
+                "consumer_spending",
+                0.75,
+                "The business IS a percentage of consumption. Payments volume "
+                "+9% and cross-border +15% in FY2026 are the revenue line, not "
+                "a proxy for it. Cross-border carries the highest take rate, "
+                "which makes international travel the swing factor.",
+            ),
+            Exposure(
+                "regulatory",
+                0.65,
+                "The largest risk by some distance, and the reason this is not "
+                "a sleep-easy holding. Interchange fee caps, the proposed "
+                "Credit Card Competition Act, and ongoing antitrust attention "
+                "to network routing all attack the take rate directly. A "
+                "legislated fee cap would hit revenue without touching volume.",
+            ),
+            Exposure(
+                "market_beta",
+                0.95,
+                "Large-cap, lower volatility than the tech complex, but it "
+                "still trades with the index.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.55,
+                "Moderate. Earnings are real and present rather than promised, "
+                "so duration is well below NOW or SNPS — but the multiple is "
+                "not cheap and this is NOT a low-duration asset. Visa is a "
+                "quality compounder, not ballast.",
+            ),
+            Exposure(
+                "market_volatility",
+                0.10,
+                "Slight. Consumers spend marginally less when frightened, but "
+                "the effect is small next to the volume trend.",
+            ),
+            Exposure("ai_capex", 0.00, "No linkage. Volume is driven by consumption."),
         ],
     ),
     "WM": ExposureSet(
@@ -2327,7 +2388,8 @@ SCENARIOS: dict[str, Scenario] = {
     "broad_drawdown": Scenario(
         key="broad_drawdown",
         name="Broad equity drawdown, -25%",
-        shocks={"market_beta": -0.25, "rates_duration": -0.10, "market_volatility": -0.30},
+        shocks={"market_beta": -0.25, "rates_duration": -0.10, "market_volatility": -0.30,
+                "consumer_spending": -0.15},
         rationale=(
             "A garden-variety bear market with no thesis-specific cause. "
             "Included because it is the most likely large loss in any given "
