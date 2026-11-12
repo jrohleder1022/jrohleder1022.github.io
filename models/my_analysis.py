@@ -206,7 +206,7 @@ WATCHLIST = {
         total_debt=0.0, cash=0.0, equity=0.0,          # FILL IN
         shares_diluted=1_630_000_000,
         shares_diluted_prior=1_640_000_000,
-        price=250.0,                     # FILL IN current
+        price=585.30,                    # 12 Nov 2026, SOURCED
         wacc=QUALITY_WACC.value(),
         basis={"revenue": "Q3 2026 8-K, SOURCED",
                "cfo": "ESTIMATE - VERIFY",
