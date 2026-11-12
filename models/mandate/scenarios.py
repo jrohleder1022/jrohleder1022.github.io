@@ -255,7 +255,7 @@ SCENARIOS: dict[str, Scenario] = {
     "rate_shock_150bp": Scenario(
         key="rate_shock_150bp",
         name="Long-rate shock, +150bp on the 10Y",
-        shocks={"rates_duration": -0.30, "market_beta": -0.10},
+        shocks={"rates_duration": -0.30, "market_beta": -0.10, "market_volatility": -0.20},
         rationale=(
             "Term premium expands on fiscal supply and a re-steepening curve. "
             "High-multiple equities de-rate in proportion to duration: the "
@@ -271,7 +271,7 @@ SCENARIOS: dict[str, Scenario] = {
     "broad_drawdown": Scenario(
         key="broad_drawdown",
         name="Broad equity drawdown, -25%",
-        shocks={"market_beta": -0.25, "rates_duration": -0.10},
+        shocks={"market_beta": -0.25, "rates_duration": -0.10, "market_volatility": -0.30},
         rationale=(
             "A garden-variety bear market with no thesis-specific cause. "
             "Included because it is the most likely large loss in any given "

@@ -64,6 +64,35 @@ _EMBEDDED_PORTFOLIO_JSON = r"""
 _EMBEDDED_PORTFOLIO = json.loads(_EMBEDDED_PORTFOLIO_JSON)
 
 
+# ----------------------------------------------------------------------------
+# Module aliases
+# ----------------------------------------------------------------------------
+# In the package, review.py does `from . import risk, scenarios` and then
+# calls risk.concentration(...). Here everything shares one namespace, so
+# those relative imports were stripped -- which left the FUNCTIONS defined
+# but the MODULE names undefined, and every qualified call raised
+# NameError at runtime rather than at import.
+#
+# This shim resolves attribute lookups straight into this file's globals.
+# __getattr__ runs at call time, so names defined further down are found
+# even though the alias is created up here.
+
+
+class _ModuleAlias:
+    """Makes `risk.concentration` resolve to the flat global of that name."""
+
+    def __getattr__(self, name: str):
+        try:
+            return globals()[name]
+        except KeyError:
+            raise AttributeError(
+                f'{name!r} is not defined in this single-file build'
+            ) from None
+
+
+factors = policy = risk = rubric = scenarios = valuation = _ModuleAlias()
+
+
 # ============================================================================
 # MODULE: factors.py
 # ============================================================================
@@ -171,6 +200,15 @@ FACTORS: dict[str, str] = {
         "elasticity rather than margin. Small in isolation; the risk is "
         "precedent spreading across states and stacking with seat compression "
         "on the same budget line."
+    ),
+    "market_volatility": (
+        "Exposure to realized volatility itself, separate from market "
+        "direction. Positive loading = hurt by rising volatility (most "
+        "businesses, via demand uncertainty and deal deferral). NEGATIVE "
+        "loading = helped by it. Exchanges, brokers and clearing houses earn "
+        "per contract traded, and volume spikes precisely when everything else "
+        "is falling. This factor exists because genuine ballast is not merely "
+        "low beta — it is a business whose revenue moves the other way."
     ),
     "market_beta": (
         "Undifferentiated exposure to a broad equity de-rating. Everything has "
@@ -557,6 +595,148 @@ CANDIDATES: dict[str, ExposureSet] = {
                 "but routine for an established operator.",
             ),
             Exposure("market_beta", 1.50, "Pre-profit small cap; amplifies the tape sharply."),
+        ],
+    ),
+    # -- Ballast candidates -------------------------------------------------
+    # Screened on the OPPOSITE properties to everything above: profitable now,
+    # cash-generative now, modest duration, low beta, and a demand driver with
+    # no connection to AI. These are structurally boring, and the boringness
+    # is the entire function.
+    "CME": ExposureSet(
+        ticker="CME",
+        thesis=(
+            "Derivatives exchange and clearing house. Earns a fee per contract "
+            "traded across rates, equities, FX, energy, metals and agriculture. "
+            "Q3 2026: record revenue $1.74B (+13%), ADV 29.4M contracts (+16%), "
+            "double-digit growth in all six asset classes. Market data revenue "
+            "$243M, its 34th consecutive quarter of growth. Q1 2026 set an ADV "
+            "record of 36.2M (+22%) during a volatile quarter. Dividend yield "
+            "roughly 3.9% at $316."
+        ),
+        exposures=[
+            Exposure(
+                "market_volatility",
+                -0.70,
+                "THE REASON TO OWN IT. Revenue is a toll per contract traded, "
+                "and volume spikes when markets are frightened. Q1 2026 proved "
+                "it: record ADV +22% in a volatile quarter. This is the only "
+                "negative volatility loading available in this file, and the "
+                "book's single worst scenario is a broad drawdown.",
+            ),
+            Exposure(
+                "market_beta",
+                0.55,
+                "The STOCK still falls in a selloff — ballast is not a hedge. "
+                "But it falls roughly half as hard as the book does, and the "
+                "earnings move the other way, which is the combination that "
+                "actually dampens a drawdown.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.30,
+                "Lowest duration of any name considered. Profits are real, "
+                "near-term and largely returned as dividends and buybacks, so "
+                "little value sits in distant cash flows for a discount rate to "
+                "destroy.",
+            ),
+            Exposure(
+                "regulatory",
+                0.35,
+                "CFTC oversight, clearing-capital rules, position limits, and "
+                "periodic political interest in a transaction tax. Real, slow-"
+                "moving, and the same barriers are why a new exchange cannot "
+                "simply appear.",
+            ),
+            Exposure("ai_capex", 0.00, "No connection. Volume is driven by hedging need."),
+        ],
+    ),
+    "WM": ExposureSet(
+        ticker="WM",
+        thesis=(
+            "Solid waste collection and disposal. The moat is permitted "
+            "landfill capacity, which is close to impossible to replicate "
+            "because new permits are rarely granted, combined with route "
+            "density that makes a competing truck uneconomic. Q3 2026: revenue "
+            "+6.3% on core pricing +5.8%. FY2026 FCF guided $3.75-3.85B at the "
+            "high end, EBITDA $8.15-8.25B."
+        ),
+        exposures=[
+            Exposure(
+                "market_beta",
+                0.70,
+                "Demand is the most inelastic there is — waste is generated "
+                "whether or not the economy is growing. The cyclical part is "
+                "construction and industrial volumes, not households.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.45,
+                "Steady contracted cash flows, but the multiple is not cheap "
+                "and the ~1.5% yield leaves limited cushion if pricing power "
+                "fades. Lower duration than the book, not dramatically so.",
+            ),
+            Exposure(
+                "gov_appropriation",
+                0.15,
+                "Municipal collection contracts are government revenue, but "
+                "they are essential-service budgets rather than discretionary "
+                "appropriations. Low exposure.",
+            ),
+            Exposure(
+                "regulatory",
+                0.30,
+                "Environmental rules cut both ways: compliance is a cost, and "
+                "it is also exactly why nobody can open a competing landfill.",
+            ),
+            Exposure(
+                "market_volatility",
+                0.10,
+                "Near-zero. Nothing about contracted waste collection responds "
+                "to market volatility.",
+            ),
+            Exposure("ai_capex", 0.05, "Negligible; some data-center construction waste."),
+        ],
+    ),
+    "PGR": ExposureSet(
+        ticker="PGR",
+        thesis=(
+            "Auto insurer with a data and pricing advantage. Invests a $99.2B "
+            "float at a 4.3% recurring book yield, 3.6-year duration. WARNING: "
+            "the underwriting cycle is turning against it. Combined ratio drifted "
+            "from 87.3 in Q2 2026 to 88.7 in Q3; the clean ratio worsened ~4 "
+            "points YoY; premium per policy is FALLING; and written premium "
+            "growth slowed to 6% in H1 2026 from 15% in H1 2025."
+        ),
+        exposures=[
+            Exposure(
+                "rates_duration",
+                -0.35,
+                "NEGATIVE, and the structural reason to look here. An insurer "
+                "reinvests its float at prevailing yields, so higher rates "
+                "raise earnings over time — the opposite of every other "
+                "position in the book. Caveat: short-run mark-to-market still "
+                "hurts (Q3 2026 total portfolio return was -1.5% on Treasury "
+                "moves). The negative loading is right for a ten-year horizon "
+                "and wrong for a quarter.",
+            ),
+            Exposure(
+                "market_beta",
+                0.45,
+                "Low. People insure their cars regardless of the index.",
+            ),
+            Exposure(
+                "regulatory",
+                0.30,
+                "State rate approval. Insurers must petition to raise prices, "
+                "which delays recovery when loss costs rise — part of why the "
+                "combined ratio is drifting now.",
+            ),
+            Exposure(
+                "market_volatility",
+                0.05,
+                "Essentially none, beyond mark-to-market on the bond portfolio.",
+            ),
+            Exposure("ai_capex", 0.00, "No connection whatsoever."),
         ],
     ),
     "LUNR": ExposureSet(
@@ -2131,7 +2311,7 @@ SCENARIOS: dict[str, Scenario] = {
     "rate_shock_150bp": Scenario(
         key="rate_shock_150bp",
         name="Long-rate shock, +150bp on the 10Y",
-        shocks={"rates_duration": -0.30, "market_beta": -0.10},
+        shocks={"rates_duration": -0.30, "market_beta": -0.10, "market_volatility": -0.20},
         rationale=(
             "Term premium expands on fiscal supply and a re-steepening curve. "
             "High-multiple equities de-rate in proportion to duration: the "
@@ -2147,7 +2327,7 @@ SCENARIOS: dict[str, Scenario] = {
     "broad_drawdown": Scenario(
         key="broad_drawdown",
         name="Broad equity drawdown, -25%",
-        shocks={"market_beta": -0.25, "rates_duration": -0.10},
+        shocks={"market_beta": -0.25, "rates_duration": -0.10, "market_volatility": -0.30},
         rationale=(
             "A garden-variety bear market with no thesis-specific cause. "
             "Included because it is the most likely large loss in any given "
