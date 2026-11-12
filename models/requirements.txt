@@ -1,0 +1,18 @@
+# mandate package — runtime dependencies
+#
+# Python 3.10 or newer. Verified against 3.11 (typical Anaconda) and 3.13.
+#
+# Anaconda ships all three already; `conda list numpy pandas scipy` to confirm.
+# No install is normally needed.
+#
+# scipy is used by efficient_frontier.py, not by mandate itself. mandate needs
+# only numpy and pandas.
+#
+# TensorFlow is deliberately NOT a dependency. There is no supervised learning
+# problem in this package: a model fitted to a few years of returns produces a
+# confident number with no information in it, which is worse than honest
+# arithmetic because it is harder to argue with.
+
+numpy>=1.24
+pandas>=2.0
+scipy>=1.10

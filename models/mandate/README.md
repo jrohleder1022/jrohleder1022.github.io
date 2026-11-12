@@ -26,11 +26,45 @@ arithmetic gets reliably right.
 
 ```bash
 cd models
-python3.13 -m mandate.review                    # full review
-python3.13 -m mandate.review --candidate AMD    # what would adding AMD do?
-python3.13 -m mandate.review --brief AMD        # research brief for an agent
-python3.13 -m mandate.review --prices closes.csv  # enables correlation
+python -m mandate.review                    # full review
+python -m mandate.review --candidate AMD    # what would adding AMD do?
+python -m mandate.review --brief AMD        # research brief for an agent
+python -m mandate.review --prices closes.csv  # enables correlation
 ```
+
+Python 3.10+. Verified on 3.11 (typical Anaconda) and 3.13. Needs only numpy
+and pandas, both of which Anaconda already has.
+
+## Spyder
+
+**Open `models/run_review.py`, not a file inside the package.** The package
+uses relative imports, which is correct for a package and is exactly what
+breaks under F5 — `runfile()` executes a script as `__main__` with no package
+context, so a relative import has nothing to be relative to. `run_review.py`
+sits above the package, fixes `sys.path`, and imports absolutely.
+
+It is split into `#%%` cells. Ctrl+Enter runs the cell under the cursor and
+leaves everything in the namespace, so `book`, `factor_table`, `scenario_df`
+and `grid` are all inspectable in the Variable Explorer. That is the reason to
+work here rather than in a terminal: **the printed report is the summary, the
+objects are the actual work.**
+
+| Cell | What it leaves behind |
+|---|---|
+| 2 | `book` — positions, weights, themes, funding plan |
+| 3 | `findings_df` — policy audit, sortable |
+| 4 | `factor_table` — current vs. each candidate, with `worst_delta` |
+| 5 | `corr` — correlation matrix and effective bets (needs prices) |
+| 6 | `scenario_df`, `attribution` |
+| 7 | `grid` — per-position × per-scenario returns |
+
+### TensorFlow
+
+Installed but deliberately unused. There is no supervised learning problem
+here. A network fitted to a few years of returns yields a confident number with
+no information in it, and it is *harder to argue with* than arithmetic — which
+makes it worse, not better. The judgment in this package lives in
+`factors.py`, where it is written down and can be contradicted.
 
 `--prices` wants a CSV with a date index and one adjusted-close column per
 ticker. Without it, correlation is **skipped rather than estimated**. A

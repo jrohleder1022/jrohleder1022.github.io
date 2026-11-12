@@ -174,7 +174,10 @@ def correlation(
     if len(tickers) < 2:
         raise ValueError("correlation needs at least two positions with history")
 
-    rets = prices[tickers].pct_change().dropna()
+    # fill_method=None is explicit for cross-version pandas: 2.1+ deprecated
+    # the old forward-filling default, and silently filling gaps would
+    # manufacture zero-return days that bias correlation upward.
+    rets = prices[tickers].pct_change(fill_method=None).dropna()
     if len(rets) < 60:
         raise ValueError(
             f"only {len(rets)} return observations; correlation estimated on "
