@@ -155,6 +155,159 @@ SNPS_FUNDAMENTALS = Fundamentals(
 print(evaluate(SNPS_FUNDAMENTALS))
 
 
+# %% 4b — WATCHLIST QUALITY COMPARISON
+#
+# RKLB, SPCX, NVDA, AMD, LUNR, IONQ.
+#
+# WHAT IS FILLED IN AND WHAT IS NOT
+# ---------------------------------
+# Income-statement and cash-flow figures below are SOURCED from the quarters
+# noted. BALANCE-SHEET fields are left at 0.0 because I do not have them, and
+# inventing them would silently corrupt the ROIC line -- the single most
+# important number in the scorecard.
+#
+# Left at 0.0, invested capital computes as zero and validate() says so
+# explicitly rather than printing a confident wrong answer. Fill in
+# total_debt, cash and equity from each 10-Q balance sheet and ROIC starts
+# working. Three numbers per company.
+#
+# Watch what happens to IONQ. Its GAAP net income is positive and the
+# scorecard still condemns it, which is the entire reason FCF conversion is
+# in there.
+
+WATCHLIST = {
+    "NVDA": Fundamentals(
+        ticker="NVDA",
+        revenue=96_220_000_000,          # Q2 FY2027
+        revenue_prior=46_740_000_000,    # implied by +106% YoY
+        gross_profit=69_280_000_000,     # ~72% margin, ESTIMATE
+        ebit=59_660_000_000,             # ~62% op margin, ESTIMATE
+        net_income=50_000_000_000,       # ESTIMATE
+        cfo=55_000_000_000,              # ESTIMATE
+        capex=3_500_000_000,             # ESTIMATE
+        total_debt=0.0, cash=0.0, equity=0.0,          # FILL IN
+        shares_diluted=24_400_000_000,
+        shares_diluted_prior=24_800_000_000,
+        price=180.0,                     # FILL IN current
+        wacc=QUALITY_WACC.value(),
+        basis={"revenue": "Q2 FY2027 release, SOURCED",
+               "cfo": "ESTIMATE - VERIFY",
+               "total_debt": "NOT FILLED IN"},
+    ),
+    "AMD": Fundamentals(
+        ticker="AMD",
+        revenue=13_400_000_000,          # Q3 2026, SOURCED
+        revenue_prior=9_240_000_000,     # implied by +45% YoY
+        gross_profit=7_370_000_000,      # ~55% margin, ESTIMATE
+        ebit=2_900_000_000,              # ESTIMATE
+        net_income=3_400_000_000,        # non-GAAP $2.09/sh x ~1.63B, ESTIMATE
+        cfo=3_600_000_000,               # ESTIMATE
+        capex=500_000_000,               # ESTIMATE
+        total_debt=0.0, cash=0.0, equity=0.0,          # FILL IN
+        shares_diluted=1_630_000_000,
+        shares_diluted_prior=1_640_000_000,
+        price=250.0,                     # FILL IN current
+        wacc=QUALITY_WACC.value(),
+        basis={"revenue": "Q3 2026 8-K, SOURCED",
+               "cfo": "ESTIMATE - VERIFY",
+               "total_debt": "NOT FILLED IN"},
+    ),
+    "SPCX": Fundamentals(
+        ticker="SPCX",
+        revenue=14_600_000_000,          # Q3 2026, SOURCED
+        revenue_prior=5_590_000_000,     # implied by +161% YoY
+        gross_profit=5_800_000_000,      # ESTIMATE
+        ebit=4_800_000_000,              # ESTIMATE
+        net_income=4_400_000_000,        # Q3 2026, SOURCED
+        cfo=5_000_000_000,               # ESTIMATE
+        capex=36_000_000_000,            # Q4 GUIDED $35-40B. ~250% of revenue.
+        total_debt=0.0, cash=0.0, equity=0.0,          # FILL IN
+        shares_diluted=13_700_000_000,   # ESTIMATE from ~$1.9T at ~$139
+        shares_diluted_prior=13_500_000_000,
+        price=139.0,
+        wacc=QUALITY_WACC.value(),
+        basis={"revenue": "Q3 2026, SOURCED", "cfo": "ESTIMATE",
+               "total_debt": "NOT FILLED IN"},
+    ),
+    "RKLB": Fundamentals(
+        ticker="RKLB",
+        revenue=267_800_000,             # Q3 2026, SOURCED
+        revenue_prior=154_800_000,       # implied by +73% YoY
+        gross_profit=87_000_000,         # ESTIMATE
+        ebit=-70_000_000,                # ESTIMATE
+        net_income=-79_700_000,          # Q3 2026, SOURCED
+        cfo=-40_000_000,                 # ESTIMATE
+        capex=30_000_000,                # ESTIMATE
+        total_debt=0.0, cash=0.0, equity=0.0,          # FILL IN
+        shares_diluted=510_000_000,
+        shares_diluted_prior=490_000_000,
+        price=54.97,                     # 9 Nov 2026 after hours, SOURCED
+        wacc=QUALITY_WACC.value(),
+        basis={"revenue": "Q3 2026, SOURCED", "cfo": "ESTIMATE",
+               "total_debt": "NOT FILLED IN"},
+    ),
+    "LUNR": Fundamentals(
+        ticker="LUNR",
+        revenue=269_000_000,             # Q3 2026, SOURCED
+        revenue_prior=165_000_000,       # ESTIMATE
+        gross_profit=69_000_000,         # Q3 2026, SOURCED (26% margin)
+        ebit=5_000_000,                  # adj EBITDA +$8M, SOURCED-ish
+        net_income=-4_020_000,           # Q3 2026, SOURCED
+        cfo=40_000_000,                  # FCF +$33M, SOURCED; capex backed out
+        capex=7_000_000,                 # ESTIMATE
+        total_debt=0.0, cash=0.0, equity=0.0,          # FILL IN
+        shares_diluted=160_000_000,
+        shares_diluted_prior=140_000_000,
+        price=12.0,                      # FILL IN current
+        wacc=QUALITY_WACC.value(),
+        basis={"revenue": "Q3 2026, SOURCED", "cfo": "FCF SOURCED +$33M",
+               "total_debt": "NOT FILLED IN"},
+    ),
+    "IONQ": Fundamentals(
+        ticker="IONQ",
+        revenue=173_800_000,             # Q3 2026, SOURCED, +336% YoY
+        revenue_prior=39_900_000,        # implied by +336%
+        gross_profit=70_000_000,         # ESTIMATE
+        ebit=-433_000_000,               # Q3 2026 operating loss, SOURCED
+        net_income=564_000_000,          # GAAP, SOURCED -- see below
+        cfo=-190_000_000,                # 9mo -$570M / 3, ESTIMATE
+        capex=25_000_000,                # ESTIMATE
+        total_debt=0.0, cash=0.0, equity=0.0,          # FILL IN
+        shares_diluted=397_000_000,      # ESTIMATE from $1.42 EPS
+        shares_diluted_prior=300_000_000,
+        price=60.0,                      # FILL IN current
+        wacc=QUALITY_WACC.value(),
+        basis={"revenue": "Q3 2026, SOURCED",
+               "cfo": "9-month -$570M, SOURCED; quarterly ESTIMATE",
+               "total_debt": "NOT FILLED IN"},
+    ),
+}
+
+# --- the comparison -------------------------------------------------------
+print("WATCHLIST — what the income statement says\n")
+hdr = (
+    f"{'':<7}{'revenue $m':>13}{'growth':>9}{'op mgn':>9}"
+    f"{'FCF $m':>13}{'FCF/NI':>9}"
+)
+print(hdr)
+print("-" * len(hdr))
+for tk, f in WATCHLIST.items():
+    conv = f.fcf_conversion
+    # None means net income was negative, so the ratio is meaningless rather
+    # than bad. LUNR is the case that matters: positive FCF with a small loss
+    # is a GOOD sign this particular check cannot express.
+    conv_s = "n/a" if conv is None else f"{conv:.2f}"
+    print(
+        f"{tk:<7}{f.revenue / 1e6:>13,.0f}{f.revenue_growth:>9.0%}"
+        f"{f.operating_margin:>9.1%}{f.fcf / 1e6:>13,.0f}{conv_s:>9}"
+    )
+
+print("\n\nFull scorecard for each:\n")
+for tk in WATCHLIST:
+    print(evaluate(WATCHLIST[tk]))
+    print()
+
+
 # %% 5 — Intrinsic value (DCF). Replace the numbers from the 10-K.
 GOOGL_WACC = WACCInputs(
     risk_free=0.0415,

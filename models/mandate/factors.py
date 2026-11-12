@@ -403,6 +403,105 @@ CANDIDATES: dict[str, ExposureSet] = {
             Exposure("market_beta", 1.40, "High-beta semiconductor; amplifies the tape."),
         ],
     ),
+    "NVDA": ExposureSet(
+        ticker="NVDA",
+        thesis=(
+            "The AI accelerator standard, and CUDA is the moat rather than the "
+            "silicon. Q2 FY2027: revenue $96.22B (+106% YoY), data center "
+            "$89.0B (+117%). Q3 guided to $108B +/-2% at 74% gross margin, "
+            "EXPLICITLY excluding all China data center compute. SOLD from this "
+            "book on 12 Nov 2026 when the written tripwire fired on Huang's "
+            "resignation. Held here to monitor the re-entry conditions, not as "
+            "a candidate."
+        ),
+        exposures=[
+            Exposure(
+                "ai_capex",
+                1.10,
+                "Above full pass-through. It sells the single most expensive "
+                "line item in the AI buildout, with operating leverage that "
+                "amplifies the factor in both directions.",
+            ),
+            Exposure(
+                "china_policy",
+                0.40,
+                "LOWER than it looks, and this is the counterintuitive part. "
+                "The $108B guide already excludes all China data center "
+                "revenue, so the loss is realized rather than pending. China "
+                "is now upside optionality. The residual exposure is the "
+                "regime tightening further on allied jurisdictions.",
+            ),
+            Exposure(
+                "regulatory",
+                0.70,
+                "Elevated sharply after the resignation. Bipartisan calls for a "
+                "federal probe, Warren and Coons demanding record preservation, "
+                "and the Chip Security Act and AI Overwatch Act moving through "
+                "the NDAA. The company lost its most effective lobbyist against "
+                "export controls and gained an investigation in the same week.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.65,
+                "Enormous current earnings relative to the multiple, which "
+                "keeps duration below the pre-profit names despite the growth.",
+            ),
+            Exposure(
+                "semi_rd",
+                0.20,
+                "A heavy consumer of EDA rather than a seller. An industry R&D "
+                "recession would ease competition and slow its own roadmap.",
+            ),
+            Exposure("market_beta", 1.45, "The highest-weight stock in the index complex."),
+        ],
+    ),
+    "IONQ": ExposureSet(
+        ticker="IONQ",
+        thesis=(
+            "Trapped-ion quantum computing, now with a semiconductor "
+            "manufacturing arm after the SkyWater acquisition. Q3 2026: revenue "
+            "$173.8M (+336% YoY), of which the platform business was $90.3M. "
+            "RPO ~$1.2B. FY2026 guided $505-515M. READ THE PROFIT LINE "
+            "CAREFULLY: GAAP net income of ~$564M (EPS $1.42) includes an $896M "
+            "NON-CASH gain from marking warrant liabilities to market. The "
+            "operating loss was ~$433M for the quarter and nine-month operating "
+            "cash flow was about -$570M."
+        ),
+        exposures=[
+            Exposure(
+                "gov_appropriation",
+                0.60,
+                "National labs, defense research and allied-government "
+                "contracts are the bulk of credible near-term quantum demand. "
+                "Commercial production use remains thin.",
+            ),
+            Exposure(
+                "ai_capex",
+                0.30,
+                "Partially coupled. Quantum sits in the same speculative "
+                "research budgets that AI enthusiasm inflated, so sentiment "
+                "transmits even though the technology does not compete.",
+            ),
+            Exposure(
+                "rates_duration",
+                1.35,
+                "The highest in this file, and deservedly. Burning ~$570M of "
+                "operating cash over nine months against a commercial payoff "
+                "that is years away means essentially all value is terminal "
+                "value. This is the definition of maximum duration, and it is "
+                "why a rate shock hurts speculative technology hardest.",
+            ),
+            Exposure(
+                "market_volatility",
+                0.55,
+                "Positive and high. A pre-commercial company funded by equity "
+                "issuance depends on markets staying open — it raised ~$2B in "
+                "October. Volatility closes that window precisely when cash is "
+                "needed.",
+            ),
+            Exposure("market_beta", 1.80, "The highest beta in the file. Narrative-driven."),
+        ],
+    ),
     "CBRS": ExposureSet(
         ticker="CBRS",
         thesis=(
