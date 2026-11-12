@@ -107,6 +107,15 @@ FACTORS: dict[str, str] = {
         "precedent spreading across states and stacking with seat compression "
         "on the same budget line."
     ),
+    "commodity_cycle": (
+        "Exposure to where a fungible-product industry sits in its CAPACITY "
+        "cycle. Distinct from every demand factor here, because the mechanism "
+        "is supply: peak margins fund the capacity that destroys them, with a "
+        "two-to-three-year lag between the capex decision and the fab coming "
+        "online. The signature is margins far above the long-run mean plus an "
+        "industry-wide capex increase. A low P/E on peak earnings is not "
+        "cheapness, it is the market discounting earnings it does not believe."
+    ),
     "consumer_spending": (
         "Revenue scales with household consumption — retail sales, travel, "
         "discretionary purchases. Distinct from `market_beta`, which is a "
@@ -401,6 +410,82 @@ CANDIDATES: dict[str, ExposureSet] = {
                 "roughly double. Substantial duration.",
             ),
             Exposure("market_beta", 1.40, "High-beta semiconductor; amplifies the tape."),
+        ],
+    ),
+    "MU": ExposureSet(
+        ticker="MU",
+        thesis=(
+            "DRAM, NAND and — the reason anyone cares now — HBM for AI "
+            "accelerators. FQ4 FY2026 (ended 3 Sept): revenue $54.2B (+379% "
+            "YoY), gross margin 87%, adjusted EPS $33.42. FY2026: revenue "
+            "$133.2B (+256%), gross margin 81.1% against ABOUT 40% in FY2025. "
+            "FQ1 FY2027 guided to $61.5B revenue, 86.25% gross margin, $38.15 "
+            "adjusted EPS. Cloud Memory (including HBM) $16.3B, +18% "
+            "sequentially, with most of calendar 2027 HBM bit supply already "
+            "contracted at significantly higher prices. Capex $27.37B in "
+            "FY2026 and guided higher for FY2027. Price $798.44 on 12 Nov 2026."
+        ),
+        exposures=[
+            Exposure(
+                "commodity_cycle",
+                1.25,
+                "THE WHOLE POSITION, and the reason the factor was added. An "
+                "87% gross margin in a commodity industry whose long-run "
+                "mid-cycle margin is 25-35% is not a new normal; it is a peak "
+                "with a date on it. Memory has all five boom ingredients — "
+                "fungible product, fixed short-run capacity, inelastic demand, "
+                "extreme operating leverage, spot pricing — which is exactly "
+                "why margins went from 40% to 81% in one year and exactly why "
+                "they will go back. The $27.37B of FY2026 capex, guided higher "
+                "still, IS the mechanism of reversal: it arrives as supply in "
+                "2028-29. Above full pass-through because operating leverage "
+                "amplifies the move in both directions.",
+            ),
+            Exposure(
+                "ai_capex",
+                1.00,
+                "HBM is sold into accelerator bills of materials, so demand is "
+                "the AI buildout. Partially mitigated by multi-year contracted "
+                "pricing — most of CY2027 HBM is already committed — which is "
+                "a genuine difference from spot DRAM and the strongest part of "
+                "the structural case.",
+            ),
+            Exposure(
+                "china_policy",
+                0.50,
+                "Memory export licensing, plus the separate and underrated "
+                "threat of Chinese domestic capacity (CXMT) entering "
+                "commodity DRAM with state funding and no return requirement.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.25,
+                "GENUINELY LOW, and the number most likely to be misread. "
+                "Almost all of Micron's present value sits in the next two or "
+                "three years rather than in 2040, so a discount-rate shock "
+                "barely touches it. That is a statement about WHEN the value "
+                "is, not about whether it is safe — the risk here is the "
+                "commodity cycle, not the yield curve.",
+            ),
+            Exposure(
+                "market_volatility",
+                0.20,
+                "Modest. The equity is volatile, but the business does not "
+                "depend on markets staying open: it is funding capex from "
+                "enormous current cash flow, not from issuance.",
+            ),
+            Exposure(
+                "semi_rd",
+                0.10,
+                "A consumer of EDA, not a seller. Minor.",
+            ),
+            Exposure(
+                "market_beta",
+                1.55,
+                "Among the highest-beta large caps. Memory equities have "
+                "historically drawn down 60-80% peak to trough across a full "
+                "cycle, with revenue still positive throughout.",
+            ),
         ],
     ),
     "NVDA": ExposureSet(

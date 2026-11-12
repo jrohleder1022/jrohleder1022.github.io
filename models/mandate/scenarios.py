@@ -67,12 +67,37 @@ class Scenario:
             )
 
 
+TOTAL_LOSS = -1.0
+
+
 @dataclass
 class PositionImpact:
     ticker: str
     weight: float
-    total_return: float
+    raw_return: float
     by_factor: dict[str, float] = field(default_factory=dict)
+
+    @property
+    def total_return(self) -> float:
+        """Impact floored at a total loss.
+
+        The factor model is LINEAR and ADDITIVE, so a position loading heavily
+        on several factors that a scenario all shocks at once can compute below
+        -100%. That is arithmetically meaningless for a long equity position:
+        you cannot lose more than you paid.
+
+        It is also a warning about the method rather than a finding about the
+        company. Real factor shocks to a single name are correlated, not
+        additive — a memory price collapse IS partly a beta event for a memory
+        company, so counting both at full weight double-counts. When a position
+        hits this floor, read the scenario as "this position is probably a
+        total loss here" and stop trying to read precision into the number.
+        """
+        return max(self.raw_return, TOTAL_LOSS)
+
+    @property
+    def floored(self) -> bool:
+        return self.raw_return < TOTAL_LOSS
 
     @property
     def contribution(self) -> float:
@@ -252,6 +277,40 @@ SCENARIOS: dict[str, Scenario] = {
             "CHIPS Act disbursement has repeatedly slipped against schedule."
         ),
     ),
+    "memory_cycle_bust": Scenario(
+        key="memory_cycle_bust",
+        name="Memory capacity cycle turns",
+        shocks={
+            "commodity_cycle": -0.55,
+            "ai_capex": -0.15,
+            "market_beta": -0.12,
+            "semi_rd": -0.05,
+        },
+        rationale=(
+            "The capacity funded at peak margins arrives. Gross margins "
+            "normalize from the high 80s toward the long-run 25-35% "
+            "mid-cycle level, and because operating leverage works both ways, "
+            "earnings fall far more than revenue does. Note what this scenario "
+            "does NOT require: no demand collapse, no thesis being wrong, no "
+            "recession. It requires only that the industry does what peak "
+            "margins have always caused it to do, which is build."
+        ),
+        analogue=(
+            "Every memory cycle on record. 2017-19: DRAM contract prices fell "
+            "roughly 60% from peak and Micron's gross margin went from ~61% to "
+            "~20% in five quarters. 2021-23: a second round, with Micron "
+            "posting negative gross margins at the trough. In both cases "
+            "revenue stayed positive the whole way down while the equity fell "
+            "60-80%. The lag from capex decision to new supply is two to three "
+            "years, which is why the peak looks most durable right before it "
+            "is not."
+        ),
+        probability_note=(
+            "Not a forecast of timing. The scenario exists because an 87% "
+            "gross margin in a fungible-product industry has a half-life, and "
+            "the capex that ends it has already been committed."
+        ),
+    ),
     "rate_shock_150bp": Scenario(
         key="rate_shock_150bp",
         name="Long-rate shock, +150bp on the 10Y",
@@ -272,7 +331,7 @@ SCENARIOS: dict[str, Scenario] = {
         key="broad_drawdown",
         name="Broad equity drawdown, -25%",
         shocks={"market_beta": -0.25, "rates_duration": -0.10, "market_volatility": -0.30,
-                "consumer_spending": -0.15},
+                "consumer_spending": -0.15, "commodity_cycle": -0.20},
         rationale=(
             "A garden-variety bear market with no thesis-specific cause. "
             "Included because it is the most likely large loss in any given "
@@ -336,7 +395,7 @@ def run_scenario(
             PositionImpact(
                 ticker=ticker,
                 weight=weight,
-                total_return=sum(by_factor.values()),
+                raw_return=sum(by_factor.values()),
                 by_factor=by_factor,
             )
         )

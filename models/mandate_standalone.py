@@ -201,6 +201,15 @@ FACTORS: dict[str, str] = {
         "precedent spreading across states and stacking with seat compression "
         "on the same budget line."
     ),
+    "commodity_cycle": (
+        "Exposure to where a fungible-product industry sits in its CAPACITY "
+        "cycle. Distinct from every demand factor here, because the mechanism "
+        "is supply: peak margins fund the capacity that destroys them, with a "
+        "two-to-three-year lag between the capex decision and the fab coming "
+        "online. The signature is margins far above the long-run mean plus an "
+        "industry-wide capex increase. A low P/E on peak earnings is not "
+        "cheapness, it is the market discounting earnings it does not believe."
+    ),
     "consumer_spending": (
         "Revenue scales with household consumption — retail sales, travel, "
         "discretionary purchases. Distinct from `market_beta`, which is a "
@@ -495,6 +504,82 @@ CANDIDATES: dict[str, ExposureSet] = {
                 "roughly double. Substantial duration.",
             ),
             Exposure("market_beta", 1.40, "High-beta semiconductor; amplifies the tape."),
+        ],
+    ),
+    "MU": ExposureSet(
+        ticker="MU",
+        thesis=(
+            "DRAM, NAND and — the reason anyone cares now — HBM for AI "
+            "accelerators. FQ4 FY2026 (ended 3 Sept): revenue $54.2B (+379% "
+            "YoY), gross margin 87%, adjusted EPS $33.42. FY2026: revenue "
+            "$133.2B (+256%), gross margin 81.1% against ABOUT 40% in FY2025. "
+            "FQ1 FY2027 guided to $61.5B revenue, 86.25% gross margin, $38.15 "
+            "adjusted EPS. Cloud Memory (including HBM) $16.3B, +18% "
+            "sequentially, with most of calendar 2027 HBM bit supply already "
+            "contracted at significantly higher prices. Capex $27.37B in "
+            "FY2026 and guided higher for FY2027. Price $798.44 on 12 Nov 2026."
+        ),
+        exposures=[
+            Exposure(
+                "commodity_cycle",
+                1.25,
+                "THE WHOLE POSITION, and the reason the factor was added. An "
+                "87% gross margin in a commodity industry whose long-run "
+                "mid-cycle margin is 25-35% is not a new normal; it is a peak "
+                "with a date on it. Memory has all five boom ingredients — "
+                "fungible product, fixed short-run capacity, inelastic demand, "
+                "extreme operating leverage, spot pricing — which is exactly "
+                "why margins went from 40% to 81% in one year and exactly why "
+                "they will go back. The $27.37B of FY2026 capex, guided higher "
+                "still, IS the mechanism of reversal: it arrives as supply in "
+                "2028-29. Above full pass-through because operating leverage "
+                "amplifies the move in both directions.",
+            ),
+            Exposure(
+                "ai_capex",
+                1.00,
+                "HBM is sold into accelerator bills of materials, so demand is "
+                "the AI buildout. Partially mitigated by multi-year contracted "
+                "pricing — most of CY2027 HBM is already committed — which is "
+                "a genuine difference from spot DRAM and the strongest part of "
+                "the structural case.",
+            ),
+            Exposure(
+                "china_policy",
+                0.50,
+                "Memory export licensing, plus the separate and underrated "
+                "threat of Chinese domestic capacity (CXMT) entering "
+                "commodity DRAM with state funding and no return requirement.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.25,
+                "GENUINELY LOW, and the number most likely to be misread. "
+                "Almost all of Micron's present value sits in the next two or "
+                "three years rather than in 2040, so a discount-rate shock "
+                "barely touches it. That is a statement about WHEN the value "
+                "is, not about whether it is safe — the risk here is the "
+                "commodity cycle, not the yield curve.",
+            ),
+            Exposure(
+                "market_volatility",
+                0.20,
+                "Modest. The equity is volatile, but the business does not "
+                "depend on markets staying open: it is funding capex from "
+                "enormous current cash flow, not from issuance.",
+            ),
+            Exposure(
+                "semi_rd",
+                0.10,
+                "A consumer of EDA, not a seller. Minor.",
+            ),
+            Exposure(
+                "market_beta",
+                1.55,
+                "Among the highest-beta large caps. Memory equities have "
+                "historically drawn down 60-80% peak to trough across a full "
+                "cycle, with revenue still positive throughout.",
+            ),
         ],
     ),
     "NVDA": ExposureSet(
@@ -2752,12 +2837,37 @@ class Scenario:
             )
 
 
+TOTAL_LOSS = -1.0
+
+
 @dataclass
 class PositionImpact:
     ticker: str
     weight: float
-    total_return: float
+    raw_return: float
     by_factor: dict[str, float] = field(default_factory=dict)
+
+    @property
+    def total_return(self) -> float:
+        """Impact floored at a total loss.
+
+        The factor model is LINEAR and ADDITIVE, so a position loading heavily
+        on several factors that a scenario all shocks at once can compute below
+        -100%. That is arithmetically meaningless for a long equity position:
+        you cannot lose more than you paid.
+
+        It is also a warning about the method rather than a finding about the
+        company. Real factor shocks to a single name are correlated, not
+        additive — a memory price collapse IS partly a beta event for a memory
+        company, so counting both at full weight double-counts. When a position
+        hits this floor, read the scenario as "this position is probably a
+        total loss here" and stop trying to read precision into the number.
+        """
+        return max(self.raw_return, TOTAL_LOSS)
+
+    @property
+    def floored(self) -> bool:
+        return self.raw_return < TOTAL_LOSS
 
     @property
     def contribution(self) -> float:
@@ -2937,6 +3047,40 @@ SCENARIOS: dict[str, Scenario] = {
             "CHIPS Act disbursement has repeatedly slipped against schedule."
         ),
     ),
+    "memory_cycle_bust": Scenario(
+        key="memory_cycle_bust",
+        name="Memory capacity cycle turns",
+        shocks={
+            "commodity_cycle": -0.55,
+            "ai_capex": -0.15,
+            "market_beta": -0.12,
+            "semi_rd": -0.05,
+        },
+        rationale=(
+            "The capacity funded at peak margins arrives. Gross margins "
+            "normalize from the high 80s toward the long-run 25-35% "
+            "mid-cycle level, and because operating leverage works both ways, "
+            "earnings fall far more than revenue does. Note what this scenario "
+            "does NOT require: no demand collapse, no thesis being wrong, no "
+            "recession. It requires only that the industry does what peak "
+            "margins have always caused it to do, which is build."
+        ),
+        analogue=(
+            "Every memory cycle on record. 2017-19: DRAM contract prices fell "
+            "roughly 60% from peak and Micron's gross margin went from ~61% to "
+            "~20% in five quarters. 2021-23: a second round, with Micron "
+            "posting negative gross margins at the trough. In both cases "
+            "revenue stayed positive the whole way down while the equity fell "
+            "60-80%. The lag from capex decision to new supply is two to three "
+            "years, which is why the peak looks most durable right before it "
+            "is not."
+        ),
+        probability_note=(
+            "Not a forecast of timing. The scenario exists because an 87% "
+            "gross margin in a fungible-product industry has a half-life, and "
+            "the capex that ends it has already been committed."
+        ),
+    ),
     "rate_shock_150bp": Scenario(
         key="rate_shock_150bp",
         name="Long-rate shock, +150bp on the 10Y",
@@ -2957,7 +3101,7 @@ SCENARIOS: dict[str, Scenario] = {
         key="broad_drawdown",
         name="Broad equity drawdown, -25%",
         shocks={"market_beta": -0.25, "rates_duration": -0.10, "market_volatility": -0.30,
-                "consumer_spending": -0.15},
+                "consumer_spending": -0.15, "commodity_cycle": -0.20},
         rationale=(
             "A garden-variety bear market with no thesis-specific cause. "
             "Included because it is the most likely large loss in any given "
@@ -3021,7 +3165,7 @@ def run_scenario(
             PositionImpact(
                 ticker=ticker,
                 weight=weight,
-                total_return=sum(by_factor.values()),
+                raw_return=sum(by_factor.values()),
                 by_factor=by_factor,
             )
         )
@@ -3460,9 +3604,18 @@ def report_scenarios(book: Book) -> None:
     print("  By position:")
     for pos in sorted(worst.positions, key=lambda p: p.total_return):
         factor, impact = pos.dominant_factor()
+        flag = "  TOTAL LOSS (model floored; see note)" if pos.floored else ""
         print(
             f"    {pos.ticker:<7} {pos.total_return:>7.1%}   "
-            f"(worst factor: {factor} at {impact:+.1%})"
+            f"(worst factor: {factor} at {impact:+.1%}){flag}"
+        )
+    if any(p.floored for p in worst.positions):
+        print(
+            "\n  NOTE: a position computed below -100% and was floored. The\n"
+            "  factor model is additive, so heavy loadings on several factors\n"
+            "  that one scenario shocks together overstate the loss — real\n"
+            "  shocks to a single name are correlated, not additive. Read it\n"
+            "  as 'probably a total loss here', not as a precise figure."
         )
 
     print("\n  Factor attribution of the portfolio move:")

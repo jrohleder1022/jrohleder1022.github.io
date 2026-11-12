@@ -179,9 +179,18 @@ def report_scenarios(book: Book) -> None:
     print("  By position:")
     for pos in sorted(worst.positions, key=lambda p: p.total_return):
         factor, impact = pos.dominant_factor()
+        flag = "  TOTAL LOSS (model floored; see note)" if pos.floored else ""
         print(
             f"    {pos.ticker:<7} {pos.total_return:>7.1%}   "
-            f"(worst factor: {factor} at {impact:+.1%})"
+            f"(worst factor: {factor} at {impact:+.1%}){flag}"
+        )
+    if any(p.floored for p in worst.positions):
+        print(
+            "\n  NOTE: a position computed below -100% and was floored. The\n"
+            "  factor model is additive, so heavy loadings on several factors\n"
+            "  that one scenario shocks together overstate the loss — real\n"
+            "  shocks to a single name are correlated, not additive. Read it\n"
+            "  as 'probably a total loss here', not as a precise figure."
         )
 
     print("\n  Factor attribution of the portfolio move:")
