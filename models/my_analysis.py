@@ -125,30 +125,31 @@ QUALITY_WACC = WACCInputs(
 
 SNPS_FUNDAMENTALS = Fundamentals(
     ticker="SNPS",
-    # --- income statement -------------------------------------------------
-    revenue=8_700_000_000,
-    revenue_prior=7_100_000_000,
-    gross_profit=6_700_000_000,
-    ebit=1_900_000_000,            # operating income
-    net_income=1_400_000_000,
-    interest_expense=450_000_000,
-    tax_rate=0.17,                 # effective rate, not statutory
-    # --- cash flow statement ---------------------------------------------
-    cfo=2_300_000_000,
-    capex=300_000_000,
-    # --- balance sheet ----------------------------------------------------
-    total_debt=10_000_000_000,
-    cash=4_500_000_000,
-    equity=19_000_000_000,
-    # --- shares and price -------------------------------------------------
-    shares_diluted=188_000_000,
+    # --- income statement (annualized from Q3 FY2026, first full Ansys qtr) --
+    revenue=9_920_000_000,         # Q3 FY26 revenue $2.48B x 4
+    revenue_prior=6_990_000_000,   # implied by +42% YoY
+    gross_profit=7_600_000_000,    # ESTIMATE
+    ebit=3_470_000_000,            # ESTIMATE at ~35% op margin
+    net_income=2_400_000_000,      # ESTIMATE
+    interest_expense=450_000_000,  # ESTIMATE on $10B of notes
+    tax_rate=0.17,                 # effective
+    # --- cash flow -----------------------------------------------------------
+    cfo=2_800_000_000,             # ESTIMATE
+    capex=300_000_000,             # ESTIMATE; EDA is capital-light
+    # --- balance sheet: SOURCED from the 10-Q, 31 July 2026 ------------------
+    total_debt=10_040_000_000,     # SOURCED: $1.02B short + $9.02B long
+    cash=3_610_000_000,            # SOURCED
+    equity=31_150_000_000,         # SOURCED
+    goodwill=26_800_000_000,       # SOURCED; ~$23.5B of it arrived with Ansys
+    # --- shares and price ----------------------------------------------------
+    shares_diluted=188_000_000,    # ESTIMATE post-Ansys issuance
     shares_diluted_prior=155_000_000,
-    price=400.0,
+    price=400.0,                   # FILL IN current
     wacc=QUALITY_WACC.value(),
     basis={
-        "revenue": "APPROXIMATE post-Ansys. REPLACE from the 10-K.",
-        "cfo": "APPROXIMATE. REPLACE.",
-        "total_debt": "APPROXIMATE Ansys financing. REPLACE.",
+        "revenue": "Q3 FY2026 $2.48B annualized, SOURCED",
+        "cfo": "ESTIMATE - VERIFY from the cash flow statement",
+        "total_debt": "10-Q 31 July 2026, SOURCED",
     },
 )
 

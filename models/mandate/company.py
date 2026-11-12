@@ -93,6 +93,7 @@ class Fundamentals:
     shares_diluted: float
     shares_diluted_prior: float
     price: float
+    goodwill: float = 0.0
     interest_expense: float = 0.0
     tax_rate: float = 0.21
     wacc: float | None = None
@@ -115,8 +116,36 @@ class Fundamentals:
         return self.total_debt + self.equity - self.cash
 
     @property
+    def invested_capital_ex_goodwill(self) -> float:
+        return self.invested_capital - self.goodwill
+
+    @property
     def roic(self) -> float | None:
+        """ROIC on TOTAL invested capital, goodwill included.
+
+        For an acquisitive company this answers "was the purchase price worth
+        paying", because goodwill is literally the premium paid above book.
+        """
         ic = self.invested_capital
+        return self.nopat / ic if ic > 0 else None
+
+    @property
+    def roic_ex_goodwill(self) -> float | None:
+        """ROIC on capital excluding goodwill.
+
+        This answers a DIFFERENT question: are the underlying operations any
+        good. Conflating the two is the most common error in analysing a serial
+        acquirer. A software company with no factories has enormous returns on
+        tangible capital while its balance sheet is mostly goodwill from
+        deals — and a low blended ROIC then says the deals were expensive,
+        not that the business is bad.
+
+        Read them as a pair:
+            ex-GW high,  incl-GW low   -> good business, dear acquisition
+            both high                  -> good business bought well
+            ex-GW low                  -> the operations themselves do not work
+        """
+        ic = self.invested_capital_ex_goodwill
         return self.nopat / ic if ic > 0 else None
 
     @property
@@ -125,6 +154,12 @@ class Fundamentals:
         if self.roic is None or self.wacc is None:
             return None
         return self.roic - self.wacc
+
+    @property
+    def value_spread_ex_goodwill(self) -> float | None:
+        if self.roic_ex_goodwill is None or self.wacc is None:
+            return None
+        return self.roic_ex_goodwill - self.wacc
 
     @property
     def gross_margin(self) -> float:
@@ -277,7 +312,27 @@ def scorecard(f: Fundamentals) -> list[Check]:
             )
         )
     else:
-        checks.append(
+        ex_gw = f.value_spread_ex_goodwill
+        if f.goodwill > 0 and ex_gw is not None and ex_gw > 0 and spread <= 0:
+            checks.append(
+                Check(
+                    "ROIC vs WACC",
+                    f"{f.roic:.1%} incl goodwill vs {f.roic_ex_goodwill:.1%} "
+                    f"ex-goodwill, WACC {f.wacc:.1%}",
+                    Verdict.ADEQUATE,
+                    f"SPLIT VERDICT. On total capital the spread is "
+                    f"{spread:+.1%}; excluding ${f.goodwill:,.0f} of goodwill "
+                    f"it is {ex_gw:+.1%}. The operations earn well above the "
+                    "cost of capital; the ACQUISITION PRICE is what drags the "
+                    "blended figure down. The question is not whether the "
+                    "business is good — it is whether the deal was worth it, "
+                    "and that is answered by the blended ROIC rising over the "
+                    "next few years as acquired earnings scale into a fixed "
+                    "capital base. Flat or falling two years on means it was not.",
+                )
+            )
+        else:
+            checks.append(
             Check(
                 "ROIC vs WACC",
                 f"{f.roic:.1%} vs {f.wacc:.1%} = {spread:+.1%}",
@@ -432,7 +487,14 @@ def evaluate(f: Fundamentals) -> str:
         f"{counts[Verdict.WEAK]} weak, {counts[Verdict.FAIL]} failing"
     )
     spread = f.value_spread
-    if spread is not None and spread <= 0:
+    ex_gw = f.value_spread_ex_goodwill
+    if spread is not None and spread <= 0 and ex_gw is not None and ex_gw > 0:
+        out.append(
+            "\n  CONCLUSION: the blended spread is negative but the ex-goodwill\n"
+            "  spread is positive. This is an acquisition-price question, not a\n"
+            "  business-quality question. Monitor whether blended ROIC rises."
+        )
+    elif spread is not None and spread <= 0:
         out.append(
             "\n  OVERRIDING CONCLUSION: the value spread is negative. Whatever "
             "else\n  scores well, this business does not earn its cost of "
