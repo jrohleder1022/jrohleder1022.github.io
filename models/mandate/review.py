@@ -160,11 +160,12 @@ def report_scenarios(book: Book) -> None:
     print(f"  Portfolio ${value:,.0f} (equity ${book.equity_value:,.0f} + cash ${book.cash:,.0f})")
     print("  Equity impacts below; cash is unshocked, so whole-portfolio")
     print("  damage is proportionally smaller while the cash is uninvested.\n")
-    print(f"  {'Scenario':<38} {'Equity':>9} {'Dollars':>12}")
-    print(f"  {THIN[:62]}")
+    width = max(len(r.scenario.name) for r in results)
+    print(f"  {'Scenario':<{width}} {'Equity':>9} {'Dollars':>12}")
+    print(f"  {THIN[:width + 23]}")
     for r in results:
         dollars = book.equity_value * r.portfolio_return
-        print(f"  {r.scenario.name:<38} {r.portfolio_return:>8.1%} {dollars:>12,.0f}")
+        print(f"  {r.scenario.name:<{width}} {r.portfolio_return:>8.1%} {dollars:>12,.0f}")
 
     worst = results[0]
     print(f"\n{THIN}")

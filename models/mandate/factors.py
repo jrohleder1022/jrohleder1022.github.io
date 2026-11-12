@@ -85,6 +85,28 @@ FACTORS: dict[str, str] = {
         "Antitrust, forced divestiture, or political intervention that "
         "constrains how the business is permitted to operate."
     ),
+    "gov_appropriation": (
+        "Revenue depends on government budgets — defense, civil space, or "
+        "industrial policy. Distinct from `regulatory`, which constrains how a "
+        "business operates: this one IS the demand. Appropriation risk cuts "
+        "both ways, because criticality puts a floor under the equity and a "
+        "ceiling over the multiple: the state's objectives (onshoring, "
+        "redundancy, domestic price restraint) are not shareholder returns."
+    ),
+    "saas_disintermediation": (
+        "Revenue depends on per-seat software pricing surviving agentic AI. "
+        "The mechanism is seat compression, not product replacement: if agents "
+        "do the work of three people, the customer buys fewer seats. Leads "
+        "through cRPO roughly four quarters before it reaches revenue, which "
+        "is why profitability metrics miss it entirely."
+    ),
+    "digital_services_tax": (
+        "Exposure to sales/use tax extension onto SaaS and digital products. "
+        "Borne by the BUYER, not the seller, so the transmission is demand "
+        "elasticity rather than margin. Small in isolation; the risk is "
+        "precedent spreading across states and stacking with seat compression "
+        "on the same budget line."
+    ),
     "market_beta": (
         "Undifferentiated exposure to a broad equity de-rating. Everything has "
         "some; nothing is immune."
@@ -284,6 +306,30 @@ BOOK: dict[str, ExposureSet] = {
                 "lowers its cost of goods; scarce compute raises it.",
             ),
             Exposure(
+                "saas_disintermediation",
+                0.85,
+                "THE live risk, and it was missing from this model until now. "
+                "ServiceNow prices per seat; agentic AI compresses seat counts. "
+                "Stock -44% over one year on this thesis while Q3 2026 "
+                "subscription revenue still grew 21% and FCF margin guidance "
+                "ROSE 35%->36% — the damage is entirely in the multiple so far. "
+                "Partial offsets: >50% of new business is consumption/outcome "
+                "priced, and agentic consumption in production rose 13x. The "
+                "tell is cRPO, which Q4 guidance already shows decelerating.",
+            ),
+            Exposure(
+                "digital_services_tax",
+                0.60,
+                "California SB 122 (signed 29 June 2026, effective 1 January "
+                "2027) extends sales and use tax to SaaS at ~9% all-in. Borne "
+                "by the customer, not ServiceNow, and applied equally to every "
+                "competitor — so it is a price-level change, not a competitive "
+                "disadvantage. Estimated direct revenue impact ~0.4%. The "
+                "exposure is set well above that because the real risk is other "
+                "states copying a $1.4B revenue idea, and because it stacks "
+                "with seat compression on the same budget line.",
+            ),
+            Exposure(
                 "regulatory",
                 0.10,
                 "Minimal. No antitrust exposure of consequence; data-residency "
@@ -404,6 +450,98 @@ CANDIDATES: dict[str, ExposureSet] = {
                 "major government contractor, which cuts both ways.",
             ),
             Exposure("market_beta", 1.45, "Staggered lockup releases still in progress."),
+        ],
+    ),
+    "RKLB": ExposureSet(
+        ticker="RKLB",
+        thesis=(
+            "Small-launch operator (Electron) plus a larger Space Systems "
+            "components business, with medium-lift Neutron in development. "
+            "Q3 2026: revenue $267.8M +73% YoY, record backlog $3.57B +52% "
+            "sequentially, 117 launches booked. Neutron slipped to 2027 at the "
+            "earliest, and the GAAP loss widened to $79.7M from $18.3M."
+        ),
+        exposures=[
+            Exposure(
+                "gov_appropriation",
+                0.65,
+                "NASA, Space Force and defense programs are the anchor demand, "
+                "alongside commercial constellation operators. This is the "
+                "FIRST candidate in this file whose primary demand driver is "
+                "not AI — which is precisely what the book is missing.",
+            ),
+            Exposure(
+                "ai_capex",
+                0.10,
+                "Near-zero direct linkage. Some satellite demand traces back to "
+                "data infrastructure, but launch cadence is set by constellation "
+                "schedules and government programs, not by hyperscaler capital "
+                "budgets.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.95,
+                "Pre-profit with a widening loss, and Neutron — the entire "
+                "medium-lift thesis — is a 2027+ event. Nearly all value is "
+                "terminal value, which is maximum duration.",
+            ),
+            Exposure(
+                "regulatory",
+                0.25,
+                "FAA launch licensing, range access, orbital debris rules. Real "
+                "but routine for an established operator.",
+            ),
+            Exposure("market_beta", 1.50, "Pre-profit small cap; amplifies the tape sharply."),
+        ],
+    ),
+    "INTC": ExposureSet(
+        ticker="INTC",
+        thesis=(
+            "Domestic foundry turnaround on 18A/18A-P, underwritten by "
+            "industrial policy. The US government bought 433M shares at $20.47 "
+            "in August 2025 (~10%, no board seat). Q3 2026 Foundry segment: "
+            "$6.7B revenue but $6.3B of that intersegment — EXTERNAL revenue "
+            "was $411M and came from a non-recurring contract. Segment "
+            "operating loss $1.9B."
+        ),
+        exposures=[
+            Exposure(
+                "gov_appropriation",
+                0.70,
+                "Industrial policy IS the thesis. The government is a ~10% "
+                "shareholder and the strategic rationale for domestic leading-"
+                "edge capacity is what funds the attempt. Note the trap: this "
+                "is the 'strategically critical' profile — a floor under the "
+                "equity and a ceiling over the multiple.",
+            ),
+            Exposure(
+                "ai_capex",
+                0.35,
+                "Moderate. Foundry capacity utilisation depends partly on AI "
+                "silicon demand, but the binding constraint today is winning "
+                "external customers at all, not end-market strength.",
+            ),
+            Exposure(
+                "china_policy",
+                0.45,
+                "Meaningful China revenue in the products business, plus export "
+                "licensing on advanced nodes.",
+            ),
+            Exposure(
+                "semi_rd",
+                0.20,
+                "Spends heavily on R&D rather than selling into it; an industry "
+                "R&D recession would ease competitive pressure while worsening "
+                "the roadmap gap.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.60,
+                "Value depends on foundry profitability years out. Long "
+                "duration, though tempered by a real products business "
+                "generating revenue today.",
+            ),
+            Exposure("market_beta", 1.25, "Large-cap semiconductor with turnaround volatility."),
         ],
     ),
 }

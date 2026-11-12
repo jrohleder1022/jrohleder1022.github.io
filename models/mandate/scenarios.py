@@ -200,6 +200,58 @@ SCENARIOS: dict[str, Scenario] = {
             "the budgets, not the stock price."
         ),
     ),
+    "agentic_seat_compression": Scenario(
+        key="agentic_seat_compression",
+        name="Agentic AI compresses SaaS seat counts",
+        shocks={
+            "saas_disintermediation": -0.45,
+            "digital_services_tax": -0.08,
+            "enterprise_it": -0.15,
+            "market_beta": -0.08,
+        },
+        rationale=(
+            "Per-seat pricing breaks down as agents do work that previously "
+            "required headcount. Customers renew at lower seat counts, and the "
+            "vendor's migration to consumption pricing does not keep pace. "
+            "State digital-services taxes add a parallel squeeze on the same "
+            "budget line. Note that revenue keeps growing throughout the early "
+            "phase — the damage shows in cRPO and in the multiple long before "
+            "it reaches the income statement, which is what makes it so easy to "
+            "dismiss as sentiment."
+        ),
+        analogue=(
+            "Already in motion. ServiceNow is down ~44% over the year to "
+            "November 2026 against the S&P up ~11%, while Q3 2026 subscription "
+            "revenue grew 21% and FCF margin guidance ROSE to 36%. The entire "
+            "decline to date is multiple compression on a forward thesis. "
+            "Structural precedent: Nokia and BlackBerry kept growing revenue "
+            "for several quarters after the iPhone made their pricing model "
+            "obsolete."
+        ),
+        probability_note=(
+            "Partially realized. The open question is whether consumption "
+            "pricing substitutes for lost seats fast enough. Q4 cRPO is the "
+            "test, not revenue and not margin."
+        ),
+    ),
+    "gov_budget_squeeze": Scenario(
+        key="gov_budget_squeeze",
+        name="Government space and industrial-policy budget squeeze",
+        shocks={"gov_appropriation": -0.35, "market_beta": -0.10},
+        rationale=(
+            "Appropriations tighten under divided government and deficit "
+            "politics. Civil space, defense space and industrial-policy "
+            "subsidies are discretionary and therefore first in line. Included "
+            "specifically so that the ballast candidates are stressed on THEIR "
+            "risk rather than only on the book's existing ones — a diversifier "
+            "that is never stress-tested is just an unexamined position."
+        ),
+        analogue=(
+            "NASA budget flatlined in real terms through most of the 2010s. "
+            "Sequestration (2013) cut defense procurement ~8% across the board. "
+            "CHIPS Act disbursement has repeatedly slipped against schedule."
+        ),
+    ),
     "rate_shock_150bp": Scenario(
         key="rate_shock_150bp",
         name="Long-rate shock, +150bp on the 10Y",
