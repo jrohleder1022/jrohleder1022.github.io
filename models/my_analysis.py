@@ -253,14 +253,14 @@ WATCHLIST = {
         gross_profit=69_000_000,         # Q3 2026, SOURCED (26% margin)
         ebit=5_000_000,                  # adj EBITDA +$8M, SOURCED-ish
         net_income=-4_020_000,           # Q3 2026, SOURCED
-        cfo=40_000_000,                  # FCF +$33M, SOURCED; capex backed out
-        capex=7_000_000,                 # ESTIMATE
+        cfo=66_000_000,                  # Q3 2026, SOURCED
+        capex=33_000_000,                # Q3 2026, SOURCED. FCF = 66 - 33 = 33.
         total_debt=0.0, cash=0.0, equity=0.0,          # FILL IN
         shares_diluted=160_000_000,
         shares_diluted_prior=140_000_000,
         price=12.0,                      # FILL IN current
         wacc=QUALITY_WACC.value(),
-        basis={"revenue": "Q3 2026, SOURCED", "cfo": "FCF SOURCED +$33M",
+        basis={"revenue": "Q3 2026, SOURCED", "cfo": "CFO $66M SOURCED. But CFO credited working-capital timing and customer advances on a backlog that went 213M->1.9B. YTD FCF ~-$112M.",
                "total_debt": "NOT FILLED IN"},
     ),
     "IONQ": Fundamentals(

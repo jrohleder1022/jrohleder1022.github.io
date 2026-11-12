@@ -833,12 +833,19 @@ CANDIDATES: dict[str, ExposureSet] = {
             ),
             Exposure(
                 "rates_duration",
-                0.70,
-                "MATERIALLY LOWER than RKLB's 0.95, and this is the reason to "
-                "prefer it on risk grounds. LUNR is already FCF-positive with a "
-                "near-breakeven loss, so less of its value sits in the far "
-                "future. Compare RKLB: a $79.7M loss that widened from $18.3M, "
-                "with the medium-lift thesis gated on a 2027 first flight.",
+                0.85,
+                "REVISED UP from 0.70. The original basis was that LUNR is "
+                "'already FCF-positive', which does not survive inspection. "
+                "Q3's +$33M was CFO $66M less capex $33M, and the CFO "
+                "attributed it to improved collections, cash from new contract "
+                "wins and the absence of Q2's unfavourable timing — i.e. "
+                "working capital, not earnings. 'Cash from new contract wins' "
+                "means customer advances against a backlog that went from "
+                "$213M to $1.9B: a liability, which reverses as the work is "
+                "performed. Year-to-date FCF is about -$112M. Still below "
+                "RKLB's 0.95, because a $4.0M net loss and +$8M adjusted "
+                "EBITDA are genuinely closer to breakeven than a $79.7M loss "
+                "that quadrupled — but this is not a cash-generative business.",
             ),
             Exposure(
                 "regulatory",
