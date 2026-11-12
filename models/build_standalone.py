@@ -221,7 +221,7 @@ def build(package: Path, portfolio: Path) -> str:
         "",
         "",
         "def _ensure_portfolio() -> Path:",
-        "    path = Path(__file__).resolve().parent / 'portfolio.json'",
+        "    path = script_dir() / 'portfolio.json'",
         "    if not path.exists():",
         "        path.write_text(json.dumps(_EMBEDDED_PORTFOLIO, indent=2), encoding='utf-8')",
         "        print(f'Wrote a starter portfolio to {path}')",

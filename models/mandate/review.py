@@ -243,9 +243,24 @@ def report_candidate(book: Book, ticker: str, contribution: float) -> None:
             print(f"    {f}")
 
 
+def script_dir() -> Path:
+    """Directory of this file, or the working directory when run interactively.
+
+    `__file__` is undefined when a function is called from an interactive
+    console — Spyder's runfile sets it during execution and it is not present
+    afterwards. Depending on it means `main()` works on F5 and raises
+    NameError the moment someone calls it from the prompt, which is exactly
+    the workflow this tool is meant to support.
+    """
+    try:
+        return Path(__file__).resolve().parent
+    except NameError:
+        return Path.cwd()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
-    here = Path(__file__).parent
+    here = script_dir()
     parser.add_argument("--portfolio", type=Path, default=here / "portfolio.json")
     parser.add_argument("--prices", type=Path, default=None)
     parser.add_argument("--candidate", type=str, default=None)
