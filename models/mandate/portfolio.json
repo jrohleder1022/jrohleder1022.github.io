@@ -1,0 +1,37 @@
+{
+  "_comment": [
+    "Current book. cost_basis figures are exact as of 2026-11-12.",
+    "market_value: replace the placeholders with real values from the broker.",
+    "Until you do, review.py weights the book by COST BASIS and says so --",
+    "that understates winners and overstates laggards, which flatters the",
+    "concentration numbers. The real ones will look worse."
+  ],
+  "as_of": "2026-11-12",
+  "annual_contribution": 2740.0,
+  "cash": 4500.0,
+  "cash_purpose": "researching the NVDA replacement",
+  "cash_decision_date": "",
+  "positions": [
+    {
+      "ticker": "GOOGL",
+      "cost_basis": 4664.58,
+      "market_value": null,
+      "theme": "ai_platform",
+      "sleeve": "core"
+    },
+    {
+      "ticker": "SNPS",
+      "cost_basis": 4012.32,
+      "market_value": null,
+      "theme": "eda",
+      "sleeve": "core"
+    },
+    {
+      "ticker": "NOW",
+      "cost_basis": 3559.70,
+      "market_value": null,
+      "theme": "ai_platform",
+      "sleeve": "core"
+    }
+  ]
+}
