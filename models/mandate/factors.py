@@ -107,6 +107,15 @@ FACTORS: dict[str, str] = {
         "precedent spreading across states and stacking with seat compression "
         "on the same budget line."
     ),
+    "financing_cost": (
+        "Exposure to the cost and availability of debt. Distinct from "
+        "`rates_duration`, which is a VALUATION effect on the discount rate: "
+        "this one hits the INCOME STATEMENT through interest expense, and in "
+        "the extreme determines whether maturities can be rolled at all. A "
+        "company funding depreciating assets with debt has fixed obligations "
+        "against revenue that is not fixed, which is the oldest way to go "
+        "broke while growing."
+    ),
     "commodity_cycle": (
         "Exposure to where a fungible-product industry sits in its CAPACITY "
         "cycle. Distinct from every demand factor here, because the mechanism "
@@ -410,6 +419,68 @@ CANDIDATES: dict[str, ExposureSet] = {
                 "roughly double. Substantial duration.",
             ),
             Exposure("market_beta", 1.40, "High-beta semiconductor; amplifies the tape."),
+        ],
+    ),
+    "CRWV": ExposureSet(
+        ticker="CRWV",
+        thesis=(
+            "GPU cloud. Buys NVIDIA accelerators with borrowed money and rents "
+            "them on contract. Q3 2026: revenue $3,661M (+168% YoY), backlog "
+            "$132.5B, FY2026 guided $13-13.3B. Adjusted operating income $379M "
+            "beat guidance of $200-260M. But capex was $14,511M in the quarter "
+            "— 396% of revenue — interest expense $846M (23% of revenue) "
+            "guided to $1.05-1.15B in Q4, and the GAAP net loss widened to "
+            "$709M from $110M a year earlier. Only 26% of the backlog converts "
+            "within 24 months."
+        ),
+        exposures=[
+            Exposure(
+                "ai_capex",
+                1.40,
+                "The highest loading in this file. CoreWeave does not merely "
+                "sell into AI capex — it IS AI capex, financed with debt. "
+                "Capex at 396% of revenue in a single quarter is a leveraged "
+                "bet that demand for rented compute persists long enough to "
+                "repay it.",
+            ),
+            Exposure(
+                "financing_cost",
+                1.30,
+                "THE position risk, and the reason the factor was added. "
+                "Interest is already 23% of revenue and guided higher. "
+                "Annualized $3.4B of interest implies roughly $31-38B of debt "
+                "at 9-11%. The obligations are fixed; GPU rental rates are not, "
+                "and they fall as each new generation ships. Any tightening of "
+                "credit, or a single missed refinancing window, is existential "
+                "rather than merely expensive.",
+            ),
+            Exposure(
+                "rates_duration",
+                1.15,
+                "Separate from financing_cost and stacked on top of it. The "
+                "equity is a long-duration claim on the residual after debt "
+                "service, which is the most rate-sensitive position in a "
+                "capital structure.",
+            ),
+            Exposure(
+                "market_volatility",
+                0.70,
+                "High. A company that must continuously raise debt and equity "
+                "to fund capex depends on markets staying open. Volatility "
+                "closes the window precisely when the next tranche is due.",
+            ),
+            Exposure(
+                "china_policy",
+                0.15,
+                "Indirect. Export controls affect GPU supply and pricing, but "
+                "CoreWeave sells compute in permitted jurisdictions.",
+            ),
+            Exposure(
+                "market_beta",
+                1.75,
+                "Among the highest in the file. Leveraged, recently public, "
+                "narrative-sensitive.",
+            ),
         ],
     ),
     "MU": ExposureSet(
@@ -1059,6 +1130,14 @@ ESTIMATES: dict[str, ReturnEstimate] = {
         dividend_yield=0.007,
         basis="Low-teens EPS growth on payment volume plus buybacks. Mild "
               "compression for interchange and routing-antitrust risk.",
+    ),
+    "CRWV": ReturnEstimate(
+        "CRWV", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
+        applicable=False,
+        basis="GAAP net loss $709M, widened from $110M. Interest alone is 23% "
+              "of revenue and rising. There is no earnings base to converge "
+              "from, and the $132.5B backlog is a gross revenue figure with no "
+              "debt service netted against it.",
     ),
     "MU": ReturnEstimate(
         "MU", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,

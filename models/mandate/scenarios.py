@@ -311,10 +311,41 @@ SCENARIOS: dict[str, Scenario] = {
             "the capex that ends it has already been committed."
         ),
     ),
+    "credit_tightening": Scenario(
+        key="credit_tightening",
+        name="Credit tightens for AI infrastructure debt",
+        shocks={
+            "financing_cost": -0.60,
+            "ai_capex": -0.20,
+            "market_volatility": -0.25,
+            "market_beta": -0.12,
+        },
+        rationale=(
+            "Lenders reprice GPU-collateralized debt after questioning the "
+            "assumed useful life of the hardware. Spreads widen, the "
+            "refinancing window narrows, and companies funding depreciating "
+            "assets with borrowed money face fixed obligations against falling "
+            "rental rates. Note that this requires no fall in AI demand — only "
+            "that creditors change their minds about collateral value."
+        ),
+        analogue=(
+            "Fibre-optic capacity 2001-02: carriers financed infrastructure "
+            "with debt against assumed demand, lenders withdrew, and Global "
+            "Crossing and WorldCom failed with the fibre still in the ground "
+            "and still useful. Also 2008 commercial mortgage REITs, where "
+            "assets kept producing income while the financing disappeared."
+        ),
+        probability_note=(
+            "The specific question is GPU depreciation schedules. If economic "
+            "life is four years rather than six, the collateral is worth less "
+            "than the loans against it and the equity is the first loss."
+        ),
+    ),
     "rate_shock_150bp": Scenario(
         key="rate_shock_150bp",
         name="Long-rate shock, +150bp on the 10Y",
-        shocks={"rates_duration": -0.30, "market_beta": -0.10, "market_volatility": -0.20},
+        shocks={"rates_duration": -0.30, "market_beta": -0.10, "market_volatility": -0.20,
+                "financing_cost": -0.35},
         rationale=(
             "Term premium expands on fiscal supply and a re-steepening curve. "
             "High-multiple equities de-rate in proportion to duration: the "
