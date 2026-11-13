@@ -42,11 +42,15 @@ import re
 from pathlib import Path
 
 # Dependency order: a module may only reference names defined above it.
+# Dependency order. valuation.py must precede factors.py, because factors.py
+# defines ESTIMATES using ReturnEstimate -- and in a flat namespace a name has
+# to be defined before the line that uses it, which the package's relative
+# imports otherwise hide.
 MODULE_ORDER = [
+    "valuation.py",
     "factors.py",
     "policy.py",
     "rubric.py",
-    "valuation.py",
     "company.py",
     "scenarios.py",
     "risk.py",

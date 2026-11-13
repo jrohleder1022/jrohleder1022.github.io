@@ -101,6 +101,49 @@ for t, v in sorted(worst.items(), key=lambda kv: -kv[1]):
     print(f"  {t:<10} {v:>7.1%}{'   <- current book' if t == 'current' else ''}")
 
 
+# %% 3b — RETURN vs RISK, every name ranked
+#
+# This is the table the workbench was missing. Expected return comes from
+# multiple convergence (EPS growth +/- annualized multiple change + yield);
+# worst case is the deepest loss across all 10 scenarios for a position held
+# on its own. ret/risk is expected return divided by that loss -- a crude
+# return-per-unit-of-downside, NOT a Sharpe ratio, because the denominator is
+# a scenario rather than a volatility.
+#
+# "n/a" means the company has no earnings, so there is no P/E to converge.
+# That is reported rather than papered over with price-to-sales, which would
+# smuggle in a margin assumption without stating it.
+
+from financial_analysis import ESTIMATES  # noqa: E402
+
+_all = {**BOOK, **CANDIDATES}
+_rows = []
+for _tk, _prof in _all.items():
+    _est = ESTIMATES.get(_tk)
+    _worst, _wname = min(
+        (
+            (scenarios.run_scenario(s, {_tk: _prof}, {_tk: 1.0}).portfolio_return, s.name)
+            for s in scenarios.SCENARIOS.values()
+        ),
+        key=lambda x: x[0],
+    )
+    _ret = _est.total_return if _est and _est.applicable else None
+    _rows.append((_tk, _ret, _worst, _wname, _tk in BOOK))
+
+_rows.sort(key=lambda r: (r[1] is None, -(r[1] or 0)))
+print(f"{'':<7}{'exp. return':>13}{'worst case':>12}{'ret/risk':>10}  worst scenario")
+print("-" * 78)
+for _tk, _ret, _worst, _wname, _held in _rows:
+    _h = " *" if _held else "  "
+    _r = f"{_ret:>12.1%}" if _ret is not None else "         n/a"
+    _rr = f"{abs(_ret / _worst):>9.2f}" if _ret is not None and _worst < 0 else "        -"
+    print(f"{_tk + _h:<7}{_r}{_worst:>12.1%}{_rr}  {_wname[:34]}")
+print("\n  * = currently held")
+print("  n/a = no earnings, so multiple convergence does not apply")
+print("\n  Every estimate carries a basis string. Read them before trusting the")
+print("  ranking:  for tk, e in ESTIMATES.items(): print(tk, e.basis)")
+
+
 # %% 4 — COMPANY QUALITY. Settle this before caring what it is worth.
 #
 # The five questions: does it create value (ROIC vs WACC), is the growth real

@@ -529,3 +529,60 @@ def report(assumptions: DCFAssumptions, price: float) -> str:
 
     lines.append(f"\n{rule}")
     return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Expected return estimates, paired with risk
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ReturnEstimate:
+    """A defensible expected-return view on one name, with its reasoning.
+
+    Deliberately built on multiple convergence rather than a DCF, because both
+    inputs are observable: you can check EPS growth against guidance and the
+    multiple against a decade of history. Neither needs a view about 2041.
+
+        annualized return ~= EPS growth + annualized multiple change + yield
+
+    `applicable` is False where the framework simply does not work — a company
+    with no earnings has no P/E, and pretending otherwise by substituting
+    price-to-sales smuggles in a margin assumption without stating it.
+    """
+
+    ticker: str
+    eps_growth: float
+    current_multiple: float
+    target_multiple: float
+    dividend_yield: float = 0.0
+    years: int = 10
+    applicable: bool = True
+    basis: str = ""
+    caveat: str = ""
+
+    @property
+    def multiple_drag(self) -> float | None:
+        if not self.applicable or self.current_multiple <= 0:
+            return None
+        return (self.target_multiple / self.current_multiple) ** (1 / self.years) - 1
+
+    @property
+    def total_return(self) -> float | None:
+        drag = self.multiple_drag
+        if drag is None:
+            return None
+        return (1 + self.eps_growth) * (1 + drag) - 1 + self.dividend_yield
+
+    def validate(self) -> list[str]:
+        problems: list[str] = []
+        if not self.basis.strip():
+            problems.append(f"{self.ticker}: return estimate has no basis.")
+        if self.applicable and self.eps_growth > 0.40:
+            problems.append(
+                f"{self.ticker}: {self.eps_growth:.0%} EPS growth sustained for "
+                f"{self.years} years compounds to "
+                f"{(1+self.eps_growth)**self.years:.0f}x. Almost nothing does "
+                "this. Check it against a longer-run rate."
+            )
+        return problems

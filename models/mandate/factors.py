@@ -1005,3 +1005,115 @@ def validate_all(sets: Mapping[str, ExposureSet]) -> list[str]:
     for exposure_set in sets.values():
         problems.extend(exposure_set.validate())
     return problems
+
+
+# ---------------------------------------------------------------------------
+# Expected-return views, to be read alongside the risk numbers
+# ---------------------------------------------------------------------------
+#
+# Same discipline as the exposures above: these are sourced opinions, not
+# measurements, and every one carries a basis. Where the framework does not
+# apply -- a company with no earnings has no P/E -- `applicable=False` says so
+# rather than substituting price-to-sales and hiding a margin assumption
+# inside it.
+
+from .valuation import ReturnEstimate  # noqa: E402
+
+ESTIMATES: dict[str, ReturnEstimate] = {
+    "SNPS": ReturnEstimate(
+        "SNPS", eps_growth=0.22, current_multiple=22.5, target_multiple=22.0,
+        basis="Guided ~22% EPS CAGR. Multiple held flat: 22.5x is near its own "
+              "ten-year average, so no re-rating is assumed in either direction.",
+    ),
+    "GOOGL": ReturnEstimate(
+        "GOOGL", eps_growth=0.14, current_multiple=22.0, target_multiple=20.0,
+        dividend_yield=0.004,
+        basis="Mid-teens EPS growth on advertising plus cloud. Mild compression "
+              "assumed because 22x already embeds AI optionality and antitrust "
+              "is unresolved.",
+    ),
+    "NOW": ReturnEstimate(
+        "NOW", eps_growth=0.18, current_multiple=30.0, target_multiple=24.0,
+        basis="21% subscription growth, but the multiple has already compressed "
+              "~44% over one year on seat-compression fears and the de-rating "
+              "may not be finished.",
+        caveat="Highest uncertainty in the book. Q4 cRPO is the test.",
+    ),
+    "CME": ReturnEstimate(
+        "CME", eps_growth=0.08, current_multiple=24.0, target_multiple=22.0,
+        dividend_yield=0.039,
+        basis="Volume growth plus pricing; 13% revenue growth does not flow "
+              "fully to EPS. Most of the return is the dividend, which is why "
+              "this is a risk decision rather than a return decision.",
+    ),
+    "AMD": ReturnEstimate(
+        "AMD", eps_growth=0.22, current_multiple=36.6, target_multiple=25.0,
+        basis="$585.30 against ~$16.00 of 2027 consensus EPS. Target 25x still "
+              "a premium. Note this UNDERSTATES the drag: up to 320M warrant "
+              "shares for Meta and OpenAI vest on delivery, ~19% dilution, "
+              "taking the entry multiple to 43.5x fully diluted.",
+        caveat="Needs the multiple to hold near 36.6x to match SNPS.",
+    ),
+    "V": ReturnEstimate(
+        "V", eps_growth=0.12, current_multiple=30.0, target_multiple=26.0,
+        dividend_yield=0.007,
+        basis="Low-teens EPS growth on payment volume plus buybacks. Mild "
+              "compression for interchange and routing-antitrust risk.",
+    ),
+    "MU": ReturnEstimate(
+        "MU", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
+        applicable=False,
+        basis="NOT APPLICABLE ON PURPOSE. The convergence framework assumes the "
+              "current multiple sits on sustainable earnings. Micron's 87% "
+              "gross margin against a 25-35% mid-cycle mean means the "
+              "denominator is a peak, so a 5.2x forward P/E is a warning rather "
+              "than an input. Value this off mid-cycle earnings or not at all.",
+    ),
+    "CBRS": ReturnEstimate(
+        "CBRS", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
+        applicable=False, basis="Pre-profit. No P/E exists.",
+    ),
+    "IONQ": ReturnEstimate(
+        "IONQ", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
+        applicable=False,
+        basis="Pre-profit. Reported GAAP income is an $896M warrant "
+              "mark-to-market against a $433M quarterly operating loss.",
+    ),
+    "RKLB": ReturnEstimate(
+        "RKLB", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
+        applicable=False, basis="Pre-profit; loss widened to $79.7M.",
+    ),
+    "LUNR": ReturnEstimate(
+        "LUNR", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
+        applicable=False, basis="Net loss $4.0M. Near breakeven but no "
+                                "meaningful earnings base yet.",
+    ),
+    "SPCX": ReturnEstimate(
+        "SPCX", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
+        applicable=False,
+        basis="One quarter into profitability at ~108x annualized earnings and "
+              "~32.5x sales, funding capex at ~250% of revenue. No stable "
+              "earnings base to converge from.",
+    ),
+    "INTC": ReturnEstimate(
+        "INTC", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
+        applicable=False,
+        basis="Foundry segment operating loss $1.9B with external revenue of "
+              "$411M from a non-recurring contract. A turnaround has no "
+              "normalized earnings to grow from.",
+    ),
+    "WM": ReturnEstimate(
+        "WM", eps_growth=0.09, current_multiple=30.0, target_multiple=26.0,
+        dividend_yield=0.015,
+        basis="Core pricing +5.8% driving high-single-digit EPS growth. Mild "
+              "compression; the ~1.5% yield gives little cushion.",
+    ),
+    "PGR": ReturnEstimate(
+        "PGR", eps_growth=0.07, current_multiple=16.0, target_multiple=15.0,
+        dividend_yield=0.020,
+        basis="Underwriting cycle turning against it -- combined ratio drifting "
+              "87.3 to 88.7, premium per policy falling, written premium growth "
+              "15% to 6%. Float income rises with rates and partly offsets.",
+        caveat="Low multiple reflects a deteriorating underwriting cycle.",
+    ),
+}
