@@ -25,16 +25,25 @@ from typing import Mapping, Sequence
 _EMBEDDED_PORTFOLIO_JSON = r"""
 {
   "_comment": [
-    "Current book. cost_basis figures are exact as of 2026-11-12.",
-    "market_value: replace the placeholders with real values from the broker.",
+    "Current book. cost_basis figures are exact.",
+    "market_value: replace the nulls with real values from the broker.",
     "Until you do, review.py weights the book by COST BASIS and says so --",
     "that understates winners and overstates laggards, which flatters the",
-    "concentration numbers. The real ones will look worse."
+    "concentration numbers. The real ones will look worse.",
+    "",
+    "SPCX bought 13 Nov 2026 at $1,500. Classified CORE, not satellite:",
+    "$1,500 meets the \u00a74 core minimum exactly, and at 10.9% of equity it",
+    "would breach the 5% single-satellite cap by more than double. Core",
+    "classification is therefore the only compliant reading, and it carries",
+    "core obligations -- a moat explainable in three sentences, which the",
+    "launch-franchise argument supplies.",
+    "",
+    "Tripwires for every position live in TRIPWIRES.md beside this file."
   ],
-  "as_of": "2026-11-12",
+  "as_of": "2026-11-13",
   "annual_contribution": 2740.0,
-  "cash": 4500.0,
-  "cash_purpose": "researching the NVDA replacement",
+  "cash": 2700.0,
+  "cash_purpose": "undeployed after SPCX; SNPS and GOOGL top-ups still open",
   "cash_decision_date": "",
   "positions": [
     {
@@ -56,6 +65,13 @@ _EMBEDDED_PORTFOLIO_JSON = r"""
       "cost_basis": 3559.7,
       "market_value": null,
       "theme": "ai_platform",
+      "sleeve": "core"
+    },
+    {
+      "ticker": "SPCX",
+      "cost_basis": 1500.0,
+      "market_value": null,
+      "theme": "space",
       "sleeve": "core"
     }
   ]
