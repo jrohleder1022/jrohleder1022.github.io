@@ -349,26 +349,138 @@ for target in (18, 22, 26):
     )
 
 
-# %% 7 — Add a company of my own
-# Factor names: ai_capex, semi_rd, china_policy, rates_duration, enterprise_it,
-# ad_cycle, regulatory, gov_appropriation, saas_disintermediation,
-# digital_services_tax, consumer_spending, market_volatility, market_beta
+# %% 7 — ADD A COMPANY: one block, all three levels of analysis
 #
-# market_beta is REQUIRED. Every exposure needs a non-empty basis string.
-# Beta is an elasticity: 1.0 = full pass-through, negative = position GAINS.
+# This replaces editing three separate cells. Fill in ONE block per company
+# and analyze() runs the whole stack:
+#
+#   1. FACTOR EXPOSURES  -> what it does to your portfolio's risk
+#   2. FUNDAMENTALS      -> quality scorecard, ROIC vs WACC
+#   3. DCF ASSUMPTIONS   -> reverse DCF, intrinsic value, sensitivity
+#
+# Any of the three can be left as None and that section is skipped. Start with
+# exposures only, add the rest as you pull figures from the filings.
 
-CANDIDATES["TICKER"] = ExposureSet(
-    ticker="TICKER",
+
+def analyze(ticker, exposures=None, fundamentals=None, dcf=None, price=None):
+    """Full stack on one company. Skips whatever you have not supplied."""
+    if exposures is not None:
+        CANDIDATES[ticker] = exposures
+        problems = exposures.validate()
+        if problems:
+            print(f"!! {ticker} factor profile is incomplete:")
+            for pr in problems:
+                print(f"   {pr}")
+            print()
+        else:
+            report_candidate(book, ticker, contribution)
+            print()
+
+    if fundamentals is not None:
+        print(evaluate(fundamentals))
+        print()
+
+    if dcf is not None:
+        if price is None:
+            print("DCF skipped: pass price= so upside can be computed.")
+        else:
+            print(report(dcf, price=price))
+            print()
+
+
+# ===========================================================================
+# TEMPLATE — copy this whole block, change MYTICKER, fill in the numbers
+# ===========================================================================
+
+MYTICKER = "PLTR"          # <- the ticker
+MYPRICE = 0.0              # <- current price. REQUIRED for the DCF.
+
+# --- 1. factor exposures. Thirteen factor names to choose from: -------------
+#   ai_capex  semi_rd  china_policy  rates_duration  enterprise_it  ad_cycle
+#   regulatory  gov_appropriation  saas_disintermediation
+#   digital_services_tax  consumer_spending  commodity_cycle
+#   market_volatility  market_beta   <- market_beta is REQUIRED
+#
+# Beta is an ELASTICITY: 1.0 = full pass-through, negative = position GAINS.
+# The third argument is a required basis string, not a comment.
+
+MY_EXPOSURES = ExposureSet(
+    ticker=MYTICKER,
     thesis="What it does, who pays, latest hard numbers with their date.",
     exposures=[
-        Exposure("consumer_spending", 0.00, "Why this number."),
-        Exposure("regulatory", 0.00, "Why this number."),
-        Exposure("rates_duration", 0.00, "Why this number."),
-        Exposure("market_beta", 1.00, "Why this number."),
+        Exposure("enterprise_it", 0.00, "REPLACE: why this number."),
+        Exposure("rates_duration", 0.00, "REPLACE: why this number."),
+        Exposure("market_beta", 1.00, "REPLACE: why this number."),
     ],
 )
 
-# report_candidate(book, "TICKER", contribution)
+# --- 2. fundamentals for the quality scorecard ------------------------------
+# Income statement and cash flow from the latest 10-Q or 10-K. Balance sheet
+# matters most: without total_debt, cash and equity, ROIC cannot be computed.
+# goodwill is optional but IMPORTANT for an acquisitive company -- it splits
+# "was the deal worth it" from "is the business good".
+
+MY_FUNDAMENTALS = Fundamentals(
+    ticker=MYTICKER,
+    revenue=0.0,              # income stmt
+    revenue_prior=0.0,        # same quarter a year ago
+    gross_profit=0.0,
+    ebit=0.0,                 # operating income
+    net_income=0.0,
+    interest_expense=0.0,
+    tax_rate=0.21,            # effective rate
+    cfo=0.0,                  # cash flow stmt, operating activities
+    capex=0.0,                # purchases of PP&E
+    total_debt=0.0,           # balance sheet, short + long
+    cash=0.0,                 # cash + short-term investments
+    equity=0.0,               # total stockholders' equity
+    goodwill=0.0,             # balance sheet; 0 is fine if not acquisitive
+    shares_diluted=0.0,
+    shares_diluted_prior=0.0,
+    price=MYPRICE,
+    wacc=QUALITY_WACC.value(),
+    basis={"revenue": "SOURCE", "cfo": "SOURCE", "total_debt": "SOURCE"},
+)
+
+# --- 3. DCF assumptions for intrinsic value ---------------------------------
+# Refuses to run on negative free cash flow, by design: a DCF on a pre-profit
+# company values the terminal assumption and nothing else. For those names use
+# multiple_convergence() in cell 6 instead.
+
+MY_WACC = WACCInputs(
+    risk_free=0.0415,            # 10Y Treasury
+    equity_risk_premium=0.045,
+    beta=1.00,                   # match market_beta above
+    cost_of_debt=0.050,
+    tax_rate=0.21,
+    debt_weight=0.00,            # debt / (debt + market cap)
+    basis="REPLACE: where these came from.",
+)
+
+MY_DCF = DCFAssumptions(
+    ticker=MYTICKER,
+    base_fcf=0.0,                # trailing twelve-month FCF = CFO - capex
+    shares_diluted=0.0,
+    net_debt=0.0,                # NEGATIVE means net cash
+    initial_growth=0.00,         # your year-1 FCF growth view
+    terminal_growth=0.03,        # the code rejects anything above ~4%
+    years=10,
+    wacc=MY_WACC,
+    basis={"base_fcf": "SOURCE", "initial_growth": "my estimate",
+           "terminal_growth": "~nominal GDP"},
+)
+
+# --- run it -----------------------------------------------------------------
+# Uncomment once the numbers are real. Passing zeros produces nonsense, which
+# is why it ships commented out.
+#
+# analyze(MYTICKER, MY_EXPOSURES, MY_FUNDAMENTALS, MY_DCF, MYPRICE)
+#
+# Or run just one level while you are still gathering figures:
+#
+# analyze(MYTICKER, MY_EXPOSURES)                                  # risk only
+# analyze(MYTICKER, None, MY_FUNDAMENTALS)                         # quality only
+# analyze(MYTICKER, None, None, MY_DCF, MYPRICE)                   # value only
 
 
 # %% 8 — Print the research brief for a name I'm studying
