@@ -25,25 +25,17 @@ from typing import Mapping, Sequence
 _EMBEDDED_PORTFOLIO_JSON = r"""
 {
   "_comment": [
-    "Current book. cost_basis figures are exact.",
-    "market_value: replace the nulls with real values from the broker.",
-    "Until you do, review.py weights the book by COST BASIS and says so --",
-    "that understates winners and overstates laggards, which flatters the",
-    "concentration numbers. The real ones will look worse.",
-    "",
-    "SPCX bought 13 Nov 2026 at $1,500. Classified CORE, not satellite:",
-    "$1,500 meets the \u00a74 core minimum exactly, and at 10.9% of equity it",
-    "would breach the 5% single-satellite cap by more than double. Core",
-    "classification is therefore the only compliant reading, and it carries",
-    "core obligations -- a moat explainable in three sentences, which the",
-    "launch-franchise argument supplies.",
-    "",
-    "Tripwires for every position live in TRIPWIRES.md beside this file."
+    "Current book. cost_basis exact where known.",
+    "AMD $1,000 and SPCX $1,500 bought; both profiles moved to BOOK in factors.py.",
+    "NOW: cost basis $3,559.70, market value ~$2,800 before the trim, ~$2,000 after.",
+    "This is the one figure to confirm -- market_value drives every weight.",
+    "Cash $5,000 = $4,200 on hand + $800 from trimming NOW.",
+    "Tripwires for every position are in TRIPWIRES.md beside this file."
   ],
-  "as_of": "2026-11-13",
+  "as_of": "2026-11-15",
   "annual_contribution": 2740.0,
-  "cash": 2700.0,
-  "cash_purpose": "undeployed after SPCX; SNPS and GOOGL top-ups still open",
+  "cash": 5000.0,
+  "cash_purpose": "$4,200 on hand plus $800 from the NOW trim",
   "cash_decision_date": "",
   "positions": [
     {
@@ -63,7 +55,7 @@ _EMBEDDED_PORTFOLIO_JSON = r"""
     {
       "ticker": "NOW",
       "cost_basis": 3559.7,
-      "market_value": null,
+      "market_value": 2000.0,
       "theme": "ai_platform",
       "sleeve": "core"
     },
@@ -73,6 +65,13 @@ _EMBEDDED_PORTFOLIO_JSON = r"""
       "market_value": null,
       "theme": "space",
       "sleeve": "core"
+    },
+    {
+      "ticker": "AMD",
+      "cost_basis": 1000.0,
+      "market_value": 1000.0,
+      "theme": "ai_hardware",
+      "sleeve": "satellite"
     }
   ]
 }
@@ -1116,14 +1115,9 @@ BOOK: dict[str, ExposureSet] = {
             Exposure("market_beta", 1.45, "Staggered lockup releases still in progress."),
         ],
     ),
-}
-
-
-# ---------------------------------------------------------------------------
-# Candidates under consideration — same discipline, no position taken
-# ---------------------------------------------------------------------------
-
-CANDIDATES: dict[str, ExposureSet] = {
+    # AMD moved here from CANDIDATES on 15 Nov 2026: bought, so it is a
+    # HOLDING. Every ticker in portfolio.json needs a profile in BOOK or the
+    # scenario engine raises KeyError rather than scoring it zero.
     "AMD": ExposureSet(
         ticker="AMD",
         thesis=(
@@ -1164,6 +1158,14 @@ CANDIDATES: dict[str, ExposureSet] = {
             Exposure("market_beta", 1.40, "High-beta semiconductor; amplifies the tape."),
         ],
     ),
+}
+
+
+# ---------------------------------------------------------------------------
+# Candidates under consideration — same discipline, no position taken
+# ---------------------------------------------------------------------------
+
+CANDIDATES: dict[str, ExposureSet] = {
     "CORT": ExposureSet(
         ticker="CORT",
         thesis=(

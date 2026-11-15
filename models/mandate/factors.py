@@ -418,14 +418,9 @@ BOOK: dict[str, ExposureSet] = {
             Exposure("market_beta", 1.45, "Staggered lockup releases still in progress."),
         ],
     ),
-}
-
-
-# ---------------------------------------------------------------------------
-# Candidates under consideration — same discipline, no position taken
-# ---------------------------------------------------------------------------
-
-CANDIDATES: dict[str, ExposureSet] = {
+    # AMD moved here from CANDIDATES on 15 Nov 2026: bought, so it is a
+    # HOLDING. Every ticker in portfolio.json needs a profile in BOOK or the
+    # scenario engine raises KeyError rather than scoring it zero.
     "AMD": ExposureSet(
         ticker="AMD",
         thesis=(
@@ -466,6 +461,14 @@ CANDIDATES: dict[str, ExposureSet] = {
             Exposure("market_beta", 1.40, "High-beta semiconductor; amplifies the tape."),
         ],
     ),
+}
+
+
+# ---------------------------------------------------------------------------
+# Candidates under consideration — same discipline, no position taken
+# ---------------------------------------------------------------------------
+
+CANDIDATES: dict[str, ExposureSet] = {
     "CORT": ExposureSet(
         ticker="CORT",
         thesis=(
