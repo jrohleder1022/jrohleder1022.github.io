@@ -1079,6 +1079,43 @@ BOOK: dict[str, ExposureSet] = {
             Exposure("market_beta", 1.15, "High-multiple software; beta above 1 is the norm."),
         ],
     ),
+    # SPCX moved here from CANDIDATES on 15 Nov 2026: bought 13 Nov, so it is
+    # a HOLDING now. The scenario engine requires every position in
+    # portfolio.json to have a profile in BOOK, and a held name left in
+    # CANDIDATES raises KeyError rather than silently scoring zero -- which is
+    # the right failure, but it has to be fixed when a purchase is recorded.
+    "SPCX": ExposureSet(
+        ticker="SPCX",
+        thesis=(
+            "Launch and satellite broadband operator that has become, by "
+            "revenue, an AI infrastructure company. Q3 2026: 'Super "
+            "Intelligence' revenue $7.6B of $14.6B total — 52%, outselling "
+            "Starlink for the first time."
+        ),
+        exposures=[
+            Exposure(
+                "ai_capex",
+                0.85,
+                "52% of revenue is AI, and Q4 capex guided to $35-40B against "
+                "$14.6B quarterly revenue (~250% of revenue). The capex "
+                "commitment is itself a leveraged bet on AI demand continuing.",
+            ),
+            Exposure(
+                "rates_duration",
+                1.10,
+                "~32.5x price/sales, one quarter into profitability, funding a "
+                "capex program far larger than revenue. Extreme duration and "
+                "extreme financing sensitivity.",
+            ),
+            Exposure(
+                "regulatory",
+                0.35,
+                "Spectrum, launch licensing, and orbital-debris rules. Also a "
+                "major government contractor, which cuts both ways.",
+            ),
+            Exposure("market_beta", 1.45, "Staggered lockup releases still in progress."),
+        ],
+    ),
 }
 
 
@@ -1546,38 +1583,6 @@ CANDIDATES: dict[str, ExposureSet] = {
                 "the definition of maximum duration.",
             ),
             Exposure("market_beta", 1.60, "Recent IPO, thin float, lockup supply still clearing."),
-        ],
-    ),
-    "SPCX": ExposureSet(
-        ticker="SPCX",
-        thesis=(
-            "Launch and satellite broadband operator that has become, by "
-            "revenue, an AI infrastructure company. Q3 2026: 'Super "
-            "Intelligence' revenue $7.6B of $14.6B total — 52%, outselling "
-            "Starlink for the first time."
-        ),
-        exposures=[
-            Exposure(
-                "ai_capex",
-                0.85,
-                "52% of revenue is AI, and Q4 capex guided to $35-40B against "
-                "$14.6B quarterly revenue (~250% of revenue). The capex "
-                "commitment is itself a leveraged bet on AI demand continuing.",
-            ),
-            Exposure(
-                "rates_duration",
-                1.10,
-                "~32.5x price/sales, one quarter into profitability, funding a "
-                "capex program far larger than revenue. Extreme duration and "
-                "extreme financing sensitivity.",
-            ),
-            Exposure(
-                "regulatory",
-                0.35,
-                "Spectrum, launch licensing, and orbital-debris rules. Also a "
-                "major government contractor, which cuts both ways.",
-            ),
-            Exposure("market_beta", 1.45, "Staggered lockup releases still in progress."),
         ],
     ),
     "RKLB": ExposureSet(
