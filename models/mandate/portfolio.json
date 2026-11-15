@@ -1,16 +1,17 @@
 {
   "_comment": [
     "Current book. cost_basis exact where known.",
-    "AMD $1,000 and SPCX $1,500 bought; both profiles moved to BOOK in factors.py.",
-    "NOW: cost basis $3,559.70, market value ~$2,800 before the trim, ~$2,000 after.",
-    "This is the one figure to confirm -- market_value drives every weight.",
-    "Cash $5,000 = $4,200 on hand + $800 from trimming NOW.",
+    "AMD $1,000 and SPCX $1,500 bought; profiles are in BOOK in factors.py.",
+    "NOW: cost basis $3,559.70, market value ~$2,000 after the $800 trim.",
+    "market_value is the one figure to confirm -- it drives every weight.",
+    "Cash $2,430 TOTAL available Monday 16 Nov. Not additive to an earlier",
+    "$5,000 figure, which was my error.",
     "Tripwires for every position are in TRIPWIRES.md beside this file."
   ],
   "as_of": "2026-11-15",
   "annual_contribution": 2740.0,
-  "cash": 5000.0,
-  "cash_purpose": "$4,200 on hand plus $800 from the NOW trim",
+  "cash": 2430.0,
+  "cash_purpose": "available to deploy Monday 16 Nov",
   "cash_decision_date": "",
   "positions": [
     {
