@@ -144,6 +144,79 @@ print("\n  Every estimate carries a basis string. Read them before trusting the"
 print("  ranking:  for tk, e in ESTIMATES.items(): print(tk, e.basis)")
 
 
+# %% 3c — FULL RANKING: return per unit of downside, and valuation sensitivity
+#
+# Two tables. The first ranks every name on expected return against its own
+# worst case. The second shows what each earns if its multiple lands at
+# various points in ten years -- which is the honest form of intrinsic value
+# for most of these, because a DCF needs balance-sheet figures that are not
+# available for twenty companies and inventing them would be worse than
+# leaving the number uncomputed.
+#
+# Note how often market_beta is the dominant factor. For most of these names
+# the biggest single risk is not the thesis -- it is simply owning equities.
+
+_allp = {**BOOK, **CANDIDATES}
+_rk = []
+for _tk, _prof in _allp.items():
+    _e = ESTIMATES.get(_tk)
+    _res = sorted(
+        ((scenarios.run_scenario(s, {_tk: _prof}, {_tk: 1.0}).portfolio_return, s.name)
+         for s in scenarios.SCENARIOS.values()),
+        key=lambda x: x[0],
+    )
+    _dom = max(_prof.as_map().items(), key=lambda kv: abs(kv[1]))
+    _rk.append({
+        "tk": _tk, "ret": _e.total_return if _e and _e.applicable else None,
+        "worst": _res[0][0], "second": _res[1][0], "wsc": _res[0][1],
+        "dom": _dom, "held": _tk in BOOK,
+    })
+
+_rated = sorted((r for r in _rk if r["ret"] is not None),
+                key=lambda r: -abs(r["ret"] / r["worst"]))
+_unrated = sorted((r for r in _rk if r["ret"] is None), key=lambda r: -r["worst"])
+
+print("=" * 92)
+print("RANKED BY RETURN PER UNIT OF DOWNSIDE  (names with earnings)")
+print("=" * 92)
+print(f"{'':<3}{'':<7}{'exp ret':>9}{'worst':>8}{'2nd worst':>11}{'ret/risk':>10}  dominant factor")
+print("-" * 92)
+for _i, _r in enumerate(_rated, 1):
+    _h = "*" if _r["held"] else " "
+    _d = f"{_r['dom'][0]} {_r['dom'][1]:+.2f}"
+    print(f"{_i:<3}{_r['tk'] + _h:<7}{_r['ret']:>9.1%}{_r['worst']:>8.1%}"
+          f"{_r['second']:>11.1%}{abs(_r['ret'] / _r['worst']):>10.2f}  {_d}")
+
+print("\n" + "=" * 92)
+print("NO EARNINGS — downside only, least bad first. No return is computable.")
+print("=" * 92)
+for _i, _r in enumerate(_unrated, 1):
+    _h = "*" if _r["held"] else " "
+    _d = f"{_r['dom'][0]} {_r['dom'][1]:+.2f}"
+    print(f"{_i:<3}{_r['tk'] + _h:<7}{'n/a':>9}{_r['worst']:>8.1%}"
+          f"{_r['second']:>11.1%}{'-':>10}  {_d}")
+print("\n  * = currently held")
+
+print("\n\n" + "=" * 88)
+print("VALUATION SENSITIVITY — annualized return if the multiple lands at X")
+print("=" * 88)
+print(f"{'':<7}{'EPS gr':>8}{'now':>7}  {'-40%':>8}{'-25%':>8}{'flat':>8}{'+15%':>8}   assumed")
+print("-" * 88)
+for _r in _rated:
+    _e = ESTIMATES[_r["tk"]]
+    _cm = _e.current_multiple
+    _cells = [
+        multiple_convergence(_r["tk"], _e.eps_growth, _cm, _cm * m).total_return
+        + _e.dividend_yield
+        for m in (0.60, 0.75, 1.00, 1.15)
+    ]
+    print(f"{_r['tk']:<7}{_e.eps_growth:>8.0%}{_cm:>7.1f}"
+          + "".join(f"{x:>8.1%}" for x in _cells)
+          + f"   {_e.target_multiple:.0f}x")
+print("\n  Dividend included. Both inputs observable: check EPS growth against")
+print("  guidance and the multiple against a decade of history.")
+
+
 # %% 4 — COMPANY QUALITY. Settle this before caring what it is worth.
 #
 # The five questions: does it create value (ROIC vs WACC), is the growth real
