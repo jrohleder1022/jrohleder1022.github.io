@@ -107,6 +107,14 @@ FACTORS: dict[str, str] = {
         "precedent spreading across states and stacking with seat compression "
         "on the same budget line."
     ),
+    "clinical_regulatory": (
+        "Binary approval risk at a drug or device regulator. Distinct from "
+        "`regulatory`, which constrains HOW a business may operate: this one "
+        "decides WHETHER a product may be sold at all. The defining features "
+        "are that it is binary, dated (a PDUFA action date), and essentially "
+        "unhedgeable — no amount of operating excellence changes the answer, "
+        "and the outcome is not correlated with anything else in a portfolio."
+    ),
     "financing_cost": (
         "Exposure to the cost and availability of debt. Distinct from "
         "`rates_duration`, which is a VALUATION effect on the discount rate: "
@@ -419,6 +427,156 @@ CANDIDATES: dict[str, ExposureSet] = {
                 "roughly double. Substantial duration.",
             ),
             Exposure("market_beta", 1.40, "High-beta semiconductor; amplifies the tape."),
+        ],
+    ),
+    "CORT": ExposureSet(
+        ticker="CORT",
+        thesis=(
+            "Cortisol modulation. Korlym plus its authorized generic treats "
+            "Cushing's syndrome; Lifyorli (relacorilant) was approved March "
+            "2026 for platinum-resistant ovarian cancer, more than three "
+            "months early. Q3 2026: revenue $340.5M (+64% YoY) — Korlym "
+            "$249.1M, Lifyorli $91.4M — and net income $126.8M against $19.7M "
+            "a year earlier. FY2026 guided $1.1-1.2B. Management targets $2B+ "
+            "of Cushing's revenue by the end of the decade, $3-5B if "
+            "relacorilant is approved for it. NOTE THE DATE: relacorilant's "
+            "Cushing's PDUFA is 17 December 2026, after an earlier complete "
+            "response letter, with labeling around a liver-injury signal "
+            "unresolved."
+        ),
+        exposures=[
+            Exposure(
+                "clinical_regulatory",
+                0.85,
+                "A dated binary event 32 days out. The earlier CRL and the "
+                "unresolved liver-injury labeling question mean this is not a "
+                "formality. Approval unlocks the $3-5B case; rejection leaves a "
+                "still-profitable company growing 64% on two approved drugs.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.45,
+                "Low for a biotech, because the earnings are real and present — "
+                "$126.8M of net income in the quarter, not a pipeline promise.",
+            ),
+            Exposure(
+                "regulatory",
+                0.30,
+                "Drug pricing policy and the authorized-generic dynamic on "
+                "Korlym. Ordinary pharma exposure.",
+            ),
+            Exposure(
+                "ai_capex",
+                0.00,
+                "None. This is the first candidate in this file with zero "
+                "connection to AI capital spending in either direction.",
+            ),
+            Exposure(
+                "market_beta",
+                0.75,
+                "Below 1. Cushing's patients are treated regardless of the "
+                "index, and the revenue is reimbursed rather than discretionary.",
+            ),
+        ],
+    ),
+    "LNG": ExposureSet(
+        ticker="LNG",
+        thesis=(
+            "Cheniere Energy. LNG liquefaction and export from Sabine Pass and "
+            "Corpus Christi, sold mostly on long-term take-or-pay contracts "
+            "where the fixed fee is paid whether or not the cargo lifts. Q3 "
+            "2026: adjusted EBITDA ~$1.9B, distributable cash flow ~$1.2B, net "
+            "income ~$1.2B, a record 188 cargoes (+17% YoY). FY2026 EBITDA "
+            "guidance RAISED a third consecutive time to $8.75-9.25B, DCF to "
+            "$6.05-6.55B. Dividend raised over 12% to $0.625 quarterly, with a "
+            "buyback authorization above $10B."
+        ),
+        exposures=[
+            Exposure(
+                "commodity_cycle",
+                0.45,
+                "The real risk, and it is a SUPPLY story. Qatar's expansion and "
+                "a wave of US projects add global liquefaction capacity through "
+                "2028, compressing spreads on uncontracted volumes. The "
+                "contracted book is insulated — the fixed fee is paid "
+                "regardless — so this bites the marginal cargo, not the base.",
+            ),
+            Exposure(
+                "financing_cost",
+                0.40,
+                "A levered infrastructure business, but term-financed against "
+                "contracted cash flows rather than funding capex out of "
+                "spot revenue. Management targets ~7x capex/EBITDA and 10% "
+                "unlevered contracted returns.",
+            ),
+            Exposure(
+                "regulatory",
+                0.40,
+                "FERC and DOE export authorizations, environmental permitting. "
+                "Slow-moving, and the same barriers are why a competitor cannot "
+                "simply build a terminal.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.35,
+                "Low. Cash flows are contracted and near-term, returned through "
+                "a growing dividend and large buybacks rather than promised.",
+            ),
+            Exposure(
+                "ai_capex",
+                0.10,
+                "Small and POSITIVE in direction: data center power demand is "
+                "lifting US gas consumption. Real but second-order next to the "
+                "export contracts.",
+            ),
+            Exposure(
+                "market_beta",
+                0.75,
+                "Below 1. Contracted take-or-pay revenue does not track the "
+                "equity market.",
+            ),
+        ],
+    ),
+    "CRDO": ExposureSet(
+        ticker="CRDO",
+        thesis=(
+            "Credo Technology. High-speed connectivity for AI data centers — "
+            "active electrical cables, SerDes IP, retimers — with roughly 93% "
+            "share of the AEC niche. Q1 FY2027: revenue ~$479M (+115% YoY, "
+            "+10% sequential), Q2 guided $525-535M, FY2027 guided to grow more "
+            "than 85%. THE RISK IS NAMEABLE: the top four customers were 84% of "
+            "Q1 revenue (33%, 28%, 13%, 10%), and none is bound by a long-term "
+            "purchase commitment."
+        ),
+        exposures=[
+            Exposure(
+                "ai_capex",
+                1.05,
+                "Sells into the interconnect layer of AI data center builds. "
+                "Above full pass-through on operating leverage.",
+            ),
+            Exposure(
+                "rates_duration",
+                1.00,
+                "High multiple on hypergrowth earnings. Long duration.",
+            ),
+            Exposure(
+                "china_policy",
+                0.30,
+                "Components for AI infrastructure sit inside the export-control "
+                "perimeter, though less directly than an accelerator.",
+            ),
+            Exposure(
+                "market_volatility",
+                0.35,
+                "It has already fallen 30% once on a single print. Concentrated "
+                "revenue plus a rich multiple makes for violent repricing.",
+            ),
+            Exposure(
+                "market_beta",
+                1.50,
+                "High-beta small cap in the most crowded theme in the market.",
+            ),
         ],
     ),
     "CRWV": ExposureSet(
@@ -1130,6 +1288,33 @@ ESTIMATES: dict[str, ReturnEstimate] = {
         dividend_yield=0.007,
         basis="Low-teens EPS growth on payment volume plus buybacks. Mild "
               "compression for interchange and routing-antitrust risk.",
+    ),
+    "CORT": ReturnEstimate(
+        "CORT", eps_growth=0.25, current_multiple=20.0, target_multiple=18.0,
+        basis="Net income $126.8M in Q3 against $19.7M a year earlier; FY2026 "
+              "guided $1.1-1.2B of revenue. 25% is a conservative long-run EPS "
+              "rate well below the current ramp. Mild compression assumed. This "
+              "EXCLUDES the relacorilant Cushing's decision on 17 Dec 2026 -- "
+              "approval opens a $3-5B revenue case that no multiple here "
+              "reflects, and the estimate deliberately does not price it.",
+        caveat="Binary PDUFA event 32 days out. Size as if it can go either way.",
+    ),
+    "LNG": ReturnEstimate(
+        "LNG", eps_growth=0.07, current_multiple=14.0, target_multiple=14.0,
+        dividend_yield=0.028,
+        basis="Contracted take-or-pay cash flows, FY2026 EBITDA guidance raised "
+              "three consecutive quarters to $8.75-9.25B, DCF $6.05-6.55B. "
+              "Dividend raised 12%+ and a $10B buyback shrinking the count, so "
+              "per-share growth exceeds EBITDA growth. Multiple held flat: "
+              "infrastructure does not re-rate much in either direction.",
+    ),
+    "CRDO": ReturnEstimate(
+        "CRDO", eps_growth=0.30, current_multiple=60.0, target_multiple=30.0,
+        basis="FY2027 guided to grow 85%+, so 30% is a long-run rate far below "
+              "the current ramp. Target 30x still rich. The multiple does most "
+              "of the work here, and the top four customers at 84% of revenue "
+              "with no purchase commitments is why it could compress fast.",
+        caveat="Customer concentration is the thesis risk, not a footnote.",
     ),
     "CRWV": ReturnEstimate(
         "CRWV", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
