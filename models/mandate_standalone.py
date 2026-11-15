@@ -2386,6 +2386,38 @@ def _check_concentration_expiry(
     return findings
 
 
+def _check_sizing_dead_zone(book: Book) -> list[Finding]:
+    """The gap between the satellite cap and the core minimum.
+
+    §3 caps a single satellite at 5% of the book. §4 sets the core minimum at
+    $1,500. Below a certain book size those two rules leave a range where NO
+    position is compliant: too large to be a satellite, too small to qualify as
+    core. The gap closes only when 5% of the book reaches the core minimum.
+
+    This is not drift and it is not a judgment call -- it is arithmetic, and it
+    silently turns a reasonable-looking purchase into two breaches.
+    """
+    total = book.total_value
+    if total <= 0:
+        return []
+    cap = total * MAX_SINGLE_SATELLITE
+    if cap >= CORE_MINIMUM:
+        return []
+    closes_at = CORE_MINIMUM / MAX_SINGLE_SATELLITE
+    return [
+        Finding(
+            Severity.NOTE,
+            "3/4",
+            f"SIZING DEAD ZONE: ${cap:,.0f}-${CORE_MINIMUM:,.0f}. A new position "
+            f"in that range breaches either way — above the "
+            f"{MAX_SINGLE_SATELLITE:.0%} satellite cap, below the "
+            f"${CORE_MINIMUM:,.0f} core minimum. Compliant sizes today are "
+            f"under ${cap:,.0f} (satellite) or ${CORE_MINIMUM:,.0f}+ (core). "
+            f"The gap closes at a book value of ${closes_at:,.0f}.",
+        )
+    ]
+
+
 def _check_cash(book: Book) -> list[Finding]:
     """§3 — cash is permitted only with a purpose AND a date."""
     if book.cash <= 0:
@@ -2452,6 +2484,7 @@ def audit(book: Book, annual_contribution: float = ASSUMED_ANNUAL_CONTRIBUTION) 
     findings += _check_position_limits(book)
     findings += _check_themes(book)
     findings += _check_concentration_expiry(book, annual_contribution)
+    findings += _check_sizing_dead_zone(book)
     findings += _check_cash(book)
     findings += _check_funding(book)
 
