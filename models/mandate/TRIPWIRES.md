@@ -89,21 +89,50 @@ substitute and no credible path to one inside a decade.
 
 ---
 
-## NVDA — sold 12 Nov 2026. Re-entry conditions, all three required.
+## NVDA — sold 12 Nov 2026. CLOSED, not pending.
 
-1. **A permanent CEO** who can articulate an architectural thesis for 2029
-   and holds credibility with TSMC and Washington. An operator who can run the
-   factory is sufficient for an Apple; it is not sufficient for a company
-   whose five largest customers are building its replacement.
-2. **Data center revenue growth holding above ~20%** post-transition.
-3. **The policy picture resolved enough to underwrite:** the NDAA cycle
-   closed so the Chip Security Act and AI Overwatch Act are readable as
-   enacted law, and the congressional investigations producing findings rather
-   than headlines.
+**Decision, 16 Nov 2026:** *"Nvidia is not bringing Jensen back so I see no
+reason to own this stock."*
 
-*Not a trigger: a lower price. Cheap is not a thesis.*
+This supersedes the three re-entry conditions previously recorded here. Those
+treated the position as pending reassessment once a permanent CEO was named.
+The owner's reasoning is different and more decisive: the thing that made the
+company investable to him was a specific person's judgment in a specific
+environment — chip architecture bets placed years ahead, TSMC allocation
+negotiated founder-to-founder, and an export-control relationship managed
+personally. That person is not returning, so the question does not stay open.
+
+The practical value of closing it rather than leaving it conditional is that
+the position stops being re-argued every time the price moves.
+
+**What would reopen it:** nothing on a schedule, and explicitly not a lower
+price. Only a new thesis that does not depend on the old one — a reason to own
+NVIDIA that would have been a reason to own it even with Huang in place, and
+that survives being written down and dated here.
 
 ---
+
+## CORT — to be bought, $2,430, core
+
+> **CORT-1 — the catalyst, and it is dated.** Relacorilant's Cushing's PDUFA is
+> **17 December 2026**, following an earlier complete response letter, with
+> labeling around a liver-injury signal unresolved. This is not a tripwire so
+> much as a scheduled coin-flip: approval opens the $2B+ Cushing's case
+> management describes (up to $3-5B); rejection leaves a profitable company
+> growing 64% on two approved drugs. **The position is sized to survive the
+> second outcome, and the expected-return estimate of 23.7% deliberately
+> excludes the first.**
+
+> **CORT-2 — Lifyorli uptake.** The oncology launch is the growth engine
+> independent of the Cushing's decision: $91.4M in Q3 2026 with over 1,300
+> patients started as of Q2. **Two consecutive quarters of sequentially
+> declining Lifyorli revenue** means the launch has stalled, which is the
+> thesis breaking regardless of what happens in December.
+
+> **CORT-3 — generic erosion.** Korlym plus its authorized generic was $249.1M
+> of the $340.5M quarter. **Korlym-family revenue declining more than 15% year
+> over year** means generic competition is taking the base faster than the new
+> drugs can replace it.
 
 ## Candidates — conditions that would make them investable
 
