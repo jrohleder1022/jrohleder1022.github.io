@@ -25,52 +25,51 @@ from typing import Mapping, Sequence
 _EMBEDDED_PORTFOLIO_JSON = r"""
 {
   "_comment": [
-    "Current book. cost_basis exact where known.",
-    "AMD $1,000 and SPCX $1,500 bought; profiles are in BOOK in factors.py.",
-    "NOW: cost basis $3,559.70, market value ~$2,000 after the $800 trim.",
-    "market_value is the one figure to confirm -- it drives every weight.",
-    "Cash $2,430 TOTAL available Monday 16 Nov. Not additive to an earlier",
-    "$5,000 figure, which was my error.",
+    "MARKET VALUES as reported by the owner 16 Nov 2026. Weights are now real,",
+    "not cost-basis approximations, so the concentration figures below are the",
+    "true ones rather than the flattered ones.",
+    "NOW carried at $3,000 against a $3,559.70 cost basis; owner intends to trim",
+    "to $2,000.",
     "Tripwires for every position are in TRIPWIRES.md beside this file."
   ],
-  "as_of": "2026-11-15",
+  "as_of": "2026-11-16",
   "annual_contribution": 2740.0,
-  "cash": 2430.0,
-  "cash_purpose": "available to deploy Monday 16 Nov",
+  "cash": 1400.0,
+  "cash_purpose": "SPAXX, undeployed",
   "cash_decision_date": "",
   "positions": [
     {
       "ticker": "GOOGL",
       "cost_basis": 4664.58,
-      "market_value": null,
+      "market_value": 5000.0,
       "theme": "ai_platform",
       "sleeve": "core"
     },
     {
       "ticker": "SNPS",
       "cost_basis": 4012.32,
-      "market_value": null,
+      "market_value": 4000.0,
       "theme": "eda",
       "sleeve": "core"
     },
     {
       "ticker": "NOW",
       "cost_basis": 3559.7,
-      "market_value": 2000.0,
+      "market_value": 3000.0,
       "theme": "ai_platform",
       "sleeve": "core"
     },
     {
       "ticker": "SPCX",
       "cost_basis": 1500.0,
-      "market_value": null,
+      "market_value": 1500.0,
       "theme": "space",
       "sleeve": "core"
     },
     {
       "ticker": "AMD",
       "cost_basis": 1000.0,
-      "market_value": 1000.0,
+      "market_value": 1250.0,
       "theme": "ai_hardware",
       "sleeve": "satellite"
     }
