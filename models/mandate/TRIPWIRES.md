@@ -87,6 +87,21 @@ substitute and no credible path to one inside a decade.
 > over year for two consecutive quarters. Advertising is still effectively all
 > of near-term operating profit; query volume is the leading indicator for it.
 
+> **GOOGL-3 — the TPU thesis, added 16 Nov 2026.** The expected return was
+> raised from 13.3% to 15.9% on TPU becoming an external hardware business:
+> Meta renting TPUs under a reported multi-year multibillion agreement, a JV
+> leasing them to outside customers, and Alphabet's CFO guiding some hardware
+> revenue in 2026 with more in 2027. **This is upside credited, not upside
+> assumed** — press reports an internal aspiration to capture ~10% of NVIDIA's
+> revenue (~$200B) and that figure is explicitly NOT in the estimate.
+>
+> **The tripwire: no disclosed external TPU revenue line, or management
+> declining to quantify it, by the Q4 2027 report.** If TPU stays an internal
+> cost advantage rather than becoming a sellable product, the raise was wrong
+> and 13.3% was right. Note the counter-case: Meta signed NVIDIA agreements at
+> the same time, Google remains one of NVIDIA's largest customers, and several
+> analysts read the deal as additive rather than substitutional.
+
 ---
 
 ## NVDA — sold 12 Nov 2026. CLOSED, not pending.

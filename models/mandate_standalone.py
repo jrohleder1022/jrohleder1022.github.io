@@ -1960,11 +1960,22 @@ ESTIMATES: dict[str, ReturnEstimate] = {
               "ten-year average, so no re-rating is assumed in either direction.",
     ),
     "GOOGL": ReturnEstimate(
-        "GOOGL", eps_growth=0.14, current_multiple=22.0, target_multiple=20.0,
+        "GOOGL", eps_growth=0.16, current_multiple=22.0, target_multiple=21.0,
         dividend_yield=0.004,
-        basis="Mid-teens EPS growth on advertising plus cloud. Mild compression "
-              "assumed because 22x already embeds AI optionality and antitrust "
-              "is unresolved.",
+        basis="RAISED from 14% growth / 20x target on 16 Nov 2026. The original "
+              "estimate priced advertising plus cloud and gave no weight to TPU "
+              "as an EXTERNAL hardware business, which is now a real line: Meta "
+              "signed a multi-year multibillion deal to rent TPUs (~Feb 2026, "
+              "neither party confirming terms), Google runs a JV leasing TPUs to "
+              "outside customers, and Alphabet's CFO has said some TPU hardware "
+              "revenue lands in 2026 with the larger impact in 2027. Press "
+              "reports an internal Google Cloud aspiration to capture ~10% of "
+              "NVIDIA's annual revenue (~$200B) through TPU sales -- that figure "
+              "is an aspiration, not guidance, and is NOT in this estimate. 16% "
+              "and a near-flat multiple is the conservative read: it credits TPU "
+              "as additive without pricing the aspiration.",
+        caveat="Antitrust remains unresolved. TPU upside is deliberately "
+               "under-weighted rather than excluded.",
     ),
     "NOW": ReturnEstimate(
         "NOW", eps_growth=0.18, current_multiple=30.0, target_multiple=24.0,
