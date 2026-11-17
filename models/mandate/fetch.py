@@ -72,6 +72,12 @@ TAGS = {
     "goodwill": "Goodwill",
     "cfo": "NetCashProvidedByUsedInOperatingActivities",
     "shares_diluted": "WeightedAverageNumberOfDilutedSharesOutstanding",
+    # Needed for the DCF: base FCF is CFO minus capex, and net debt is
+    # total debt minus cash. Without these the intrinsic-value block cannot
+    # be built, which was the gap.
+    "capex": "PaymentsToAcquirePropertyPlantAndEquipment",
+    "debt_long": "LongTermDebtNoncurrent",
+    "debt_short": "LongTermDebtCurrent",
 }
 
 
@@ -363,6 +369,28 @@ def scaffold(ticker: str, price: float | None = None) -> str:
         return f"{fact.period_end} {fact.form}" if fact else "missing"
 
     px = f"{price:.2f}" if price else "0.0  # REPLACE with the current price"
+    px_plain = f"{price:.2f}" if price else "0.0"
+
+    def _num(field: str) -> float | None:
+        fact = facts.get(field)
+        return fact.value if fact else None
+
+    _cfo, _capex = _num("cfo"), _num("capex")
+    fcf = (f"{_cfo - abs(_capex):_.0f}" if _cfo is not None and _capex is not None
+           else "0.0  # CFO or capex not reported — compute by hand")
+
+    capex_v = (f"{abs(_capex):_.0f}" if _capex is not None
+               else "0.0  # NOT REPORTED — purchases of PP&E, look it up")
+
+    _dl, _ds, _cash = _num("debt_long"), _num("debt_short"), _num("cash")
+    debt_v = (f"{(_dl or 0) + (_ds or 0):_.0f}"
+              if (_dl is not None or _ds is not None)
+              else "0.0  # NOT REPORTED — short + long term debt, look it up")
+    if _cash is not None and (_dl is not None or _ds is not None):
+        _nd = (_dl or 0) + (_ds or 0) - _cash
+        netdebt = f"{_nd:_.0f}"
+    else:
+        netdebt = "0.0  # debt or cash not reported — compute by hand"
 
     return f'''
 # ===========================================================================
@@ -381,8 +409,8 @@ def scaffold(ticker: str, price: float | None = None) -> str:
     interest_expense=0.0,           # REPLACE: from the debt footnote
     tax_rate=0.21,                  # REPLACE with the effective rate
     cfo={value("cfo")},
-    capex=0.0,                      # REPLACE: purchases of PP&E
-    total_debt=0.0,                 # REPLACE: short-term + long-term
+    capex={capex_v},
+    total_debt={debt_v},
     cash={value("cash")},
     equity={value("equity")},
     goodwill={value("goodwill")},
@@ -392,7 +420,7 @@ def scaffold(ticker: str, price: float | None = None) -> str:
     wacc=QUALITY_WACC.value(),
     basis={{"revenue": "SEC XBRL {dated("revenue")}",
            "cfo": "SEC XBRL {dated("cfo")}",
-           "total_debt": "REPLACE — not fetched"}},
+           "total_debt": "SEC XBRL long-term + short-term"}},
 )
 
 # --- JUDGMENTS: no filing contains these. They drive the whole output. -----
@@ -417,6 +445,41 @@ ESTIMATES["{ticker}"] = ReturnEstimate(
     basis="REPLACE: where the growth rate and target multiple come from.",
 )
 
+# --- 3. INTRINSIC VALUE: base_fcf and net_debt computed from the facts -----
+# base_fcf = CFO - capex.  net_debt = long-term + short-term debt - cash.
+# A NEGATIVE net_debt means net cash, which is correct and the code expects it.
+# The growth rates are the only judgments here, and they drive everything.
+
+{ticker}_WACC = WACCInputs(
+    risk_free=0.0415,               # 10Y Treasury
+    equity_risk_premium=0.045,
+    beta=1.00,                      # REPLACE: match market_beta above
+    cost_of_debt=0.050,
+    tax_rate=0.21,
+    debt_weight=0.00,               # REPLACE: debt / (debt + market cap)
+    basis="REPLACE: where these came from.",
+)
+
+{ticker}_DCF = DCFAssumptions(
+    ticker="{ticker}",
+    base_fcf={fcf},
+    shares_diluted={value("shares_diluted")},
+    net_debt={netdebt},
+    initial_growth=0.00,            # REPLACE: your year-1 FCF growth view
+    terminal_growth=0.03,           # the code rejects anything above ~4%
+    years=10,
+    wacc={ticker}_WACC,
+    basis={{"base_fcf": "SEC XBRL: CFO {dated("cfo")} less capex",
+           "initial_growth": "REPLACE: my estimate",
+           "terminal_growth": "~nominal GDP"}},
+)
+
 # --- then run ---------------------------------------------------------------
-# analyze("{ticker}", CANDIDATES["{ticker}"], {ticker}_FUNDAMENTALS)
+# All three levels at once. Pass the current price for the DCF upside.
+# analyze("{ticker}", CANDIDATES["{ticker}"], {ticker}_FUNDAMENTALS,
+#         {ticker}_DCF, price={px_plain})
+#
+# The DCF REFUSES to run on negative base_fcf, by design. For a pre-profit
+# company use multiple_convergence() in cell 6 instead and be explicit that
+# you are underwriting a story rather than a cash flow.
 '''
