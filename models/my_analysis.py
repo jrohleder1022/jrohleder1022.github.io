@@ -675,7 +675,7 @@ MY_DCF = DCFAssumptions(
 # Needs network. If it fails, run fetch_main(["--check"]) to see which
 # endpoint is unreachable.
 
-NEW_TICKER = "PLTR"
+NEW_TICKER = "CORT"   # any US-listed ticker; the CIK is looked up
 
 from financial_analysis import scaffold, fetch_main  # noqa: E402
 

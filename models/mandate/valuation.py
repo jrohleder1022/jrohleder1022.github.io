@@ -129,6 +129,13 @@ class DCFAssumptions:
                     "has infinite value, which is why this is always an input "
                     "error and never a finding."
                 )
+        if self.initial_growth == 0.0:
+            problems.append(
+                "initial_growth is exactly 0.00, which is the scaffold's "
+                "placeholder. The model will still run and produce a number, "
+                "and that number will be meaningless -- it is the only "
+                "judgment in the whole DCF. Set it before reading the output."
+            )
         if self.terminal_growth > 0.04:
             problems.append(
                 f"terminal growth {self.terminal_growth:.1%} exceeds ~4%. In "

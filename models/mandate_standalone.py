@@ -225,6 +225,13 @@ class DCFAssumptions:
                     "has infinite value, which is why this is always an input "
                     "error and never a finding."
                 )
+        if self.initial_growth == 0.0:
+            problems.append(
+                "initial_growth is exactly 0.00, which is the scaffold's "
+                "placeholder. The model will still run and produce a number, "
+                "and that number will be meaningless -- it is the only "
+                "judgment in the whole DCF. Set it before reading the output."
+            )
         if self.terminal_growth > 0.04:
             problems.append(
                 f"terminal growth {self.terminal_growth:.1%} exceeds ~4%. In "
@@ -4851,6 +4858,7 @@ broker_main = main
 
 
 SEC_UA = "mandate-portfolio-tool/0.1 (personal research)"
+SEC_TICKERS = "https://www.sec.gov/files/company_tickers.json"
 SEC_FACTS = "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik:010d}/us-gaap/{tag}.json"
 
 # CIK numbers for every ticker in the book and watchlist. These are stable
@@ -4882,6 +4890,33 @@ TAGS = {
     "debt_long": "LongTermDebtNoncurrent",
     "debt_short": "LongTermDebtCurrent",
 }
+
+
+_CIK_CACHE: dict[str, int] = {}
+
+
+def resolve_cik(ticker: str) -> int | None:
+    """CIK for a ticker: the local map first, then the SEC's full directory.
+
+    The hardcoded CIK map only ever covered the names discussed here, which
+    made "look up any company" false in a way that was easy to miss -- the
+    workbench's own example ticker was not in it. The SEC publishes the
+    complete mapping, so fall back to that and cache it for the session.
+    """
+    ticker = ticker.upper()
+    if ticker in CIK:
+        return CIK[ticker]
+    if ticker in _CIK_CACHE:
+        return _CIK_CACHE[ticker]
+
+    import urllib.request
+
+    request = urllib.request.Request(SEC_TICKERS, headers={"User-Agent": SEC_UA})
+    with urllib.request.urlopen(request, timeout=20) as response:
+        directory = json.load(response)
+    for entry in directory.values():
+        _CIK_CACHE[entry["ticker"].upper()] = int(entry["cik_str"])
+    return _CIK_CACHE.get(ticker)
 
 
 # ---------------------------------------------------------------------------
@@ -4951,9 +4986,12 @@ def fetch_sec_concept(ticker: str, tag: str, timeout: int = 20) -> Fact | None:
     import urllib.error
     import urllib.request
 
-    cik = CIK.get(ticker)
+    cik = resolve_cik(ticker)
     if cik is None:
-        raise KeyError(f"no CIK recorded for {ticker}. Add it to fetch.CIK.")
+        raise KeyError(
+            f"{ticker} is not in the SEC's ticker directory. Check the spelling, "
+            "or the company may file under a different symbol."
+        )
 
     url = SEC_FACTS.format(cik=cik, tag=tag)
     request = urllib.request.Request(url, headers={"User-Agent": SEC_UA})
@@ -5150,11 +5188,17 @@ def scaffold(ticker: str, price: float | None = None) -> str:
     producing confident numbers with nothing behind them.
     """
     ticker = ticker.upper()
-    if ticker not in CIK:
+    try:
+        if resolve_cik(ticker) is None:
+            return (
+                f"# {ticker} is not in the SEC's ticker directory. Check the\n"
+                f"# spelling, or the company may file under another symbol."
+            )
+    except Exception as exc:
         return (
-            f"# {ticker} has no CIK recorded. Look it up at\n"
-            f"#   https://www.sec.gov/cgi-bin/browse-edgar?company={ticker}\n"
-            f"# and add it to fetch.CIK, then re-run."
+            f"# Could not reach the SEC ticker directory: "
+            f"{type(exc).__name__}.\n# Run fetch_main([\"--check\"]) to test "
+            f"connectivity."
         )
 
     facts = fetch_fundamentals(ticker)
