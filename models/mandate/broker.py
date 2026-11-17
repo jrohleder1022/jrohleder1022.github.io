@@ -184,8 +184,16 @@ def merge_into_portfolio(
     theme and sleeve are judgments that no export contains, so existing ones
     are kept and new tickers are marked UNCLASSIFIED rather than guessed at.
     """
+    preserved: dict = {}
     if path.exists():
         data = json.loads(path.read_text())
+        # Fields the export cannot carry. Losing annual_contribution is not
+        # cosmetic: §5 divides by it, so a zero makes the rebuild time
+        # infinite, the affordable book $0, and the ballast floor jump to its
+        # maximum. The audit then reports a breach that does not exist.
+        for key in ("annual_contribution", "cash_purpose", "cash_decision_date"):
+            if key in data:
+                preserved[key] = data[key]
     else:
         template = path.parent / "portfolio.example.json"
         data = json.loads(template.read_text()) if template.exists() else {
@@ -221,9 +229,18 @@ def merge_into_portfolio(
 
     data["positions"] = rows
     data["cash"] = round(cash, 2)
+    data.update(preserved)
+    data.setdefault("annual_contribution", 0.0)
     data.setdefault("cash_purpose", "sweep balance from broker export")
     data.setdefault("cash_decision_date", "")
     data["_imported_from_broker"] = True
+
+    if not data.get("annual_contribution"):
+        notes.append(
+            "annual_contribution is 0 — §5 divides by it, so the rebuild time "
+            "will read as infinite and the ballast floor will jump to its "
+            "maximum. Set it in portfolio.json before trusting the audit."
+        )
 
     if not dry_run:
         path.write_text(json.dumps(data, indent=2) + "\n")

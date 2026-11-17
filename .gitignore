@@ -24,3 +24,9 @@ Thumbs.db
 models/mandate/portfolio.json
 models/closes.csv
 models/**/portfolio.json
+
+# Broker exports. These contain the ACCOUNT NUMBER as well as every holding.
+Portfolio_Positions*.csv
+*_Positions_*.csv
+positions*.csv
+*.CSV
