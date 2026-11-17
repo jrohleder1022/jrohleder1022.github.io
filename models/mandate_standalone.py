@@ -5074,6 +5074,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--prices", action="store_true", help="write closes.csv")
     parser.add_argument("--values", action="store_true", help="update market values")
     parser.add_argument("--facts", type=str, help="print SEC fundamentals for a ticker")
+    parser.add_argument("--scaffold", type=str,
+                        help="emit a paste-ready block for a new ticker")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--portfolio", type=Path, default=here / "portfolio.json")
     parser.add_argument("--out", type=Path, default=here.parent / "closes.csv")
@@ -5114,10 +5116,109 @@ def main(argv: list[str] | None = None) -> int:
         print("  the filing rather than substituting a guess.")
         return 0
 
+    if args.scaffold:
+        print(scaffold(args.scaffold, fetch_quote(args.scaffold.upper())))
+        return 0
+
     parser.print_help()
     return 0
 
 
+# ---------------------------------------------------------------------------
+# Scaffolding a new ticker
+# ---------------------------------------------------------------------------
+
+
+def scaffold(ticker: str, price: float | None = None) -> str:
+    """Emit a paste-ready block for a new ticker, with real SEC figures in it.
+
+    This is as far as automation honestly goes. It fills in everything that is
+    a FACT — revenue, earnings, cash flow, the balance sheet, share count,
+    straight from the company's own XBRL filings — and leaves every field that
+    is a JUDGMENT marked REPLACE.
+
+    The division is not arbitrary. A filing can tell you what a company earned.
+    It cannot tell you whether its moat holds for ten years, whose budget its
+    revenue comes out of, or what multiple it deserves. Those are the inputs
+    that actually drive the output, and a tool that guessed at them would be
+    producing confident numbers with nothing behind them.
+    """
+    ticker = ticker.upper()
+    if ticker not in CIK:
+        return (
+            f"# {ticker} has no CIK recorded. Look it up at\n"
+            f"#   https://www.sec.gov/cgi-bin/browse-edgar?company={ticker}\n"
+            f"# and add it to fetch.CIK, then re-run."
+        )
+
+    facts = fetch_fundamentals(ticker)
+
+    def value(field: str) -> str:
+        fact = facts.get(field)
+        return f"{fact.value:_.0f}" if fact else "0.0  # NOT REPORTED — look it up"
+
+    def dated(field: str) -> str:
+        fact = facts.get(field)
+        return f"{fact.period_end} {fact.form}" if fact else "missing"
+
+    px = f"{price:.2f}" if price else "0.0  # REPLACE with the current price"
+
+    return f'''
+# ===========================================================================
+# {ticker} — scaffolded from SEC XBRL. Facts filled in; judgments marked.
+# Revenue as of {dated("revenue")}.  Equity as of {dated("equity")}.
+# ===========================================================================
+
+# --- FACTS: straight from the filings. Spot-check the dates above. ---------
+{ticker}_FUNDAMENTALS = Fundamentals(
+    ticker="{ticker}",
+    revenue={value("revenue")},
+    revenue_prior=0.0,              # REPLACE: same period a year earlier
+    gross_profit=0.0,               # REPLACE: not a standard XBRL tag
+    ebit={value("ebit")},
+    net_income={value("net_income")},
+    interest_expense=0.0,           # REPLACE: from the debt footnote
+    tax_rate=0.21,                  # REPLACE with the effective rate
+    cfo={value("cfo")},
+    capex=0.0,                      # REPLACE: purchases of PP&E
+    total_debt=0.0,                 # REPLACE: short-term + long-term
+    cash={value("cash")},
+    equity={value("equity")},
+    goodwill={value("goodwill")},
+    shares_diluted={value("shares_diluted")},
+    shares_diluted_prior=0.0,       # REPLACE
+    price={px},
+    wacc=QUALITY_WACC.value(),
+    basis={{"revenue": "SEC XBRL {dated("revenue")}",
+           "cfo": "SEC XBRL {dated("cfo")}",
+           "total_debt": "REPLACE — not fetched"}},
+)
+
+# --- JUDGMENTS: no filing contains these. They drive the whole output. -----
+# Factor names: ai_capex semi_rd china_policy rates_duration enterprise_it
+#   ad_cycle regulatory gov_appropriation saas_disintermediation
+#   digital_services_tax consumer_spending commodity_cycle clinical_regulatory
+#   financing_cost market_volatility market_beta   <- market_beta REQUIRED
+# Beta is an elasticity: 1.0 = full pass-through, negative = position GAINS.
+
+CANDIDATES["{ticker}"] = ExposureSet(
+    ticker="{ticker}",
+    thesis="REPLACE: what it does, who pays, latest hard numbers with dates.",
+    exposures=[
+        Exposure("market_beta", 1.00, "REPLACE: why this number."),
+        # add three to five more
+    ],
+)
+
+ESTIMATES["{ticker}"] = ReturnEstimate(
+    "{ticker}", eps_growth=0.00, current_multiple=0.0, target_multiple=0.0,
+    applicable=False,               # set True once the multiples are real
+    basis="REPLACE: where the growth rate and target multiple come from.",
+)
+
+# --- then run ---------------------------------------------------------------
+# analyze("{ticker}", CANDIDATES["{ticker}"], {ticker}_FUNDAMENTALS)
+'''
 
 # Capture this module's entry point before the next one shadows it.
 fetch_main = main

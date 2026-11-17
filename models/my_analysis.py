@@ -659,5 +659,34 @@ MY_DCF = DCFAssumptions(
 # analyze(MYTICKER, None, None, MY_DCF, MYPRICE)                   # value only
 
 
+# %% 7b — SCAFFOLD A NEW TICKER.  Name it; the facts get fetched.
+#
+# This is as far as automation honestly goes. It fills in every field that is
+# a FACT -- revenue, earnings, cash flow, balance sheet, share count, straight
+# from the company's own SEC XBRL filings -- and marks every field that is a
+# JUDGMENT with REPLACE.
+#
+# The split is not arbitrary. A filing says what a company earned. It cannot
+# say whether the moat holds for ten years, whose budget the revenue comes out
+# of, or what multiple it deserves. Those are the inputs that drive the output,
+# and a tool that guessed at them would hand you confident numbers with
+# nothing behind them.
+#
+# Needs network. If it fails, run fetch_main(["--check"]) to see which
+# endpoint is unreachable.
+
+NEW_TICKER = "PLTR"
+
+from financial_analysis import scaffold, fetch_main  # noqa: E402
+
+print(scaffold(NEW_TICKER))
+
+# Copy the output into cell 7, fill in every REPLACE, then run it.
+# A ticker with no CIK on file prints the EDGAR lookup link instead.
+#
+# Just the raw figures, without the scaffolding:
+#   fetch_main(["--facts", NEW_TICKER])
+
+
 # %% 8 — Print the research brief for a name I'm studying
 print(brief("TICKER"))
