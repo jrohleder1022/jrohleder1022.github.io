@@ -102,6 +102,16 @@ def _money(raw: str | None) -> float | None:
     return -value if negative else value
 
 
+def _norm(name: str) -> str:
+    """Normalize a column name for matching: lowercase, letters only.
+
+    Fidelity exports "Current value"; the documentation shows "Current Value".
+    Matching the exact string makes the parser fail on a real file for a reason
+    that has nothing to do with the data.
+    """
+    return re.sub(r"[^a-z]", "", name.lower())
+
+
 def read_positions(path: Path, flavour: str = "fidelity") -> tuple[list[Holding], float, list[str]]:
     """Parse a positions export. Returns (holdings, cash, notes)."""
     if flavour not in COLUMN_MAPS:
@@ -112,8 +122,10 @@ def read_positions(path: Path, flavour: str = "fidelity") -> tuple[list[Holding]
     lines = text.splitlines()
 
     # Find the header row: the first line containing the ticker column name.
+    want = _norm(cols["ticker"])
     header_index = next(
-        (i for i, line in enumerate(lines) if cols["ticker"] in line), None
+        (i for i, line in enumerate(lines)
+         if any(_norm(c) == want for c in line.split(","))), None
     )
     if header_index is None:
         raise ValueError(
@@ -122,17 +134,27 @@ def read_positions(path: Path, flavour: str = "fidelity") -> tuple[list[Holding]
         )
 
     reader = csv.DictReader(lines[header_index:])
+    # Map our field names onto whatever this file actually calls them.
+    actual = {_norm(f): f for f in (reader.fieldnames or [])}
+    resolved = {k: actual.get(_norm(v)) for k, v in cols.items()}
+    missing = [k for k, v in resolved.items() if v is None]
+    if "ticker" in missing:
+        raise ValueError(f"cannot locate the ticker column; found {reader.fieldnames}")
     holdings: list[Holding] = []
     cash = 0.0
     notes: list[str] = []
 
     for row in reader:
-        ticker = (row.get(cols["ticker"]) or "").strip().upper()
-        # Footer disclaimer rows have no ticker, or prose in the field.
-        if not ticker or len(ticker) > 6 or " " in ticker:
+        raw_ticker = (row.get(resolved["ticker"]) or "").strip().upper()
+        # Fidelity appends ** to sweep tickers (SPAXX**). Strip to letters and
+        # dots before doing anything, including the length test -- otherwise
+        # the cash row is thrown away as prose and the balance goes missing.
+        ticker = re.sub(r"[^A-Z.]", "", raw_ticker)
+        # Footer disclaimer rows have no ticker, or a sentence in the field.
+        if not ticker or len(ticker) > 6:
             continue
 
-        value = _money(row.get(cols["market_value"]))
+        value = _money(row.get(resolved["market_value"]))
         if value is None:
             notes.append(f"{ticker}: no market value — skipped")
             continue
@@ -142,11 +164,13 @@ def read_positions(path: Path, flavour: str = "fidelity") -> tuple[list[Holding]
             notes.append(f"{ticker}: ${value:,.2f} treated as CASH")
             continue
 
+        shares = _money(row.get(resolved["shares"])) if resolved["shares"] else None
+        cost = _money(row.get(resolved["cost_basis"])) if resolved["cost_basis"] else None
+        if cost is None:
+            notes.append(f"{ticker}: no cost basis in the export — recorded as 0")
         holdings.append(Holding(
-            ticker=ticker,
-            shares=_money(row.get(cols["shares"])) or 0.0,
-            market_value=value,
-            cost_basis=_money(row.get(cols["cost_basis"])) or 0.0,
+            ticker=ticker, shares=shares or 0.0,
+            market_value=value, cost_basis=cost or 0.0,
         ))
 
     return holdings, cash, notes

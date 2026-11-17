@@ -2145,13 +2145,15 @@ ESTIMATES: dict[str, ReturnEstimate] = {
 #                             the floor. Scenario impacts are capped at -100%.
 
 # --- §4 position limits ----------------------------------------------------
-MAX_SINGLE_POSITION = 0.35
-# RAISED from 0.25 on 17 Nov 2026. 25% was unreachable for a deliberately
-# concentrated book of five or six names: with four positions equal-weighted
-# you are AT the cap, and any winner puts you through it. The result was a
-# permanent breach the owner learned to step past, which is worse than no
-# rule. 35% permits a concentrated book while still catching a position that
-# has genuinely run away.
+MAX_SINGLE_POSITION = 0.40
+# 0.25 -> 0.35 -> 0.40 on 17 Nov 2026, tuned for a 23-year-old Roth seeking
+# growth. 25% was unreachable: with four positions equal-weighted you are AT
+# the cap and any winner puts you through it, producing a permanent breach the
+# owner learned to step past -- worse than no rule. 40% lets a genuine winner
+# run, which is the single largest source of return in a concentrated book
+# held for decades, while still catching a position that has become the
+# portfolio. The cap exists to stop ONE mistake being fatal, not to stop
+# concentration.
 
 # The core/satellite line is PROPORTIONAL, not a fixed dollar figure.
 # This fixes a real bug. A fixed $1,500 minimum against a percentage-based
@@ -2183,17 +2185,71 @@ AI_COMPLEX_CEILING_BY_SIZE: tuple[tuple[float, float], ...] = (
     (75_000.0, 0.60),
 )
 
-# --- §5 concentration expiry ------------------------------------------------
-# Concentration is affordable only while annual contributions can rebuild a
-# 50% drawdown inside five years. Past that, diversification stops being
-# optional because TIME, not money, becomes the binding constraint.
-EXPIRY_LADDER: tuple[tuple[float, float], ...] = (
-    (20_000.0, 0.00),
-    (40_000.0, 0.20),
-    (75_000.0, 0.30),
-)
-ASSUMED_ANNUAL_CONTRIBUTION = 2_740.0
+# --- §5 concentration expiry, DERIVED rather than tabled ------------------
+#
+# The principle: concentration is affordable while annual contributions can
+# rebuild a 50% drawdown inside five years. Past that, TIME rather than money
+# becomes the binding constraint and diversification stops being optional.
+#
+# The old version hardcoded dollar thresholds ($20k, $40k, $75k) that were
+# computed off a $2,740 contribution rate. That is backwards: the thresholds
+# are a CONSEQUENCE of the contribution rate, so they should move when it
+# does. Deriving them means that funding the account buys concentration
+# headroom, which is the correct incentive and the right answer for someone
+# whose contributions will rise.
+#
+#     affordable book = rebuild_years_limit x annual_contribution / drawdown
+#
+# At $2,740/yr:  5 x 2,740 / 0.5 = $27,400 before ballast is required.
+# At $7,500/yr:  5 x 7,500 / 0.5 = $75,000.
+#
+# So maxing the Roth nearly triples the book value you can run concentrated.
+DRAWDOWN_ASSUMPTION = 0.50
 REBUILD_YEARS_LIMIT = 5.0
+ASSUMED_ANNUAL_CONTRIBUTION = 2_740.0
+
+# Required non-correlated floor, as a function of how far past the affordable
+# threshold the book has grown. Ratios, not dollars.
+EXPIRY_RUNGS: tuple[tuple[float, float], ...] = (
+    (1.0, 0.00),   # at or below the affordable book: no ballast required
+    (1.5, 0.20),   # 50% past it
+    (2.75, 0.30),  # nearly 3x past it
+)
+
+
+def affordable_book(annual_contribution: float) -> float:
+    """Book value at which a 50% drawdown still rebuilds inside the limit."""
+    return REBUILD_YEARS_LIMIT * annual_contribution / DRAWDOWN_ASSUMPTION
+
+
+def required_non_correlated(book_total: float, annual_contribution: float) -> float:
+    """Non-correlated floor implied by the rebuild test at this size."""
+    threshold = affordable_book(annual_contribution)
+    if threshold <= 0:
+        return EXPIRY_RUNGS[-1][1]
+    ratio = book_total / threshold
+    floor = 0.0
+    for rung, required in EXPIRY_RUNGS:
+        if ratio >= rung:
+            floor = required
+    return floor
+
+
+# --- turnover, the one documented behavioural flaw -------------------------
+#
+# Between August and November 2026 this account saw roughly ten position
+# changes against a stated ten-year horizon: VST out, NEE out, INTC in and
+# out, CDNS out, NVDA in and out at a realized -$400, SPCX out then back in,
+# AMD in, NOW trimmed. One measured loss; the rest cost in ways nobody can
+# measure.
+#
+# For a growth strategy the enemy is not volatility -- it is churn. These
+# limits are deliberately the TIGHTEST parameters in the policy, because they
+# govern the thing that has actually gone wrong rather than the thing that
+# might.
+MAX_POSITION_CHANGES_PER_YEAR = 4   # excludes contributions and DCA
+MIN_HOLDING_EARNINGS_REPORTS = 2    # hold a new position through two prints
+                                    # unless a written tripwire fires
 
 # --- Roth contribution headroom --------------------------------------------
 # 2026 limit per IRS Notice 2025-67. Update each year.
@@ -2428,10 +2484,8 @@ def _check_concentration_expiry(
     """§5 — concentration is affordable only while contributions can rebuild it."""
     findings: list[Finding] = []
     total = book.total_value
-    required = 0.0
-    for threshold, floor in EXPIRY_LADDER:
-        if total >= threshold:
-            required = floor
+    required = required_non_correlated(total, annual_contribution)
+    threshold = affordable_book(annual_contribution)
     non_correlated = book.theme_weights(include_cash=False).get("non_correlated", 0.0)
 
     drawdown = total * 0.5
@@ -2443,8 +2497,11 @@ def _check_concentration_expiry(
             "5",
             f"Portfolio ${total:,.0f}. A 50% drawdown costs ${drawdown:,.0f} and "
             f"takes {rebuild_years:.1f} years to rebuild at "
-            f"${annual_contribution:,.0f}/yr. Required non-correlated floor: "
-            f"{required:.0%}. Actual: {non_correlated:.0%}.",
+            f"${annual_contribution:,.0f}/yr. Concentration stays affordable to "
+            f"${threshold:,.0f} at this contribution rate — "
+            f"${affordable_book(ROTH_LIMIT):,.0f} if the Roth were maxed. "
+            f"Required non-correlated floor: {required:.0%}. Actual: "
+            f"{non_correlated:.0%}.",
         )
     )
 
@@ -2458,16 +2515,16 @@ def _check_concentration_expiry(
                 "Fund the ballast sleeve before adding to the complex.",
             )
         )
-    elif rebuild_years > REBUILD_YEARS_LIMIT and required == 0.0:
+    elif total > threshold:
         findings.append(
             Finding(
                 Severity.WARNING,
                 "5",
-                f"Rebuild time is {rebuild_years:.1f} years, past the "
-                f"{REBUILD_YEARS_LIMIT:.0f}-year limit, but the ladder has not "
-                "yet stepped up. The ladder is lagging the arithmetic.",
-                "Treat the ballast requirement as live now rather than waiting "
-                "for the next threshold.",
+                f"Book ${total:,.0f} is past the ${threshold:,.0f} affordable at "
+                f"${annual_contribution:,.0f}/yr, though not yet far enough to "
+                "require a floor.",
+                "Either raise contributions — which raises the threshold — or "
+                "start the ballast sleeve.",
             )
         )
     return findings
@@ -4550,6 +4607,16 @@ def _money(raw: str | None) -> float | None:
     return -value if negative else value
 
 
+def _norm(name: str) -> str:
+    """Normalize a column name for matching: lowercase, letters only.
+
+    Fidelity exports "Current value"; the documentation shows "Current Value".
+    Matching the exact string makes the parser fail on a real file for a reason
+    that has nothing to do with the data.
+    """
+    return re.sub(r"[^a-z]", "", name.lower())
+
+
 def read_positions(path: Path, flavour: str = "fidelity") -> tuple[list[Holding], float, list[str]]:
     """Parse a positions export. Returns (holdings, cash, notes)."""
     if flavour not in COLUMN_MAPS:
@@ -4560,8 +4627,10 @@ def read_positions(path: Path, flavour: str = "fidelity") -> tuple[list[Holding]
     lines = text.splitlines()
 
     # Find the header row: the first line containing the ticker column name.
+    want = _norm(cols["ticker"])
     header_index = next(
-        (i for i, line in enumerate(lines) if cols["ticker"] in line), None
+        (i for i, line in enumerate(lines)
+         if any(_norm(c) == want for c in line.split(","))), None
     )
     if header_index is None:
         raise ValueError(
@@ -4570,17 +4639,27 @@ def read_positions(path: Path, flavour: str = "fidelity") -> tuple[list[Holding]
         )
 
     reader = csv.DictReader(lines[header_index:])
+    # Map our field names onto whatever this file actually calls them.
+    actual = {_norm(f): f for f in (reader.fieldnames or [])}
+    resolved = {k: actual.get(_norm(v)) for k, v in cols.items()}
+    missing = [k for k, v in resolved.items() if v is None]
+    if "ticker" in missing:
+        raise ValueError(f"cannot locate the ticker column; found {reader.fieldnames}")
     holdings: list[Holding] = []
     cash = 0.0
     notes: list[str] = []
 
     for row in reader:
-        ticker = (row.get(cols["ticker"]) or "").strip().upper()
-        # Footer disclaimer rows have no ticker, or prose in the field.
-        if not ticker or len(ticker) > 6 or " " in ticker:
+        raw_ticker = (row.get(resolved["ticker"]) or "").strip().upper()
+        # Fidelity appends ** to sweep tickers (SPAXX**). Strip to letters and
+        # dots before doing anything, including the length test -- otherwise
+        # the cash row is thrown away as prose and the balance goes missing.
+        ticker = re.sub(r"[^A-Z.]", "", raw_ticker)
+        # Footer disclaimer rows have no ticker, or a sentence in the field.
+        if not ticker or len(ticker) > 6:
             continue
 
-        value = _money(row.get(cols["market_value"]))
+        value = _money(row.get(resolved["market_value"]))
         if value is None:
             notes.append(f"{ticker}: no market value — skipped")
             continue
@@ -4590,11 +4669,13 @@ def read_positions(path: Path, flavour: str = "fidelity") -> tuple[list[Holding]
             notes.append(f"{ticker}: ${value:,.2f} treated as CASH")
             continue
 
+        shares = _money(row.get(resolved["shares"])) if resolved["shares"] else None
+        cost = _money(row.get(resolved["cost_basis"])) if resolved["cost_basis"] else None
+        if cost is None:
+            notes.append(f"{ticker}: no cost basis in the export — recorded as 0")
         holdings.append(Holding(
-            ticker=ticker,
-            shares=_money(row.get(cols["shares"])) or 0.0,
-            market_value=value,
-            cost_basis=_money(row.get(cols["cost_basis"])) or 0.0,
+            ticker=ticker, shares=shares or 0.0,
+            market_value=value, cost_basis=cost or 0.0,
         ))
 
     return holdings, cash, notes
