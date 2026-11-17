@@ -61,6 +61,66 @@ from financial_analysis import _ensure_portfolio
 PORTFOLIO = _ensure_portfolio()
 
 
+# %% 0 — IMPORT FROM FIDELITY.  Run this cell first, after a fresh export.
+#
+# Fidelity: Positions > Download. Put the path below.
+# Nothing is uploaded anywhere. portfolio.json is gitignored.
+#
+# Use a RAW string (the r before the quote) so Windows backslashes are not
+# read as escape characters -- r"C:\Users\..." works, "C:\Users\..." does not.
+
+FIDELITY_CSV = r"C:\Users\HomePC\Downloads\Portfolio_Positions_Nov-17-2026.csv"
+
+# theme and sleeve are judgments no export contains, so set them here once.
+# A ticker missing from this map imports as UNCLASSIFIED and the scenario
+# engine will refuse to run until it is classified -- an unclassified holding
+# is an unmeasured risk.
+MY_THEMES = {
+    "GOOGL": ("ai_platform", "core"),
+    "SNPS": ("eda", "core"),
+    "NOW": ("ai_platform", "core"),
+    "SPCX": ("space", "core"),
+    "AMD": ("ai_hardware", "satellite"),
+    "CORT": ("non_correlated", "core"),
+}
+
+import json as _json  # noqa: E402
+from pathlib import Path as _Path  # noqa: E402
+
+from financial_analysis import read_positions, merge_into_portfolio  # noqa: E402
+
+_csv = _Path(FIDELITY_CSV)
+if not _csv.exists():
+    print(f"not found: {_csv}")
+    print("Update FIDELITY_CSV above with the real path, then re-run this cell.")
+else:
+    _holdings, _cash, _notes = read_positions(_csv, "fidelity")
+    print(f"Read {len(_holdings)} holdings and ${_cash:,.2f} of cash\n")
+    for _h in sorted(_holdings, key=lambda h: -h.market_value):
+        _pl = _h.market_value - _h.cost_basis
+        print(f"  {_h.ticker:<7}{_h.shares:>11,.3f} sh  ${_h.market_value:>10,.2f}"
+              f"   cost ${_h.cost_basis:>9,.2f}   {_pl:>+10,.2f}"
+              f"  {_pl / _h.cost_basis if _h.cost_basis else 0:>+7.1%}")
+    for _n in _notes:
+        print(f"  note: {_n}")
+
+    for _n in merge_into_portfolio(_holdings, _cash, PORTFOLIO):
+        print(f"  ! {_n}")
+
+    # Restore the judgments the export cannot carry.
+    _d = _json.loads(PORTFOLIO.read_text())
+    for _row in _d["positions"]:
+        if _row["ticker"] in MY_THEMES:
+            _row["theme"], _row["sleeve"] = MY_THEMES[_row["ticker"]]
+    PORTFOLIO.write_text(_json.dumps(_d, indent=2) + "\n")
+
+    _tc = sum(h.cost_basis for h in _holdings)
+    _tm = sum(h.market_value for h in _holdings)
+    print(f"\n  cost ${_tc:,.2f}   market ${_tm:,.2f}   "
+          f"unrealized {_tm - _tc:+,.2f} ({_tm / _tc - 1:+.1%})")
+    print(f"  wrote {PORTFOLIO}")
+
+
 # %% 1 — Full portfolio review
 main(["--portfolio", str(PORTFOLIO)])
 

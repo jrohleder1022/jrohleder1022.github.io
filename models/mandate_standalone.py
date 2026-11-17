@@ -4507,6 +4507,10 @@ def main(argv: list[str] | None = None) -> int:
 
 
 
+# Capture this module's entry point before the next one shadows it.
+review_main = main
+
+
 # ============================================================================
 # MODULE: broker.py
 # ============================================================================
@@ -4778,6 +4782,10 @@ def main(argv: list[str] | None = None) -> int:
         print("  now run:  python -m mandate.review")
     return 0
 
+
+
+# Capture this module's entry point before the next one shadows it.
+broker_main = main
 
 
 # ============================================================================
@@ -5094,6 +5102,17 @@ def main(argv: list[str] | None = None) -> int:
 
 
 
+# Capture this module's entry point before the next one shadows it.
+fetch_main = main
+
+
+
+# ============================================================================
+# NAME RESTORATION
+# ============================================================================
+# `main` is whichever module defined it last. Point it back at the
+# review, which is what every caller means by main().
+main = review_main
 
 # ============================================================================
 # STANDALONE ENTRY POINT

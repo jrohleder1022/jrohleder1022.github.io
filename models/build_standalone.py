@@ -151,7 +151,21 @@ def build(package: Path, portfolio: Path) -> str:
         for imp in imports:
             if imp not in all_imports:
                 all_imports.append(imp)
-        sections.append(banner(name, doc) + body)
+        section = banner(name, doc) + body
+        # A flat namespace means the LAST `def main` wins. review, broker and
+        # fetch each define one, so capture each under a distinct alias right
+        # after its own section, then restore the primary one at the bottom.
+        # Without this, `main(['--portfolio', ...])` silently called fetch's
+        # argument parser instead of the review.
+        stem = name.removesuffix(".py")
+        if any(line.startswith("def main(") for line in body):
+            section += [
+                "",
+                f"# Capture this module's entry point before the next one shadows it.",
+                f"{stem}_main = main",
+                "",
+            ]
+        sections.append(section)
 
     # Embed as a JSON *string* parsed at runtime, not as a Python literal.
     # json.dumps emits null/true/false, which are not Python names, so pasting
@@ -218,6 +232,13 @@ def build(package: Path, portfolio: Path) -> str:
 
     footer = [
         "",
+        "",
+        "# " + "=" * 76,
+        "# NAME RESTORATION",
+        "# " + "=" * 76,
+        "# `main` is whichever module defined it last. Point it back at the",
+        "# review, which is what every caller means by main().",
+        "main = review_main",
         "",
         "# " + "=" * 76,
         "# STANDALONE ENTRY POINT",
