@@ -688,5 +688,130 @@ print(scaffold(NEW_TICKER))
 #   fetch_main(["--facts", NEW_TICKER])
 
 
+# %% 7c — CORT.  Facts sourced 17 Nov 2026; judgments marked and defended.
+#
+# CORT is ALREADY in the engine -- CANDIDATES["CORT"] and ESTIMATES["CORT"]
+# were written when you put it on the watchlist. So this cell does NOT
+# redefine them. What was missing is the two blocks below: the quality
+# scorecard and the intrinsic value.
+#
+# PERIOD CONVENTION: trailing twelve months, Q4 2025 through Q3 2026.
+# Not an annualized quarter. CORT's quarters are too uneven to annualize --
+# revenue ran 202 -> 165 -> 256 -> 340 -- so multiplying any one of them by
+# four would be wrong by 30% in either direction.
+
+# make the cell runnable on its own, without cell 2
+if "book" not in globals():
+    book, contribution, _ = load_book(PORTFOLIO)
+
+# WACC first, because both blocks below use it. Beta 0.75 matches
+# market_beta in CANDIDATES["CORT"]; debt_weight 0 because there is no debt --
+# $9.0M of finance leases against a $9.2B market cap rounds to nothing.
+# This is CORT's own cost of capital, not the generic QUALITY_WACC from cell 4,
+# so this cell runs on its own with Ctrl+Enter.
+
+CORT_WACC = WACCInputs(
+    risk_free=0.0415,
+    equity_risk_premium=0.045,
+    beta=0.75,
+    cost_of_debt=0.050,
+    tax_rate=0.14,
+    debt_weight=0.00,
+    basis="rf = 10Y Nov 2026. ERP 4.5% Damodaran. Beta 0.75 = market_beta "
+          "from the factor profile: reimbursed, non-discretionary demand.",
+)
+
+CORT_FUNDAMENTALS = Fundamentals(
+    ticker="CORT",
+    # --- income statement, TTM Q4'25-Q3'26 ----------------------------------
+    revenue=963_647_000,        # 202.1 + 164.9 + 256.1 + 340.5
+    revenue_prior=741_172_000,  # 181.9 + 157.2 + 194.4 + 207.6  -> +30.0%
+    gross_profit=949_550_000,   # 98.5% margin. A pill, not a device.
+    ebit=110_910_000,           # 4.5 - 49.6 + 41.3 + 114.7
+    net_income=162_005_000,     # 24.3 - 31.2 + 42.1 + 126.8
+    interest_expense=0.0,       # SOURCED: no interest expense in any quarter
+    tax_rate=0.14,              # JUDGMENT -- see note below
+    # --- cash flow, same TTM window -----------------------------------------
+    cfo=198_110_000,            # 38.4 - 16.8 + 33.5 + 142.9
+    capex=3_488_000,            # 0.05 + 0.2 + 2.5 + 0.7.  Capital-light.
+    # --- balance sheet, 30 Sep 2026 -----------------------------------------
+    total_debt=8_991_000,       # finance-lease obligations. NO borrowings.
+    cash=662_307_000,           # 98.7 cash + 272.0 short-term + 291.6 long-term
+    equity=833_740_000,
+    goodwill=0.0,               # SOURCED: never made an acquisition
+    # --- shares and price ----------------------------------------------------
+    shares_diluted=125_523_000,        # $126.778M NI / $1.01 reported dil. EPS
+    shares_diluted_prior=122_925_000,  # $19.668M / $0.16  -> +2.1% dilution
+    price=72.94,                       # 13 Nov 2026 close. REPLACE with live.
+    wacc=CORT_WACC.value(),
+    basis={
+        "revenue": "TTM Q4'25-Q3'26, SOURCED from quarterly filings",
+        "cfo": "TTM, SOURCED. capex $3.5M on $964M of revenue.",
+        "total_debt": "30 Sep 2026, SOURCED: finance leases only, no debt",
+        "cash": "JUDGMENT: includes $291.6M of LONG-TERM investments as "
+                "cash-like. They are marketable securities, not operating "
+                "assets. Excluding them lifts invested capital to $472M and "
+                "cuts ROIC from ~53% to ~20% -- still far above WACC, so the "
+                "conclusion does not turn on this choice.",
+        "tax_rate": "JUDGMENT: 14%, the blended effective rate for 2023-24 "
+                    "(13.5%). The TTM figure is a net tax BENEFIT of $37.3M, "
+                    "driven by stock-comp windfalls, and using it would "
+                    "produce a NOPAT above pre-tax income. Not sustainable.",
+    },
+)
+
+print(evaluate(CORT_FUNDAMENTALS))
+
+# --- intrinsic value --------------------------------------------------------
+CORT_DCF = DCFAssumptions(
+    ticker="CORT",
+    base_fcf=194_622_000,       # CFO 198.1 - capex 3.5
+    shares_diluted=125_523_000,
+    net_debt=-653_316_000,      # 9.0 debt - 662.3 cash. NEGATIVE = net cash.
+    initial_growth=0.20,        # JUDGMENT. The whole answer sits here.
+    terminal_growth=0.03,
+    years=10,
+    wacc=CORT_WACC,
+    basis={
+        "base_fcf": "TTM CFO less capex, SOURCED",
+        "initial_growth": "JUDGMENT, 20%. FY2026 revenue is guided to "
+                          "$1.1-1.2B against 2025's $761M (+48%), and Lifyorli "
+                          "added $91.4M in its second full quarter. 20% fading "
+                          "to 3% is well BELOW the current ramp and "
+                          "deliberately EXCLUDES the 17 Dec 2026 Cushing's "
+                          "PDUFA, which management frames as a $3-5B revenue "
+                          "case. If you want that in, raise this -- but then "
+                          "you are underwriting a binary event 30 days out.",
+        "terminal_growth": "~nominal GDP",
+    },
+)
+
+print(report(CORT_DCF, price=72.94))
+
+# --- READING THE OUTPUT: two numbers above will mislead you -----------------
+#
+# 1. "Operating margin 11.5% [WEAK]" is an artefact of the window, not the
+#    business. Q1 2026 carried $145.4M of SG&A against $164.9M of revenue and
+#    posted a $49.6M operating LOSS, which drags the TTM figure down. Q3 2026
+#    on its own: $114.7M of EBIT on $340.5M of revenue = 33.7%. Before you
+#    accept 11.5%, find out what that Q1 charge was -- if it recurs the 11.5%
+#    is the truth and the 33.7% is the artefact. I have not established which.
+#
+# 2. "P/E 56.5x" here vs "current_multiple=20.0" in ESTIMATES["CORT"] is not a
+#    contradiction, it is two bases. 56.5x is TTM: $9.16B over $162.0M of
+#    trailing net income, which includes the Q1 loss. 20x is the run rate:
+#    Q3's $126.8M annualized is ~$507M, and $9.16B over that is 18x. Cell 3b
+#    ranks CORT on the run rate; this cell scores it on the trailing year.
+#    Neither is wrong. Quote the basis whenever you quote the number.
+#
+# 3. The reverse DCF is the line that matters: the price requires +18.5% and
+#    the cell assumes +20.0%. That is 1.5 points of cushion on a 10-year
+#    forecast -- i.e. CORT is priced roughly FAIRLY for the two drugs it
+#    already sells. You are not being handed a discount for the 17 Dec PDUFA;
+#    you are being asked to pay full price for the base business and take the
+#    binary event for free. Whether that is a good trade depends on the odds
+#    you put on approval, which is a judgment no cell in this file makes.
+
+
 # %% 8 — Print the research brief for a name I'm studying
 print(brief("TICKER"))

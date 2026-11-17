@@ -211,6 +211,14 @@ class DCFAssumptions:
     wacc: WACCInputs | None = None
     basis: dict[str, str] = field(default_factory=dict)
 
+    # Set ONLY by reverse_dcf's bisection. The solver sweeps growth across
+    # [-50%, +150%] and lands on exactly 0.00 whenever the implied rate is
+    # below 50%, which is the common case. Without this flag the placeholder
+    # guard below rejects the solver's own trial point and the reverse DCF
+    # reports "not solvable" for almost every real company. Never set it by
+    # hand: it exists to tell a machine's probe apart from a human's omission.
+    solver_probe: bool = False
+
     def validate(self) -> list[str]:
         problems: list[str] = []
         if self.wacc is None:
@@ -225,7 +233,7 @@ class DCFAssumptions:
                     "has infinite value, which is why this is always an input "
                     "error and never a finding."
                 )
-        if self.initial_growth == 0.0:
+        if self.initial_growth == 0.0 and not self.solver_probe:
             problems.append(
                 "initial_growth is exactly 0.00, which is the scaffold's "
                 "placeholder. The model will still run and produce a number, "
@@ -388,6 +396,7 @@ def reverse_dcf(
             years=assumptions.years,
             wacc=assumptions.wacc,
             basis=assumptions.basis,
+            solver_probe=True,
         )
         result = dcf(trial)
         return result.equity_value + assumptions.net_debt - target_equity
@@ -5201,7 +5210,22 @@ def scaffold(ticker: str, price: float | None = None) -> str:
             f"connectivity."
         )
 
-    facts = fetch_fundamentals(ticker)
+    # The CIK lookup above is guarded; this is the call that actually pulls the
+    # eleven XBRL concepts, and it is the one that fails on a dropped
+    # connection, a proxy, or the SEC rate-limiting a burst of requests.
+    # Without this guard a network blip prints a urllib traceback, which looks
+    # like a bug in the tool rather than a bad moment on the wire.
+    try:
+        facts = fetch_fundamentals(ticker)
+    except Exception as exc:
+        return (
+            f"# Reached the SEC ticker directory but could not pull {ticker}'s\n"
+            f"# figures: {type(exc).__name__}: {exc}\n"
+            f"#\n"
+            f"# Nothing is wrong with your file. Try again in a minute -- the\n"
+            f"# SEC throttles bursts -- or run fetch_main([\"--check\"]) to see\n"
+            f"# which endpoint is unreachable."
+        )
 
     def value(field: str) -> str:
         fact = facts.get(field)

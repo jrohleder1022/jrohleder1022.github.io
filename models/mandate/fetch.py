@@ -395,7 +395,22 @@ def scaffold(ticker: str, price: float | None = None) -> str:
             f"connectivity."
         )
 
-    facts = fetch_fundamentals(ticker)
+    # The CIK lookup above is guarded; this is the call that actually pulls the
+    # eleven XBRL concepts, and it is the one that fails on a dropped
+    # connection, a proxy, or the SEC rate-limiting a burst of requests.
+    # Without this guard a network blip prints a urllib traceback, which looks
+    # like a bug in the tool rather than a bad moment on the wire.
+    try:
+        facts = fetch_fundamentals(ticker)
+    except Exception as exc:
+        return (
+            f"# Reached the SEC ticker directory but could not pull {ticker}'s\n"
+            f"# figures: {type(exc).__name__}: {exc}\n"
+            f"#\n"
+            f"# Nothing is wrong with your file. Try again in a minute -- the\n"
+            f"# SEC throttles bursts -- or run fetch_main([\"--check\"]) to see\n"
+            f"# which endpoint is unreachable."
+        )
 
     def value(field: str) -> str:
         fact = facts.get(field)
