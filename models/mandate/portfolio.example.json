@@ -1,0 +1,36 @@
+{
+  "_comment": [
+    "TEMPLATE. Copy to portfolio.json and put your own figures in.",
+    "portfolio.json is gitignored -- your holdings never get committed.",
+    "",
+    "shares: optional. Needed only if you want `python -m mandate.fetch",
+    "--values` to recompute market_value from live prices.",
+    "",
+    "Easier: export your positions from your broker and run",
+    "    python -m mandate.broker --fidelity Portfolio_Positions.csv",
+    "which writes portfolio.json for you, no typing and no network."
+  ],
+  "as_of": "YYYY-MM-DD",
+  "annual_contribution": 0.0,
+  "cash": 0.0,
+  "cash_purpose": "",
+  "cash_decision_date": "",
+  "positions": [
+    {
+      "ticker": "GOOGL",
+      "cost_basis": 0.0,
+      "market_value": null,
+      "shares": null,
+      "theme": "ai_platform",
+      "sleeve": "core"
+    },
+    {
+      "ticker": "SNPS",
+      "cost_basis": 0.0,
+      "market_value": null,
+      "shares": null,
+      "theme": "eda",
+      "sleeve": "core"
+    }
+  ]
+}

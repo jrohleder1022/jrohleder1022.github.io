@@ -16,3 +16,11 @@ models/efficient_frontier.png
 # OS
 .DS_Store
 Thumbs.db
+
+# PERSONAL FINANCIAL DATA — never commit.
+# This repository is a GitHub Pages user site (<username>.github.io), which is
+# public on free accounts. portfolio.json holds real holdings, cost basis and
+# cash balances; closes.csv holds whatever tickers you fetched.
+models/mandate/portfolio.json
+models/closes.csv
+models/**/portfolio.json

@@ -11,10 +11,13 @@ nothing else — the portfolio is embedded below.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import numpy as np
 import pandas as pd
+import re
 import sys
+import time
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -25,53 +28,37 @@ from typing import Mapping, Sequence
 _EMBEDDED_PORTFOLIO_JSON = r"""
 {
   "_comment": [
-    "MARKET VALUES as reported by the owner 16 Nov 2026. Weights are now real,",
-    "not cost-basis approximations, so the concentration figures below are the",
-    "true ones rather than the flattered ones.",
-    "NOW carried at $3,000 against a $3,559.70 cost basis; owner intends to trim",
-    "to $2,000.",
-    "Tripwires for every position are in TRIPWIRES.md beside this file."
+    "TEMPLATE. Copy to portfolio.json and put your own figures in.",
+    "portfolio.json is gitignored -- your holdings never get committed.",
+    "",
+    "shares: optional. Needed only if you want `python -m mandate.fetch",
+    "--values` to recompute market_value from live prices.",
+    "",
+    "Easier: export your positions from your broker and run",
+    "    python -m mandate.broker --fidelity Portfolio_Positions.csv",
+    "which writes portfolio.json for you, no typing and no network."
   ],
-  "as_of": "2026-11-16",
-  "annual_contribution": 2740.0,
-  "cash": 1400.0,
-  "cash_purpose": "SPAXX, undeployed",
+  "as_of": "YYYY-MM-DD",
+  "annual_contribution": 0.0,
+  "cash": 0.0,
+  "cash_purpose": "",
   "cash_decision_date": "",
   "positions": [
     {
       "ticker": "GOOGL",
-      "cost_basis": 4664.58,
-      "market_value": 5000.0,
+      "cost_basis": 0.0,
+      "market_value": null,
+      "shares": null,
       "theme": "ai_platform",
       "sleeve": "core"
     },
     {
       "ticker": "SNPS",
-      "cost_basis": 4012.32,
-      "market_value": 4000.0,
+      "cost_basis": 0.0,
+      "market_value": null,
+      "shares": null,
       "theme": "eda",
       "sleeve": "core"
-    },
-    {
-      "ticker": "NOW",
-      "cost_basis": 3559.7,
-      "market_value": 3000.0,
-      "theme": "ai_platform",
-      "sleeve": "core"
-    },
-    {
-      "ticker": "SPCX",
-      "cost_basis": 1500.0,
-      "market_value": 1500.0,
-      "theme": "space",
-      "sleeve": "core"
-    },
-    {
-      "ticker": "AMD",
-      "cost_basis": 1000.0,
-      "market_value": 1250.0,
-      "theme": "ai_hardware",
-      "sleeve": "satellite"
     }
   ]
 }
@@ -4323,6 +4310,569 @@ def main(argv: list[str] | None = None) -> int:
     print("This report measures risk and enforces policy. It does not pick")
     print("stocks, and no part of it should be read as a recommendation.")
     print(RULE)
+    return 0
+
+
+
+# ============================================================================
+# MODULE: broker.py
+# ============================================================================
+# Broker statement import — turn a positions export into portfolio.json.
+# ======================================================================
+#
+# WHY THIS IS BETTER THAN FETCHING PRICES
+# ---------------------------------------
+# A broker export already contains shares, market value AND cost basis, all
+# as of the same instant and all reconciled to the account. Fetching prices
+# gives you one of those three and requires the share count you were trying to
+# avoid typing. So this needs no network, no API key, and cannot drift out of
+# sync with itself.
+#
+# It also keeps your holdings on your machine. Nothing here uploads anything.
+#
+# FIDELITY
+# --------
+# Positions > Download. You get `Portfolio_Positions_<date>.csv` with a header
+# row, one row per holding, then several footer rows of disclaimer text that
+# have to be skipped — they are not data and they are not consistently
+# formatted.
+#
+# Columns used: Symbol, Quantity, Current Value, Cost Basis Total.
+# Money arrives as "$4,664.58" and has to be unwrapped.
+#
+# SPAXX and similar sweep tickers are treated as CASH rather than a position,
+# which is what they are.
+#
+# OTHER BROKERS
+# -------------
+# Schwab and Vanguard exports are close enough in shape that the same parser
+# handles them with a different column map. If yours is not recognised, run with
+# `--columns` and it prints what it found so a map can be added.
+#
+# WHAT IT WILL NOT DO
+# -------------------
+# It cannot know a position's `theme` or `sleeve` — those are judgments, not
+# data. Existing values in portfolio.json are preserved; genuinely new tickers
+# come in as theme "UNCLASSIFIED" and must be set by hand before the scenario
+# engine will run, because an unclassified holding is an unmeasured risk.
+
+
+
+
+# Sweep and money-market tickers that are cash, not holdings.
+CASH_TICKERS = {"SPAXX", "FDRXX", "FZFXX", "SPRXX", "FCASH", "QACDS", "CORE"}
+
+COLUMN_MAPS = {
+    "fidelity": {
+        "ticker": "Symbol",
+        "shares": "Quantity",
+        "market_value": "Current Value",
+        "cost_basis": "Cost Basis Total",
+    },
+    "schwab": {
+        "ticker": "Symbol",
+        "shares": "Quantity",
+        "market_value": "Market Value",
+        "cost_basis": "Cost Basis",
+    },
+    "vanguard": {
+        "ticker": "Symbol",
+        "shares": "Shares",
+        "market_value": "Total Value",
+        "cost_basis": "Total Cost",
+    },
+}
+
+
+@dataclass
+class Holding:
+    ticker: str
+    shares: float
+    market_value: float
+    cost_basis: float
+
+
+def _money(raw: str | None) -> float | None:
+    """Unwrap "$4,664.58", "(1,234.00)", "--", "n/a" into a float or None.
+
+    Parentheses are the accounting convention for negative, which a naive
+    float() would silently mis-parse as an error rather than a sign.
+    """
+    if raw is None:
+        return None
+    text = raw.strip()
+    if text in {"", "--", "n/a", "N/A", "-"}:
+        return None
+    negative = text.startswith("(") and text.endswith(")")
+    cleaned = re.sub(r"[^0-9.\-]", "", text)
+    if cleaned in {"", "-", "."}:
+        return None
+    try:
+        value = float(cleaned)
+    except ValueError:
+        return None
+    return -value if negative else value
+
+
+def read_positions(path: Path, flavour: str = "fidelity") -> tuple[list[Holding], float, list[str]]:
+    """Parse a positions export. Returns (holdings, cash, notes)."""
+    if flavour not in COLUMN_MAPS:
+        raise ValueError(f"unknown flavour {flavour!r}; known: {sorted(COLUMN_MAPS)}")
+    cols = COLUMN_MAPS[flavour]
+
+    text = path.read_text(encoding="utf-8-sig", errors="replace")
+    lines = text.splitlines()
+
+    # Find the header row: the first line containing the ticker column name.
+    header_index = next(
+        (i for i, line in enumerate(lines) if cols["ticker"] in line), None
+    )
+    if header_index is None:
+        raise ValueError(
+            f"no column named {cols['ticker']!r} found. Run with --columns to see "
+            "what the file actually contains."
+        )
+
+    reader = csv.DictReader(lines[header_index:])
+    holdings: list[Holding] = []
+    cash = 0.0
+    notes: list[str] = []
+
+    for row in reader:
+        ticker = (row.get(cols["ticker"]) or "").strip().upper()
+        # Footer disclaimer rows have no ticker, or prose in the field.
+        if not ticker or len(ticker) > 6 or " " in ticker:
+            continue
+
+        value = _money(row.get(cols["market_value"]))
+        if value is None:
+            notes.append(f"{ticker}: no market value — skipped")
+            continue
+
+        if ticker in CASH_TICKERS:
+            cash += value
+            notes.append(f"{ticker}: ${value:,.2f} treated as CASH")
+            continue
+
+        holdings.append(Holding(
+            ticker=ticker,
+            shares=_money(row.get(cols["shares"])) or 0.0,
+            market_value=value,
+            cost_basis=_money(row.get(cols["cost_basis"])) or 0.0,
+        ))
+
+    return holdings, cash, notes
+
+
+def merge_into_portfolio(
+    holdings: list[Holding], cash: float, path: Path, dry_run: bool = False
+) -> list[str]:
+    """Write holdings into portfolio.json, preserving theme and sleeve.
+
+    theme and sleeve are judgments that no export contains, so existing ones
+    are kept and new tickers are marked UNCLASSIFIED rather than guessed at.
+    """
+    if path.exists():
+        data = json.loads(path.read_text())
+    else:
+        template = path.parent / "portfolio.example.json"
+        data = json.loads(template.read_text()) if template.exists() else {
+            "positions": [], "cash": 0.0, "annual_contribution": 0.0,
+        }
+        data["positions"] = []
+
+    existing = {r["ticker"]: r for r in data.get("positions", [])}
+    notes: list[str] = []
+    rows = []
+
+    for h in holdings:
+        prior = existing.get(h.ticker, {})
+        theme = prior.get("theme", "UNCLASSIFIED")
+        sleeve = prior.get("sleeve", "core" if h.market_value >= 1500 else "satellite")
+        if h.ticker not in existing:
+            notes.append(
+                f"{h.ticker}: NEW — theme set to UNCLASSIFIED. Set it, and add a "
+                "factor profile in factors.py BOOK, before the scenarios will run."
+            )
+        rows.append({
+            "ticker": h.ticker,
+            "cost_basis": round(h.cost_basis, 2),
+            "market_value": round(h.market_value, 2),
+            "shares": h.shares,
+            "theme": theme,
+            "sleeve": sleeve,
+        })
+
+    gone = set(existing) - {h.ticker for h in holdings}
+    for ticker in sorted(gone):
+        notes.append(f"{ticker}: in portfolio.json but NOT in the export — removed")
+
+    data["positions"] = rows
+    data["cash"] = round(cash, 2)
+    data.setdefault("cash_purpose", "sweep balance from broker export")
+    data.setdefault("cash_decision_date", "")
+    data["_imported_from_broker"] = True
+
+    if not dry_run:
+        path.write_text(json.dumps(data, indent=2) + "\n")
+    return notes
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    here = Path(__file__).resolve().parent
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[1])
+    parser.add_argument("csv_path", type=Path, help="broker positions export")
+    parser.add_argument("--flavour", default="fidelity", choices=sorted(COLUMN_MAPS))
+    parser.add_argument("--portfolio", type=Path, default=here / "portfolio.json")
+    parser.add_argument("--columns", action="store_true",
+                        help="print the columns found and exit")
+    parser.add_argument("--dry-run", action="store_true")
+    args = parser.parse_args(argv)
+
+    if not args.csv_path.exists():
+        print(f"not found: {args.csv_path}")
+        return 2
+
+    if args.columns:
+        text = args.csv_path.read_text(encoding="utf-8-sig", errors="replace")
+        for i, line in enumerate(text.splitlines()[:12]):
+            print(f"  {i}: {line[:150]}")
+        return 0
+
+    holdings, cash, parse_notes = read_positions(args.csv_path, args.flavour)
+    print(f"Read {len(holdings)} holdings and ${cash:,.2f} of cash\n")
+    for h in holdings:
+        unreal = h.market_value - h.cost_basis
+        print(f"  {h.ticker:<7}{h.shares:>12,.4f} sh  ${h.market_value:>11,.2f}  "
+              f"cost ${h.cost_basis:>10,.2f}  {unreal:>+11,.2f}")
+    for note in parse_notes:
+        print(f"  note: {note}")
+
+    print()
+    for note in merge_into_portfolio(holdings, cash, args.portfolio, args.dry_run):
+        print(f"  ! {note}")
+
+    if args.dry_run:
+        print("\n  dry run — nothing written")
+    else:
+        print(f"\n  wrote {args.portfolio}")
+        print("  now run:  python -m mandate.review")
+    return 0
+
+
+
+# ============================================================================
+# MODULE: fetch.py
+# ============================================================================
+# Data fetching — prices from Yahoo, fundamentals from SEC XBRL.
+# ==============================================================
+#
+# WHAT THIS FIXES
+# ---------------
+# Three gaps that have been open since the package was written:
+#
+#   1. Correlation was always SKIPPED, because no price history was supplied.
+#      This writes closes.csv, which turns it on.
+#   2. Market values had to be typed in by hand, so the weights drifted out of
+#      date between sessions.
+#   3. Balance-sheet fields in the watchlist sat at 0.0, which made ROIC
+#      uncomputable for every candidate.
+#
+# NETWORK CODE IS UNTESTED IN THE AUTHORING SANDBOX
+# -------------------------------------------------
+# Both yahoo and data.sec.gov are blocked by the proxy where this file was
+# written, so the HTTP paths here have NOT been executed. The parsing and the
+# JSON handling were tested against saved fixtures; the requests themselves were
+# not. Run `python -m mandate.fetch --check` first: it reports exactly which
+# endpoints answer, so a failure is loud rather than silent.
+#
+# If something is wrong it will be in the request layer, not the arithmetic.
+#
+# TWO SOURCES, DELIBERATELY
+# -------------------------
+#     PRICES        yfinance. Free, no key, good enough for closes.
+#     FUNDAMENTALS  SEC XBRL company-facts API. Authoritative, free, no key.
+#                   Yahoo's fundamentals are inconsistent across tickers; the
+#                   SEC's are the numbers the company actually filed.
+#
+# Nothing here needs an API key, so there is no credential to store.
+#
+# ON THE USER-AGENT
+# -----------------
+# The SEC asks automated clients to identify themselves. This sends a generic
+# tool name and NO personal information. Do not put a real email address in it.
+
+
+
+
+
+SEC_UA = "mandate-portfolio-tool/0.1 (personal research)"
+SEC_FACTS = "https://data.sec.gov/api/xbrl/companyconcept/CIK{cik:010d}/us-gaap/{tag}.json"
+
+# CIK numbers for every ticker in the book and watchlist. These are stable
+# identifiers; the SEC API takes them zero-padded to ten digits.
+CIK = {
+    "GOOGL": 1652044, "SNPS": 883241, "NOW": 1373715, "AMD": 2488,
+    "CORT": 1088856, "CRDO": 1807794, "LNG": 3570, "CME": 1156375,
+    "WM": 823768, "PGR": 80661, "V": 1403161, "MU": 723125,
+    "NVDA": 1045810, "INTC": 50863, "RKLB": 1819994, "LUNR": 1844452,
+    "IONQ": 1824920, "CRWV": 1769628, "CBRS": 2021728,
+}
+
+# XBRL tags for the fields company.py needs. A company may report under a
+# different tag, in which case the fetch returns None for that field rather
+# than guessing — a missing number is better than a wrong one.
+TAGS = {
+    "revenue": "RevenueFromContractWithCustomerExcludingAssessedTax",
+    "net_income": "NetIncomeLoss",
+    "ebit": "OperatingIncomeLoss",
+    "cash": "CashAndCashEquivalentsAtCarryingValue",
+    "equity": "StockholdersEquity",
+    "goodwill": "Goodwill",
+    "cfo": "NetCashProvidedByUsedInOperatingActivities",
+    "shares_diluted": "WeightedAverageNumberOfDilutedSharesOutstanding",
+}
+
+
+# ---------------------------------------------------------------------------
+# Prices
+# ---------------------------------------------------------------------------
+
+
+def fetch_closes(tickers: list[str], period: str = "3y") -> pd.DataFrame:
+    """Daily adjusted closes as a dates x tickers frame.
+
+    Three years is the practical minimum for correlation. A single quiet year
+    tells you how things behaved while nothing happened, which is the opposite
+    of what the measurement is for.
+    """
+    try:
+        import yfinance as yf
+    except ImportError as exc:
+        raise RuntimeError(
+            "yfinance is not installed. In an Anaconda Prompt:\n"
+            "    pip install yfinance"
+        ) from exc
+
+    data = yf.download(tickers, period=period, progress=False, auto_adjust=True)
+    if data is None or len(data) == 0:
+        raise RuntimeError(
+            "yfinance returned nothing. Usually a network block or a bad "
+            "ticker. Try one ticker alone to isolate it."
+        )
+    closes = data["Close"] if "Close" in data else data
+    if isinstance(closes, pd.Series):
+        closes = closes.to_frame(tickers[0])
+    return closes.dropna(how="all")
+
+
+def fetch_quote(ticker: str) -> float | None:
+    """Latest close for one ticker, or None if it cannot be had."""
+    try:
+        frame = fetch_closes([ticker], period="5d")
+        series = frame[ticker].dropna()
+        return float(series.iloc[-1]) if len(series) else None
+    except Exception:
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Fundamentals from SEC XBRL
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class Fact:
+    tag: str
+    value: float
+    period_end: str
+    form: str
+    frame: str
+
+
+def fetch_sec_concept(ticker: str, tag: str, timeout: int = 20) -> Fact | None:
+    """Most recent reported value of one XBRL tag, or None.
+
+    Returns None rather than raising on a missing tag, because companies
+    legitimately report under different tags and a gap is informative. It
+    DOES raise on a network or auth failure, so a broken connection cannot be
+    mistaken for a company that does not report the field.
+    """
+    import urllib.error
+    import urllib.request
+
+    cik = CIK.get(ticker)
+    if cik is None:
+        raise KeyError(f"no CIK recorded for {ticker}. Add it to fetch.CIK.")
+
+    url = SEC_FACTS.format(cik=cik, tag=tag)
+    request = urllib.request.Request(url, headers={"User-Agent": SEC_UA})
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            payload = json.load(response)
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return None  # company does not report this tag
+        raise RuntimeError(f"SEC returned HTTP {exc.code} for {ticker}/{tag}") from exc
+
+    units = payload.get("units", {}).get("USD") or payload.get("units", {}).get("shares")
+    if not units:
+        return None
+
+    # Prefer the most recent quarterly or annual figure that has a frame,
+    # which filters out the restated and duplicated entries.
+    framed = [u for u in units if u.get("frame")]
+    chosen = max(framed or units, key=lambda u: u.get("end", ""))
+    return Fact(
+        tag=tag, value=float(chosen["val"]), period_end=chosen.get("end", ""),
+        form=chosen.get("form", ""), frame=chosen.get("frame", ""),
+    )
+
+
+def fetch_fundamentals(ticker: str, pause: float = 0.15) -> dict[str, Fact | None]:
+    """Every field in TAGS for one ticker.
+
+    `pause` respects the SEC's rate guidance of roughly ten requests a second.
+    """
+    out: dict[str, Fact | None] = {}
+    for field, tag in TAGS.items():
+        out[field] = fetch_sec_concept(ticker, tag)
+        time.sleep(pause)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Updating the portfolio file
+# ---------------------------------------------------------------------------
+
+
+def update_market_values(path: Path, dry_run: bool = False) -> list[str]:
+    """Recompute market_value as shares x latest close.
+
+    REQUIRES a `shares` field on each position. Without it there is no way to
+    turn a price into a market value, and the whole point of this function is
+    to stop the weights going stale between sessions. Positions without
+    `shares` are left exactly as they are and reported.
+    """
+    data = json.loads(path.read_text())
+    notes: list[str] = []
+    for row in data["positions"]:
+        ticker = row["ticker"]
+        shares = row.get("shares")
+        if not shares:
+            notes.append(f"{ticker}: no `shares` field — market_value left unchanged")
+            continue
+        price = fetch_quote(ticker)
+        if price is None:
+            notes.append(f"{ticker}: quote failed — market_value left unchanged")
+            continue
+        new_value = round(shares * price, 2)
+        old_value = row.get("market_value")
+        notes.append(
+            f"{ticker}: {shares} x ${price:,.2f} = ${new_value:,.2f}"
+            + (f"  (was ${old_value:,.2f})" if old_value else "")
+        )
+        if not dry_run:
+            row["market_value"] = new_value
+    if not dry_run:
+        data["_fetched_at"] = time.strftime("%Y-%m-%d %H:%M")
+        path.write_text(json.dumps(data, indent=2) + "\n")
+    return notes
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+
+def check() -> int:
+    """Probe both endpoints and say plainly which work."""
+    print("CONNECTIVITY CHECK\n")
+    ok = 0
+
+    print("  yfinance (prices)")
+    try:
+        price = fetch_quote("SNPS")
+        if price:
+            print(f"    OK   SNPS last close ${price:,.2f}")
+            ok += 1
+        else:
+            print("    FAIL returned no data")
+    except Exception as exc:
+        print(f"    FAIL {type(exc).__name__}: {str(exc)[:90]}")
+
+    print("\n  data.sec.gov (fundamentals)")
+    try:
+        fact = fetch_sec_concept("SNPS", TAGS["equity"])
+        if fact:
+            print(f"    OK   SNPS StockholdersEquity ${fact.value:,.0f}"
+                  f" as of {fact.period_end} ({fact.form})")
+            ok += 1
+        else:
+            print("    FAIL tag not reported (unexpected for this one)")
+    except Exception as exc:
+        print(f"    FAIL {type(exc).__name__}: {str(exc)[:90]}")
+
+    print(f"\n  {ok}/2 sources reachable")
+    if ok < 2:
+        print("\n  A failure here is a network or install problem, not a bug in")
+        print("  the arithmetic. pip install yfinance, and check whether a VPN or")
+        print("  corporate proxy is blocking the hosts.")
+    return 0 if ok == 2 else 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    here = Path(__file__).resolve().parent
+    parser = argparse.ArgumentParser(description="Fetch prices and fundamentals.")
+    parser.add_argument("--check", action="store_true", help="probe both endpoints")
+    parser.add_argument("--prices", action="store_true", help="write closes.csv")
+    parser.add_argument("--values", action="store_true", help="update market values")
+    parser.add_argument("--facts", type=str, help="print SEC fundamentals for a ticker")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--portfolio", type=Path, default=here / "portfolio.json")
+    parser.add_argument("--out", type=Path, default=here.parent / "closes.csv")
+    parser.add_argument("--period", type=str, default="3y")
+    args = parser.parse_args(argv)
+
+    if args.check:
+        return check()
+
+    if args.prices:
+        data = json.loads(args.portfolio.read_text())
+        tickers = [r["ticker"] for r in data["positions"]]
+        print(f"fetching {args.period} of closes for {', '.join(tickers)} ...")
+        frame = fetch_closes(tickers, args.period)
+        frame.to_csv(args.out)
+        print(f"wrote {args.out}  ({len(frame)} rows, {len(frame.columns)} tickers)")
+        print("\nCorrelation now works:")
+        print(f"  python -m mandate.review --prices {args.out}")
+        return 0
+
+    if args.values:
+        for note in update_market_values(args.portfolio, dry_run=args.dry_run):
+            print(f"  {note}")
+        if args.dry_run:
+            print("\n  dry run — nothing written")
+        return 0
+
+    if args.facts:
+        ticker = args.facts.upper()
+        print(f"SEC XBRL facts for {ticker}\n")
+        for field, fact in fetch_fundamentals(ticker).items():
+            if fact is None:
+                print(f"  {field:<16} not reported under {TAGS[field]}")
+            else:
+                print(f"  {field:<16} {fact.value:>20,.0f}   {fact.period_end}  {fact.form}")
+        print("\n  Paste these into a Fundamentals block. A 'not reported' line")
+        print("  means the company files under a different tag — look it up in")
+        print("  the filing rather than substituting a guess.")
+        return 0
+
+    parser.print_help()
     return 0
 
 

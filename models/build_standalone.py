@@ -55,6 +55,8 @@ MODULE_ORDER = [
     "scenarios.py",
     "risk.py",
     "review.py",
+    "broker.py",
+    "fetch.py",
 ]
 
 RELATIVE_IMPORT = re.compile(r"^\s*from\s+\.")
@@ -253,7 +255,9 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=here / "mandate_standalone.py")
     args = parser.parse_args()
 
-    text = build(args.package, args.package / "portfolio.json")
+    # Embed the TEMPLATE, never the real portfolio: the standalone file is
+    # published to a public repository and the real one is gitignored.
+    text = build(args.package, args.package / "portfolio.example.json")
     args.out.write_text(text, encoding="utf-8")
     lines = text.count("\n") + 1
     print(f"Wrote {args.out} ({lines:,} lines, {len(text) / 1024:.0f} KB)")
