@@ -281,7 +281,7 @@ SCENARIOS: dict[str, Scenario] = {
         key="memory_cycle_bust",
         name="Memory capacity cycle turns",
         shocks={
-            "commodity_cycle": -0.55,
+            "memory_cycle": -0.55,
             "ai_capex": -0.15,
             "market_beta": -0.12,
             "semi_rd": -0.05,
@@ -356,6 +356,60 @@ SCENARIOS: dict[str, Scenario] = {
             "2022: the 10Y rose roughly 230bp and the highest-multiple software "
             "names lost 50-70% with revenue still growing. Multiple compression "
             "alone did all of it."
+        ),
+    ),
+    # Added after a coverage audit found clinical_regulatory and ad_cycle were
+    # DEAD FACTORS: exposures written on real positions that no scenario
+    # shocked. The effect was to flatter exactly the names carrying them --
+    # CORT ranked first on return-per-unit-of-downside because the only risk
+    # the engine could see was its beta of 0.75. A factor with no scenario is
+    # not a conservative omission, it is a silent subsidy.
+    "clinical_rejection": Scenario(
+        key="clinical_rejection",
+        name="Drug rejection or safety signal at a single-product biotech",
+        shocks={"clinical_regulatory": -0.45, "regulatory": -0.15,
+                "market_beta": -0.05, "rates_duration": -0.10},
+        rationale=(
+            "A dated FDA action goes the wrong way, or a label carries a "
+            "warning severe enough to cap uptake. For a company whose value "
+            "sits in one or two molecules this is not a derating, it is the "
+            "removal of a branch of the tree. The shock is deliberately large "
+            "because the event is binary and the downside is not diversified "
+            "away inside the company."
+        ),
+        analogue=(
+            "Corcept itself: the FDA issued a complete response letter on "
+            "relacorilant for hypercortisolism in late 2025, and the stock "
+            "fell from roughly $115 at the end of September 2026 to about $73 "
+            "by mid-November -- around 37% in seven weeks, with the resubmitted "
+            "PDUFA still pending on 17 December 2026. More broadly: Sarepta, "
+            "Intercept and Amarin all lost 40-70% in a day on single "
+            "regulatory decisions."
+        ),
+        probability_note=(
+            "Not a tail event when a PDUFA is dated and the application has "
+            "already drawn one CRL. Size the position as though this scenario "
+            "and the approval case are both live."
+        ),
+    ),
+    "ad_recession": Scenario(
+        key="ad_recession",
+        name="Advertising recession",
+        shocks={"ad_cycle": -0.35, "consumer_spending": -0.20,
+                "market_beta": -0.12, "market_volatility": -0.15},
+        rationale=(
+            "Advertising is the first line cut in a corporate budget squeeze "
+            "and the first restored on recovery, which makes it violently "
+            "cyclical while looking like a stable annuity in good years. This "
+            "matters because the book's largest position still earns the "
+            "majority of its revenue from ads, a fact the AI narrative "
+            "obscures on both the way up and the way down."
+        ),
+        analogue=(
+            "2008-09: US ad spending fell roughly 13% in a year. 2022: digital "
+            "ad growth went from ~35% to near zero in three quarters and "
+            "Alphabet fell about 39% peak to trough while still growing "
+            "revenue and buying back stock."
         ),
     ),
     "broad_drawdown": Scenario(

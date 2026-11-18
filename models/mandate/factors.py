@@ -124,14 +124,28 @@ FACTORS: dict[str, str] = {
         "against revenue that is not fixed, which is the oldest way to go "
         "broke while growing."
     ),
+    "memory_cycle": (
+        "Where the SEMICONDUCTOR MEMORY industry sits in its capacity cycle. "
+        "The mechanism is supply, not demand: peak margins fund the fabs that "
+        "destroy them, with a two-to-three-year lag between the capex decision "
+        "and the fab coming online. The signature is gross margin far above "
+        "the long-run mean plus an industry-wide capex increase. A low P/E on "
+        "peak earnings is not cheapness, it is the market discounting earnings "
+        "it does not believe. "
+        "SPLIT OUT OF `commodity_cycle` after a coverage audit: the memory "
+        "scenario was shocking every holding that carried the old combined "
+        "factor, so a DRAM glut registered as a loss against an LNG exporter "
+        "and a turbine maker. Two unrelated supply cycles sharing one factor "
+        "is a correlation the model asserts and the world does not."
+    ),
     "commodity_cycle": (
-        "Exposure to where a fungible-product industry sits in its CAPACITY "
-        "cycle. Distinct from every demand factor here, because the mechanism "
-        "is supply: peak margins fund the capacity that destroys them, with a "
-        "two-to-three-year lag between the capex decision and the fab coming "
-        "online. The signature is margins far above the long-run mean plus an "
-        "industry-wide capex increase. A low P/E on peak earnings is not "
-        "cheapness, it is the market discounting earnings it does not believe."
+        "Exposure to PHYSICAL commodity prices — energy, metals, castings — on "
+        "either side of the income statement: as an input cost, or as the "
+        "price of what is sold. Now distinct from `memory_cycle`, which is the "
+        "semiconductor capacity cycle and moves for entirely different "
+        "reasons. Use this one for a gas exporter whose spreads compress as "
+        "global liquefaction capacity arrives, or a manufacturer whose steel "
+        "and copper bill rises. Do NOT use it for a fab."
     ),
     "consumer_spending": (
         "Revenue scales with household consumption — retail sales, travel, "
@@ -772,7 +786,7 @@ CANDIDATES: dict[str, ExposureSet] = {
         ),
         exposures=[
             Exposure(
-                "commodity_cycle",
+                "memory_cycle",
                 1.25,
                 "THE WHOLE POSITION, and the reason the factor was added. An "
                 "87% gross margin in a commodity industry whose long-run "

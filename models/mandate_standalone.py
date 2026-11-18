@@ -824,14 +824,28 @@ FACTORS: dict[str, str] = {
         "against revenue that is not fixed, which is the oldest way to go "
         "broke while growing."
     ),
+    "memory_cycle": (
+        "Where the SEMICONDUCTOR MEMORY industry sits in its capacity cycle. "
+        "The mechanism is supply, not demand: peak margins fund the fabs that "
+        "destroy them, with a two-to-three-year lag between the capex decision "
+        "and the fab coming online. The signature is gross margin far above "
+        "the long-run mean plus an industry-wide capex increase. A low P/E on "
+        "peak earnings is not cheapness, it is the market discounting earnings "
+        "it does not believe. "
+        "SPLIT OUT OF `commodity_cycle` after a coverage audit: the memory "
+        "scenario was shocking every holding that carried the old combined "
+        "factor, so a DRAM glut registered as a loss against an LNG exporter "
+        "and a turbine maker. Two unrelated supply cycles sharing one factor "
+        "is a correlation the model asserts and the world does not."
+    ),
     "commodity_cycle": (
-        "Exposure to where a fungible-product industry sits in its CAPACITY "
-        "cycle. Distinct from every demand factor here, because the mechanism "
-        "is supply: peak margins fund the capacity that destroys them, with a "
-        "two-to-three-year lag between the capex decision and the fab coming "
-        "online. The signature is margins far above the long-run mean plus an "
-        "industry-wide capex increase. A low P/E on peak earnings is not "
-        "cheapness, it is the market discounting earnings it does not believe."
+        "Exposure to PHYSICAL commodity prices — energy, metals, castings — on "
+        "either side of the income statement: as an input cost, or as the "
+        "price of what is sold. Now distinct from `memory_cycle`, which is the "
+        "semiconductor capacity cycle and moves for entirely different "
+        "reasons. Use this one for a gas exporter whose spreads compress as "
+        "global liquefaction capacity arrives, or a manufacturer whose steel "
+        "and copper bill rises. Do NOT use it for a fab."
     ),
     "consumer_spending": (
         "Revenue scales with household consumption — retail sales, travel, "
@@ -1472,7 +1486,7 @@ CANDIDATES: dict[str, ExposureSet] = {
         ),
         exposures=[
             Exposure(
-                "commodity_cycle",
+                "memory_cycle",
                 1.25,
                 "THE WHOLE POSITION, and the reason the factor was added. An "
                 "87% gross margin in a commodity industry whose long-run "
@@ -3934,7 +3948,7 @@ SCENARIOS: dict[str, Scenario] = {
         key="memory_cycle_bust",
         name="Memory capacity cycle turns",
         shocks={
-            "commodity_cycle": -0.55,
+            "memory_cycle": -0.55,
             "ai_capex": -0.15,
             "market_beta": -0.12,
             "semi_rd": -0.05,
@@ -4009,6 +4023,60 @@ SCENARIOS: dict[str, Scenario] = {
             "2022: the 10Y rose roughly 230bp and the highest-multiple software "
             "names lost 50-70% with revenue still growing. Multiple compression "
             "alone did all of it."
+        ),
+    ),
+    # Added after a coverage audit found clinical_regulatory and ad_cycle were
+    # DEAD FACTORS: exposures written on real positions that no scenario
+    # shocked. The effect was to flatter exactly the names carrying them --
+    # CORT ranked first on return-per-unit-of-downside because the only risk
+    # the engine could see was its beta of 0.75. A factor with no scenario is
+    # not a conservative omission, it is a silent subsidy.
+    "clinical_rejection": Scenario(
+        key="clinical_rejection",
+        name="Drug rejection or safety signal at a single-product biotech",
+        shocks={"clinical_regulatory": -0.45, "regulatory": -0.15,
+                "market_beta": -0.05, "rates_duration": -0.10},
+        rationale=(
+            "A dated FDA action goes the wrong way, or a label carries a "
+            "warning severe enough to cap uptake. For a company whose value "
+            "sits in one or two molecules this is not a derating, it is the "
+            "removal of a branch of the tree. The shock is deliberately large "
+            "because the event is binary and the downside is not diversified "
+            "away inside the company."
+        ),
+        analogue=(
+            "Corcept itself: the FDA issued a complete response letter on "
+            "relacorilant for hypercortisolism in late 2025, and the stock "
+            "fell from roughly $115 at the end of September 2026 to about $73 "
+            "by mid-November -- around 37% in seven weeks, with the resubmitted "
+            "PDUFA still pending on 17 December 2026. More broadly: Sarepta, "
+            "Intercept and Amarin all lost 40-70% in a day on single "
+            "regulatory decisions."
+        ),
+        probability_note=(
+            "Not a tail event when a PDUFA is dated and the application has "
+            "already drawn one CRL. Size the position as though this scenario "
+            "and the approval case are both live."
+        ),
+    ),
+    "ad_recession": Scenario(
+        key="ad_recession",
+        name="Advertising recession",
+        shocks={"ad_cycle": -0.35, "consumer_spending": -0.20,
+                "market_beta": -0.12, "market_volatility": -0.15},
+        rationale=(
+            "Advertising is the first line cut in a corporate budget squeeze "
+            "and the first restored on recovery, which makes it violently "
+            "cyclical while looking like a stable annuity in good years. This "
+            "matters because the book's largest position still earns the "
+            "majority of its revenue from ads, a fact the AI narrative "
+            "obscures on both the way up and the way down."
+        ),
+        analogue=(
+            "2008-09: US ad spending fell roughly 13% in a year. 2022: digital "
+            "ad growth went from ~35% to near zero in three quarters and "
+            "Alphabet fell about 39% peak to trough while still growing "
+            "revenue and buying back stock."
         ),
     ),
     "broad_drawdown": Scenario(
