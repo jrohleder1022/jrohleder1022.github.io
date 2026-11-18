@@ -1090,10 +1090,40 @@ CANDIDATES: dict[str, ExposureSet] = {
     "CBRS": ExposureSet(
         ticker="CBRS",
         thesis=(
-            "Wafer-scale inference accelerators. Genuine engineering "
-            "differentiation on latency. Pre-profit, six months public, and "
-            "the revenue base is concentrated to a degree that is itself the "
-            "thesis risk."
+            "Wafer-scale inference accelerators. The engineering "
+            "differentiation on latency is genuine. REWRITTEN 18 Nov 2026 "
+            "after the Q3 print: the earlier entry said 'pre-profit' and put "
+            "UAE concentration at ~43%, and both were wrong. "
+            "IPO 14 May 2026 at $185, popped 68% to ~$311, traded $108.72 on "
+            "13 Nov -- -41% from the IPO price, ~-65% from the peak, ~$28B of "
+            "market cap against ~$48B at listing. "
+            "ON PROFITABILITY: FY2025 reported net income of +$237.8M on "
+            "$510M of revenue, and that is not profit. Operating income was "
+            "NEGATIVE $145.3M. The gap is ~$390M of non-operating gains, "
+            "almost all in Q2 2025 (+$309.5M net against a $57.2M operating "
+            "loss) -- a pre-IPO fair-value mark on preferred and warrant "
+            "liabilities, an accounting entry rather than cash earned. "
+            "Cerebras has never had a profitable year on the operating line. "
+            "Nine months of 2026: revenue $584.3M, operating income -$716.3M. "
+            "ON THE GROSS MARGIN, which is the real finding: 44.6% in Q1 "
+            "2026, 14.2% in Q2, 20.0% in Q3. It halved. The cause is a mix "
+            "shift -- Q3 cloud services revenue rose 265% to $142M while "
+            "direct hardware system sales FELL 29% to $69M. Cerebras is "
+            "converting itself from a chip vendor into a cloud operator, "
+            "absorbing depreciation on its own fleet, and has taken on debt to "
+            "do it (~$75M/yr of interest expense against zero pre-IPO). That "
+            "makes it a neocloud, the most leveraged link in the AI capital "
+            "chain. "
+            "ON CONCENTRATION: it rotated, it did not fall. G42 went from 85% "
+            "of 2024 revenue to 24% of 2025, but MBZUAI -- also Abu Dhabi -- "
+            "was 62% of 2025, so the two together were ~86%. By Q3 2026 it was "
+            "MBZUAI ~38% plus OpenAI ~34%: ~72% in two names. "
+            "Q3 revenue $210.8M (+55%), core revenue $230.9M (+70%), GAAP net "
+            "loss $161M, core net income ~$30M, the difference being stock "
+            "compensation. FY2026 core revenue guided $940-960M; management "
+            "expects revenue to triple in 2027. Backlog ~$26B, including a "
+            "750MW OpenAI agreement valued above $20B -- which makes the "
+            "backlog a CREDIT question about OpenAI, not a demand question."
         ),
         exposures=[
             Exposure(
@@ -1107,18 +1137,35 @@ CANDIDATES: dict[str, ExposureSet] = {
             Exposure(
                 "china_policy",
                 0.45,
-                "Accelerator export regime applies. Separately, ~43% of Q2 2026 "
-                "revenue came from two UAE-affiliated entities (MBZUAI 34%, G42 "
-                "9%), and G42 is also an investor — related-party revenue that "
-                "sits inside the same geopolitical review process.",
+                "Accelerator export regime applies, and the counterparty "
+                "concentration sits inside the same review process. CORRECTED: "
+                "the Abu Dhabi share is far higher than the ~43% this basis "
+                "once claimed. MBZUAI was 62% of FY2025 revenue and G42 24%, "
+                "about 86% between two related entities, and G42 is also an "
+                "investor. By Q3 2026 MBZUAI was ~38%. Sovereign-adjacent "
+                "demand from one emirate, reviewable by CFIUS and the export "
+                "regime, is a political exposure wearing a customer's clothes.",
             ),
             Exposure(
                 "rates_duration",
                 1.20,
-                "Pre-profit. Essentially all value is terminal value, which is "
-                "the definition of maximum duration.",
+                "No operating profit in any year. Essentially all value is "
+                "terminal value, which is the definition of maximum duration.",
             ),
-            Exposure("market_beta", 1.60, "Recent IPO, thin float, lockup supply still clearing."),
+            Exposure(
+                "financing_cost",
+                0.95,
+                "ADDED 18 Nov 2026. Cerebras is becoming a cloud operator, not "
+                "just a chip vendor: Q3 cloud revenue +265% to $142M while "
+                "hardware sales fell 29%, gross margin halved to 20%, and "
+                "interest expense is now ~$75M/yr against zero before the IPO. "
+                "Owning the fleet means funding the fleet. That puts it in the "
+                "neocloud layer, where floating-rate paper is secured on "
+                "depreciating accelerators -- and its largest forward "
+                "counterparty, OpenAI, is itself not cash-flow positive. The "
+                "~$26B backlog is only worth what the counterparties can pay.",
+            ),
+            Exposure("market_beta", 1.60, "Recent IPO, thin float, lockup supply still clearing. Already -65% from its post-IPO peak."),
         ],
     ),
     "RKLB": ExposureSet(
