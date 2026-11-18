@@ -1223,6 +1223,136 @@ BOOK: dict[str, ExposureSet] = {
 # ---------------------------------------------------------------------------
 
 CANDIDATES: dict[str, ExposureSet] = {
+    "VRT": ExposureSet(
+        ticker="VRT",
+        thesis=(
+            "Vertiv. Data-centre power and thermal: UPS, busway, switchgear, "
+            "and the liquid cooling that high-density AI racks require. Spun "
+            "out of Emerson Network Power via SPAC in 2020. Q3 2026: revenue "
+            "$4.31B (+61%, +55% organic), GAAP operating margin 22.8%, "
+            "adjusted operating profit $1.09B (+83%), adjusted EPS $2.21. TTM "
+            "revenue $13.12B (+35%), operating margin 20.1%, net income "
+            "$2.10B. FY2026 guided to ~$14.65B. Backlog was $15.0B (+109%) as "
+            "of Q2. Price $202.07 on 13 Nov 2026, ~385.1M shares, ~$77.8B cap, "
+            "37.1x trailing earnings. "
+            "TWO THINGS TO WEIGH. Management said it is 'not planning to share "
+            "orders data going forward' -- a company in a boom withdrawing its "
+            "own leading indicator, which removes the number that would have "
+            "told you first when demand turned. And the stock went $240.51 on "
+            "28 October, the day it beat and raised, to $202.07 by 13 "
+            "November: -16% in two weeks on no news. That is what owning the "
+            "purest version of this trade feels like."
+        ),
+        exposures=[
+            Exposure(
+                "ai_capex",
+                1.10,
+                "THE WHOLE POSITION. There is no second business here. Vertiv "
+                "sells into the data-centre capital budget and essentially "
+                "nothing else, which puts it level with NVDA and above AMD on "
+                "this factor. Compare GEV at 0.35, where roughly half the "
+                "backlog is services on installed turbines. Buying VRT is not "
+                "diversifying an AI book, it is concentrating it.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.70,
+                "37x trailing earnings on a capital-goods order book. The "
+                "earnings are real and present, which caps this below a "
+                "pre-profit name, but the multiple assumes the ramp continues.",
+            ),
+            Exposure(
+                "regulatory",
+                0.25,
+                "Data-centre siting and interconnection. State-level "
+                "moratoriums and local permitting fights bite the builder's "
+                "schedule, and Vertiv's revenue is that schedule.",
+            ),
+            Exposure(
+                "financing_cost",
+                0.45,
+                "Hyperscalers self-fund, but the neoclouds and colocation "
+                "developers that make up a growing share of the customer base "
+                "are financed, and their cost of capital sets their build rate.",
+            ),
+            Exposure(
+                "commodity_cycle",
+                0.20,
+                "Copper and steel in busway, switchgear and enclosures. Real "
+                "but second-order against a 38% gross margin.",
+            ),
+            Exposure(
+                "market_beta",
+                1.55,
+                "High. A momentum name with a 37x multiple and a single end "
+                "market. The -16% fortnight after a beat is the evidence.",
+            ),
+        ],
+    ),
+    "SBGSY": ExposureSet(
+        ticker="SBGSY",
+        thesis=(
+            "Schneider Electric, via the US ADR. Energy management (power "
+            "distribution, 3-phase UPS under the APC brand, prefabricated "
+            "data-centre modules, cooling) plus industrial automation. Q3 "
+            "2026: record revenue ~EUR 11.5B, +17% organic. Energy Management "
+            "is 84% of the group and grew 18.8% organic, driven by data "
+            "centre, where growth was triple-digit for a third consecutive "
+            "quarter. Industrial Automation grew only 8.1% to ~EUR 1.85B. "
+            "FY2026 organic growth guidance raised to 12-14%. "
+            "GENUINELY MORE DIVERSIFIED than Vertiv -- buildings, "
+            "infrastructure, residential, industry and utilities are real end "
+            "markets here, not a rounding error -- but data centre is the "
+            "swing factor in the segment that is five-sixths of the company. "
+            "ROTH-SPECIFIC COST, see the ai_capex and dividend notes: French "
+            "withholding on the dividend is UNRECOVERABLE in this account."
+        ),
+        exposures=[
+            Exposure(
+                "ai_capex",
+                0.45,
+                "Higher than GEV's 0.35, not lower. Data centre is ~20-25% of "
+                "group revenue and the dominant growth driver of the 84% "
+                "segment, where it is compounding at triple digits. The offset "
+                "is that Schneider carries a ~27x multiple against GEV's ~42x, "
+                "so there is less multiple to lose, and no progress-payment "
+                "cash flow dynamic to reverse.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.40,
+                "Mid. A ~27x multiple on a diversified industrial compounder "
+                "with real current earnings.",
+            ),
+            Exposure(
+                "consumer_spending",
+                0.15,
+                "Residential and light-commercial buildings. Small, and the "
+                "only name on this list with any direct household link.",
+            ),
+            Exposure(
+                "regulatory",
+                0.25,
+                "European energy-efficiency mandates cut the other way here -- "
+                "they are a tailwind. Netted against data-centre siting and "
+                "EU industrial policy, roughly ordinary exposure.",
+            ),
+            Exposure(
+                "commodity_cycle",
+                0.25,
+                "Copper, aluminium, steel and electrical steel for "
+                "transformers. A genuine input-cost exposure on a ~40% gross "
+                "margin.",
+            ),
+            Exposure(
+                "market_beta",
+                1.00,
+                "Market-like. EUR 130B+ of market cap, four end markets, a "
+                "dividend, and a century of operating history. The lowest beta "
+                "of the three electrification names.",
+            ),
+        ],
+    ),
     "GEV": ExposureSet(
         ticker="GEV",
         thesis=(
@@ -2097,6 +2227,44 @@ def validate_all(sets: Mapping[str, ExposureSet]) -> list[str]:
 
 
 ESTIMATES: dict[str, ReturnEstimate] = {
+    "VRT": ReturnEstimate(
+        "VRT", eps_growth=0.20, current_multiple=37.1, target_multiple=22.0,
+        basis="TTM revenue grew 35.3% and Q3 alone 61%, with operating margin "
+              "at 20.1% TTM against 22.8% in the quarter, so margin is still "
+              "expanding. 20% long-run EPS growth is well below the current "
+              "ramp and assumes the AI buildout keeps going without "
+              "accelerating. 37.1x is $77.8B over $2.10B of TTM net income -- "
+              "clean, with no non-recurring items to strip. 22x is a mature "
+              "industrial-technology multiple, implying -5.1%/yr of "
+              "compression. No dividend.",
+        caveat="Management WITHDREW orders disclosure this quarter. In a "
+               "demand boom the order book is the leading indicator, and it "
+               "is now the one number you cannot see. Treat the $15.0B Q2 "
+               "backlog as the last hard datapoint. Separately, the stock fell "
+               "16% in the fortnight after beating and raising, which is the "
+               "volatility you are signing up for at ai_capex 1.10.",
+    ),
+    "SBGSY": ReturnEstimate(
+        "SBGSY", eps_growth=0.13, current_multiple=27.0, target_multiple=22.0,
+        dividend_yield=0.0153,
+        basis="FY2026 organic revenue growth guided to 12-14%; 13% EPS growth "
+              "assumes that holds with modest margin expansion and the "
+              "buyback. 27x to 22x over ten years is -2.0%/yr of compression, "
+              "the mildest of the three electrification names because the "
+              "starting multiple is the lowest. "
+              "DIVIDEND IS NET, NOT GROSS. The gross yield is ~1.8%; 1.53% is "
+              "what reaches a Roth after 15% French treaty withholding. In a "
+              "TAXABLE account that 27bp would come back as a foreign tax "
+              "credit. In a Roth there is no US tax liability to credit it "
+              "against, so it is a permanent, unrecoverable leak -- and if the "
+              "broker applies the 25% statutory rate instead of the treaty "
+              "rate, the leak is 45bp/yr. Over a decade that is roughly 3-4.5% "
+              "of cumulative value, spent purely on the account type.",
+        caveat="A EUR-denominated ADR traded OTC. Currency is an unhedged "
+               "second bet, the spread is wider than a listed US name, and ADR "
+               "custody fees run ~1-3c/share/yr on top of the withholding. "
+               "None of that is in the return estimate.",
+    ),
     "GEV": ReturnEstimate(
         "GEV", eps_growth=0.22, current_multiple=42.0, target_multiple=28.0,
         dividend_yield=0.0025,
