@@ -510,16 +510,27 @@ CANDIDATES: dict[str, ExposureSet] = {
         exposures=[
             Exposure(
                 "ai_capex",
-                0.55,
-                "The demand driver, but NOT one-for-one. Data-centre load "
-                "growth is why gas turbine slots are sold out, and that is the "
-                "~$104B equipment backlog. The ~$93B services backlog is "
-                "annuity revenue on an already-installed base and is paid "
-                "whether or not another data centre is built. Roughly half the "
-                "book is AI-levered, so 0.55 rather than 1.0. NOTE FOR "
-                "PORTFOLIO PURPOSES: this is still POSITIVE AI exposure. GEV "
-                "does not diversify an AI-heavy book the way a non-correlated "
-                "name does -- it is the same bet through a different wire.",
+                0.35,
+                "REVISED DOWN from 0.55 against the company's own disclosure. "
+                "Data centres were ~$1.4B of $29.3B of Q3 orders (4.8%) and "
+                ">$6B year to date, and they are ~20% of Electrification's "
+                "~100-customer base against 80% traditional utility and "
+                "industrial. Of the ~$197B backlog, ~$93B (47%) is services on "
+                "an already-installed base -- annuity revenue paid whether or "
+                "not another data centre is built -- and Wind has no AI link "
+                "at all. Even the gas turbine demand that IS load-driven sits "
+                "on US load growth of which data centres are a third to a "
+                "half, with the rest reshored manufacturing, transport and "
+                "building electrification, and coal retirements needing "
+                "replacement capacity. Revenue-weighted AI linkage is more "
+                "like 15-20%. "
+                "0.35 rather than 0.20 because the EQUITY is more AI-levered "
+                "than the revenue: at ~42x annualized Q3 earnings the multiple "
+                "prices continued order growth, and the $17.1B of trailing "
+                "free cash flow is progress payments on a rising order book, "
+                "so an order slowdown reverses the cash dynamic rather than "
+                "merely slowing revenue. The beta is an elasticity on the "
+                "share price, not a revenue share.",
             ),
             Exposure(
                 "regulatory",
