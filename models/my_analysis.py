@@ -973,5 +973,135 @@ print("""
 """)
 
 
+# %% 7e — NFLX.  The first name in this file where a DCF is the RIGHT tool.
+#
+# Why it works here and failed everywhere else:
+#
+#   GEV    base_fcf was in dispute. $17.1B reported vs ~$1.4B stripped of
+#          progress payments, so the reverse DCF spanned -2.7% to +63.7%.
+#   CBRS   no free cash flow at all, and no profitable year on the
+#          operating line. A DCF would value the terminal assumption.
+#   VRT    profitable, but the whole thesis is a capex ramp continuing.
+#   CORT   works, but a dated binary event sits outside the model.
+#
+#   NFLX   large, stable, growing FCF; capex is 1.9% of revenue; and
+#          crucially the CONTENT SPEND IS ALREADY INSIDE CFO. Netflix
+#          capitalizes content and amortizes it, so net income is after
+#          content AMORTIZATION while CFO is after content CASH SPEND.
+#          Cash spend slightly exceeds amortization, which is why FCF
+#          conversion is ~0.86 rather than above 1 -- it means Netflix is
+#          still investing, close to steady state, and the FCF is real
+#          owner earnings rather than a harvest or a float.
+#
+# Exposures and the return estimate are already in the engine. See
+# CANDIDATES["NFLX"] and ESTIMATES["NFLX"].
+#
+# PERIOD: trailing twelve months, Q4 2025 through Q3 2026.
+# PRICE:  $65.78, from ONE third-party source. VERIFY before trusting the
+#         upside figures -- everything below scales off it. The 10-for-1
+#         split took effect 17 Nov 2025 at ~$111.
+
+NFLX_WACC = WACCInputs(
+    risk_free=0.0415,
+    equity_risk_premium=0.045,
+    beta=1.10,
+    cost_of_debt=0.050,
+    tax_rate=0.15,              # effective, not statutory
+    debt_weight=0.052,          # $15.13B debt / ($15.13B + $277B cap)
+    basis="rf = 10Y Nov 2026. ERP 4.5% Damodaran. Beta 1.10 = market_beta "
+          "from the factor profile. Effective tax ~15%, not 21%.",
+)
+
+NFLX_FUNDAMENTALS = Fundamentals(
+    ticker="NFLX",
+    # --- income statement, TTM Q4'25-Q3'26 ----------------------------------
+    revenue=49_734_700_000,        # 12,050.8 + 12,249.8 + 12,559.9 + 12,874.2
+    revenue_prior=43_378_800_000,  # -> +14.7%
+    gross_profit=0.0,              # REPLACE: Netflix reports cost of revenues
+                                   # including content amortization; the gross
+                                   # line is not comparable to a manufacturer's
+    ebit=15_564_900_000,           # 2,956.7 + 3,957.0 + 4,192.6 + 4,458.6
+    net_income=13_230_000_000,     # DERIVED: EBIT x (1 - 15%). See below.
+    interest_expense=700_000_000,  # ESTIMATE on $15.1B of notes
+    tax_rate=0.15,
+    # --- cash flow, same window ---------------------------------------------
+    cfo=12_307_900_000,            # SOURCED
+    capex=932_800_000,             # SOURCED. 1.9% of revenue.
+    # --- balance sheet, 30 Sep 2026 -----------------------------------------
+    total_debt=15_132_400_000,
+    cash=8_194_300_000,            # net DEBT of $6.94B
+    equity=29_286_253_000,
+    goodwill=0.0,                  # SOURCED: none. Netflix does not acquire.
+    shares_diluted=4_211_000_000,  # $3,663.9M Q3 NI / $0.87 diluted EPS
+    shares_diluted_prior=4_316_000_000,  # count FALLING on the buyback
+    price=65.78,
+    wacc=NFLX_WACC.value(),
+    basis={
+        "revenue": "TTM Q4'25-Q3'26, SOURCED",
+        "net_income": "DERIVED, not reported. TTM GAAP is $14,767M, but Q1 "
+                      "2026 booked $5,282.8M of NET income on $3,957.0M of "
+                      "OPERATING income -- a ~$1.3B non-operating item. Using "
+                      "GAAP gives 19.0x; clean earnings give 20.9x. THIRD case "
+                      "of this found in one week, after GEV's Prolec gain and "
+                      "Cerebras's pre-IPO warrant mark. Check whether net "
+                      "income and operating income point the same way before "
+                      "quoting any multiple.",
+        "cfo": "SOURCED $12,307.9M. Content spend is INSIDE this number, so "
+               "FCF of $11,375.1M is owner earnings. Contrast GEV, where "
+               "$17.1B of CFO was largely customer progress payments.",
+        "equity": "30 Sep 2026, SOURCED. No goodwill, so ROIC incl. and "
+                  "excl. goodwill are the same number.",
+    },
+)
+
+print(evaluate(NFLX_FUNDAMENTALS))
+
+# --- intrinsic value --------------------------------------------------------
+NFLX_DCF = DCFAssumptions(
+    ticker="NFLX",
+    base_fcf=11_375_100_000,       # TTM CFO 12,307.9 - capex 932.8
+    shares_diluted=4_211_000_000,
+    net_debt=6_938_100_000,        # POSITIVE: Netflix carries net debt
+    initial_growth=0.12,           # JUDGMENT -- the only one that matters
+    terminal_growth=0.03,
+    years=10,
+    wacc=NFLX_WACC,
+    basis={
+        "base_fcf": "TTM CFO less capex, SOURCED. FCF history: -$132M in "
+                    "FY2021, $1,619M, $6,926M, $6,922M, $9,461M in FY2025, "
+                    "$11,375M TTM. The 2021 figure is not a typo -- Netflix "
+                    "was cash-flow negative five years ago.",
+        "initial_growth": "JUDGMENT, 12%. Revenue compounds low-to-mid teens "
+                          "and is DECELERATING (15.7% FY24, 15.9% FY25, 14.7% "
+                          "TTM, +12% in Q3), while operating margin has added "
+                          "~350bp/yr since 2022 and cannot do so forever. FCF "
+                          "growth is the product of both, so it runs above "
+                          "revenue growth now and converges down to it once "
+                          "margin plateaus. 12% is the blend over ten years.",
+        "terminal_growth": "~nominal GDP",
+    },
+)
+
+print(report(NFLX_DCF, price=65.78))
+
+# --- READING IT -------------------------------------------------------------
+# The reverse DCF is the line to read: the price requires ~11.4% FCF growth
+# for a decade. Judge that against what the company has actually done -- FCF
+# went $6.9B in FY2024 to $11.4B TTM, and margin is still rising. An 11.4%
+# bar is not obviously demanding, which is why this is the only name in the
+# file whose DCF lands near fair value rather than at one extreme.
+#
+# The sensitivity is the honest width:
+#     6% growth  -> $52.30/sh   -20.5%
+#     8%         -> $56.97      -13.4%
+#    10%         -> $62.01       -5.7%
+#    12%         -> $67.43       +2.5%
+#    14%         -> $73.26      +11.4%
+#
+# So you are paid for believing low-double-digit FCF growth and punished for
+# high-single-digit. That is a real, narrow, falsifiable question -- which is
+# more than can be said for most of this watchlist.
+
+
 # %% 8 — Print the research brief for a name I'm studying
 print(brief("TICKER"))
