@@ -349,15 +349,44 @@ def scorecard(f: Fundamentals) -> list[Check]:
 
     # 2. Earnings quality
     conv = f.fcf_conversion
+    if conv is None:
+        _conv_verdict = Verdict.WEAK
+        _conv_note = (
+            "FCF / net income. Net income is negative, so the ratio carries no "
+            "information rather than bad information."
+        )
+    elif conv > 2.0:
+        # The low side of this ratio catches profit that is not becoming cash.
+        # The HIGH side catches the mirror image -- cash arriving that is not
+        # profit -- and grading it STRONG was a false positive. Above ~2x the
+        # usual causes are customer prepayments on a growing order book,
+        # working-capital release, asset sales, or a depressed denominator.
+        # None of them recur forever, and a DCF built on that FCF is wrong by
+        # whatever share of it is non-recurring.
+        _conv_verdict = Verdict.WEAK
+        _conv_note = (
+            "FCF / net income. IMPLAUSIBLY HIGH, which this check used to "
+            "score as a pass. Above ~2x sustained, the cash is arriving from "
+            "somewhere other than profit: customer prepayments on a growing "
+            "order book, a working-capital release, asset sales, or a "
+            "denominator depressed by charges. Each one is temporary, so DO "
+            "NOT put this FCF into a DCF until you have read the cash flow "
+            "statement's working-capital lines and know how much recurs."
+        )
+    else:
+        _conv_verdict = _grade(conv, 1.0, 0.8, 0.6)
+        _conv_note = (
+            "FCF / net income. Below ~0.8 sustained means reported profit is "
+            "not becoming cash. Could be growth capex (fine, temporary) or "
+            "receivables and capitalised costs (not fine). The ratio says "
+            "where to look, not which it is."
+        )
     checks.append(
         Check(
             "FCF conversion",
             "n/a (loss-making)" if conv is None else f"{conv:.2f}x",
-            Verdict.WEAK if conv is None else _grade(conv, 1.0, 0.8, 0.6),
-            "FCF / net income. Below ~0.8 sustained means reported profit is "
-            "not becoming cash. Could be growth capex (fine, temporary) or "
-            "receivables and capitalised costs (not fine). The ratio says "
-            "where to look, not which it is.",
+            _conv_verdict,
+            _conv_note,
         )
     )
 

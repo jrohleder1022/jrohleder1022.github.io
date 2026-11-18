@@ -1169,6 +1169,82 @@ BOOK: dict[str, ExposureSet] = {
 # ---------------------------------------------------------------------------
 
 CANDIDATES: dict[str, ExposureSet] = {
+    "GEV": ExposureSet(
+        ticker="GEV",
+        thesis=(
+            "GE Vernova. Spun out of GE in April 2024. Three segments: Power "
+            "(gas turbines and the services book on ~7,000 installed units), "
+            "Wind (onshore and offshore, the loss-maker), and Electrification "
+            "(grid equipment, transformers, switchgear). Q3 2026: revenue "
+            "$12.64B (+27%, +18% organic), operating income $1.39B for an 11.0% "
+            "margin against 3.7% a year earlier, orders $29.3B (+96% organic), "
+            "backlog ~$197B of which ~$104B equipment and ~$93B services. "
+            "FY2026 guided to $46.5-47.5B of revenue, 13.5-14.5% adjusted "
+            "EBITDA margin, $16-17B of free cash flow. Buyback authorization "
+            "doubled to $20B; $1.6B repurchased in the quarter. "
+            "TWO FIGURES IN THE FILINGS ARE TRAPS. (1) TTM GAAP net income is "
+            "$10.37B, but ~$7.1B of it is non-recurring: a ~$4.5B pre-tax "
+            "remeasurement gain on buying the remaining 50% of Prolec GE in "
+            "Q1 2026, plus a $2.57B tax benefit in Q4 2025. GAAP EPS that "
+            "quarter was $17.44 against $1.98 adjusted. (2) TTM free cash flow "
+            "is $17.1B against $3.7B for the whole of FY2025 -- a 4.6x jump on "
+            "17% revenue growth. Current liabilities exceed current assets by "
+            "$11.8B, so the business is funded by customer progress payments on "
+            "the order book. That inflow is real cash but it is not earnings, "
+            "and it stops when order growth stops."
+        ),
+        exposures=[
+            Exposure(
+                "ai_capex",
+                0.55,
+                "The demand driver, but NOT one-for-one. Data-centre load "
+                "growth is why gas turbine slots are sold out, and that is the "
+                "~$104B equipment backlog. The ~$93B services backlog is "
+                "annuity revenue on an already-installed base and is paid "
+                "whether or not another data centre is built. Roughly half the "
+                "book is AI-levered, so 0.55 rather than 1.0. NOTE FOR "
+                "PORTFOLIO PURPOSES: this is still POSITIVE AI exposure. GEV "
+                "does not diversify an AI-heavy book the way a non-correlated "
+                "name does -- it is the same bet through a different wire.",
+            ),
+            Exposure(
+                "regulatory",
+                0.45,
+                "High, and it is the Wind segment. Offshore permitting, "
+                "production and investment tax credits, and interconnection "
+                "queues have whipsawed this business into losses. Policy is a "
+                "first-order driver here, not background noise.",
+            ),
+            Exposure(
+                "financing_cost",
+                0.40,
+                "Customers are utilities and independent power producers "
+                "financing multi-billion-dollar projects. Higher rates delay "
+                "final investment decisions, which shows up as orders not "
+                "booked rather than as revenue lost.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.50,
+                "Earnings are present and growing, which caps this. But the "
+                "stock is ~42x annualized Q3 earnings, and the thesis is a "
+                "margin ramp years out, so a rate move still compresses it.",
+            ),
+            Exposure(
+                "commodity_cycle",
+                0.30,
+                "Input costs -- steel, copper, castings -- and, on the demand "
+                "side, gas prices setting the economics of gas generation "
+                "against alternatives.",
+            ),
+            Exposure(
+                "market_beta",
+                1.30,
+                "Above 1. Capital goods with a high multiple and a cyclical "
+                "order book. The equity has been volatile since the spin.",
+            ),
+        ],
+    ),
     "CORT": ExposureSet(
         ticker="CORT",
         thesis=(
@@ -1956,6 +2032,27 @@ def validate_all(sets: Mapping[str, ExposureSet]) -> list[str]:
 
 
 ESTIMATES: dict[str, ReturnEstimate] = {
+    "GEV": ReturnEstimate(
+        "GEV", eps_growth=0.22, current_multiple=42.0, target_multiple=28.0,
+        dividend_yield=0.0025,
+        basis="22% is the margin ramp, not revenue growth: Q3 2026 operating "
+              "margin was 11.0% against 3.7% a year earlier, on revenue up "
+              "18% organically, and FY2026 is guided to a 13.5-14.5% adjusted "
+              "EBITDA margin. Revenue alone compounds mid-teens against a "
+              "$197B backlog (4.5 years booked); margin does the rest. 42x is "
+              "ANNUALIZED Q3 GAAP EPS of $4.81 -- deliberately NOT the TTM P/E "
+              "of 20.8x, which is flattered by $7.1B of non-recurring Prolec "
+              "and tax items. 28x is a premium capital-goods multiple a decade "
+              "out, which still assumes -4.0%/yr of compression.",
+        caveat="The DCF is NOT resolvable from public figures, and that is the "
+               "finding. Reverse DCF on reported TTM FCF of $17.1B says the "
+               "price requires -2.7% growth; on FCF with the working-capital "
+               "inflow stripped out ($1.4B) it requires +63.7%. A 66-point "
+               "spread on one input. Everything depends on how much of the "
+               "$17.1B is customer progress payments rather than earnings, and "
+               "the press release line items needed to settle it were not "
+               "reachable. Read the 10-Q cash flow statement yourself.",
+    ),
     "SNPS": ReturnEstimate(
         "SNPS", eps_growth=0.22, current_multiple=22.5, target_multiple=22.0,
         basis="Guided ~22% EPS CAGR. Multiple held flat: 22.5x is near its own "
@@ -3353,15 +3450,44 @@ def scorecard(f: Fundamentals) -> list[Check]:
 
     # 2. Earnings quality
     conv = f.fcf_conversion
+    if conv is None:
+        _conv_verdict = Verdict.WEAK
+        _conv_note = (
+            "FCF / net income. Net income is negative, so the ratio carries no "
+            "information rather than bad information."
+        )
+    elif conv > 2.0:
+        # The low side of this ratio catches profit that is not becoming cash.
+        # The HIGH side catches the mirror image -- cash arriving that is not
+        # profit -- and grading it STRONG was a false positive. Above ~2x the
+        # usual causes are customer prepayments on a growing order book,
+        # working-capital release, asset sales, or a depressed denominator.
+        # None of them recur forever, and a DCF built on that FCF is wrong by
+        # whatever share of it is non-recurring.
+        _conv_verdict = Verdict.WEAK
+        _conv_note = (
+            "FCF / net income. IMPLAUSIBLY HIGH, which this check used to "
+            "score as a pass. Above ~2x sustained, the cash is arriving from "
+            "somewhere other than profit: customer prepayments on a growing "
+            "order book, a working-capital release, asset sales, or a "
+            "denominator depressed by charges. Each one is temporary, so DO "
+            "NOT put this FCF into a DCF until you have read the cash flow "
+            "statement's working-capital lines and know how much recurs."
+        )
+    else:
+        _conv_verdict = _grade(conv, 1.0, 0.8, 0.6)
+        _conv_note = (
+            "FCF / net income. Below ~0.8 sustained means reported profit is "
+            "not becoming cash. Could be growth capex (fine, temporary) or "
+            "receivables and capitalised costs (not fine). The ratio says "
+            "where to look, not which it is."
+        )
     checks.append(
         Check(
             "FCF conversion",
             "n/a (loss-making)" if conv is None else f"{conv:.2f}x",
-            Verdict.WEAK if conv is None else _grade(conv, 1.0, 0.8, 0.6),
-            "FCF / net income. Below ~0.8 sustained means reported profit is "
-            "not becoming cash. Could be growth capex (fine, temporary) or "
-            "receivables and capitalised costs (not fine). The ratio says "
-            "where to look, not which it is.",
+            _conv_verdict,
+            _conv_note,
         )
     )
 

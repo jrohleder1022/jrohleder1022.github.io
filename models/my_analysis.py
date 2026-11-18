@@ -43,13 +43,16 @@ from financial_analysis import (
     DCFAssumptions,
     Exposure,
     ExposureSet,
+    Fundamentals,
     WACCInputs,
     brief,
+    evaluate,
     load_book,
     main,
     multiple_convergence,
     report,
     report_candidate,
+    reverse_dcf,
 )
 
 # Underscore-prefixed names are skipped by `import *`, so this one is explicit.
@@ -811,6 +814,135 @@ print(report(CORT_DCF, price=72.94))
 #    you are being asked to pay full price for the base business and take the
 #    binary event for free. Whether that is a good trade depends on the odds
 #    you put on approval, which is a judgment no cell in this file makes.
+
+
+# %% 7d — GEV (GE Vernova).  Facts 18 Nov 2026. Read the warnings first.
+#
+# Exposures and the return estimate are already in the engine -- see
+# CANDIDATES["GEV"] and ESTIMATES["GEV"]. This cell adds the scorecard and the
+# valuation, and the valuation is the interesting part because IT DOES NOT
+# RESOLVE.
+#
+# PERIOD: trailing twelve months, Q4 2025 through Q3 2026.
+#
+# TWO REPORTED FIGURES ARE TRAPS, and both would make GEV look cheap:
+#
+#   TTM GAAP net income is $10.37B. About $7.1B of that is non-recurring:
+#   a ~$4.5B pre-tax remeasurement gain on buying the remaining 50% of
+#   Prolec GE in Q1 2026, and a $2.57B tax benefit in Q4 2025. GAAP EPS in
+#   Q1 was $17.44 against $1.98 adjusted. Using TTM GAAP gives a P/E of
+#   20.8x on a company that is not earning anything like that.
+#
+#   TTM free cash flow is $17.1B. All of FY2025 was $3.7B. A 4.6x jump on
+#   17% revenue growth is not an earnings story -- current liabilities
+#   exceed current assets by $11.8B, so customers are pre-paying for a
+#   $197B order book. That cash is real and it is spendable. It is not
+#   profit, and it stops the quarter order growth stops.
+#
+# net_income below is therefore DERIVED, not reported. Operating income plus
+# net interest, taxed at 25%. Say so to anyone you show this to.
+
+GEV_WACC = WACCInputs(
+    risk_free=0.0415,
+    equity_risk_premium=0.045,
+    beta=1.30,
+    cost_of_debt=0.050,
+    tax_rate=0.25,
+    debt_weight=0.015,          # $2.83B debt against a $215B market cap
+    basis="rf = 10Y Nov 2026. ERP 4.5% Damodaran. Beta 1.30 = market_beta "
+          "from the factor profile: capital goods, cyclical order book.",
+)
+
+GEV_FUNDAMENTALS = Fundamentals(
+    ticker="GEV",
+    # --- income statement, TTM Q4'25-Q3'26, $ thousands ---------------------
+    revenue=44_041_000_000,        # 10,956 + 9,339 + 11,104 + 12,642
+    revenue_prior=37_679_000_000,  # 10,558 + 8,041 + 9,111 + 9,969 -> +16.9%
+    gross_profit=9_570_000_000,
+    ebit=2_829_000_000,            # 601 + 179 + 655 + 1,394. SOURCED.
+    net_income=2_542_000_000,      # DERIVED, not reported -- see header
+    interest_expense=120_000_000,  # ESTIMATE on $2.83B of notes
+    tax_rate=0.25,                 # JUDGMENT: Q3'26 actual 27.7%, FY24 12.6%
+    # --- cash flow, same window ---------------------------------------------
+    cfo=19_217_000_000,            # SOURCED. See trap #2 before using it.
+    capex=2_101_000_000,           # SOURCED
+    # --- balance sheet, 30 Sep 2026 -----------------------------------------
+    total_debt=2_826_000_000,
+    cash=16_764_000_000,           # net CASH of $13.94B
+    equity=11_382_000_000,
+    goodwill=9_609_000_000,        # was $4.44B. Prolec consolidation.
+    shares_diluted=268_400_000,    # $1,291M NI / $4.81 reported diluted EPS
+    shares_diluted_prior=275_600_000,  # $452M / $1.64 -> count FELL 2.6%
+    price=803.13,                  # 13 Nov 2026. REPLACE with live.
+    wacc=GEV_WACC.value(),
+    basis={
+        "revenue": "TTM Q4'25-Q3'26, SOURCED from quarterly filings",
+        "net_income": "DERIVED: EBIT $2,829M + net interest ~$560M, taxed at "
+                      "25%. TTM GAAP is $10,368M and ~$7.1B of that is the "
+                      "Prolec remeasurement gain plus a Q4'25 tax benefit. "
+                      "Reporting GAAP here would give a 20.8x P/E on earnings "
+                      "the company did not earn.",
+        "cfo": "SOURCED $19,217M. NOT owner earnings. FY2025 CFO was $4,988M. "
+               "The difference is progress payments on a $197B backlog after a "
+               "quarter of $29.3B of orders (+96% organic). Verify against the "
+               "10-Q cash flow statement: look for 'contract liabilities' and "
+               "'progress collections'. I could not reach the filing.",
+        "total_debt": "30 Sep 2026, SOURCED",
+        "equity": "SOURCED $11,382M. NOTE: goodwill $9,609M plus intangibles "
+                  "$4,343M exceeds it, so TANGIBLE equity is NEGATIVE ~$2.6B "
+                  "against $62.5B of current liabilities.",
+    },
+)
+
+print(evaluate(GEV_FUNDAMENTALS))
+
+# --- VALUATION: deliberately not a single number ----------------------------
+# A DCF needs one base_fcf and that is exactly the number in dispute. So run
+# the reverse DCF across every defensible definition and look at the spread.
+# This is the honest output for GEV: a range, and the range is enormous.
+
+GEV_FCF_CASES = {
+    "reported TTM FCF":        19_217_000_000 - 2_101_000_000,   # $17.1B
+    "FY2026 guided FCF (mid)": 16_500_000_000,
+    "FY2025 actual FCF":        4_988_000_000 - 1_277_000_000,   # $3.7B
+    "NOPAT + D&A - capex":      2_829_000_000 * 0.75 + 1_428_000_000
+                                - 2_101_000_000,                 # $1.4B
+}
+
+print("=" * 76)
+print("GEV REVERSE DCF — what the price requires, by FCF definition")
+print("=" * 76)
+print(f"{'basis':<26}{'base FCF':>12}{'implied 10y growth':>22}")
+print("-" * 76)
+for _label, _fcf in GEV_FCF_CASES.items():
+    _a = DCFAssumptions(
+        ticker="GEV", base_fcf=_fcf, shares_diluted=268_400_000,
+        net_debt=2_826_000_000 - 16_764_000_000,
+        initial_growth=0.15, terminal_growth=0.03, years=10, wacc=GEV_WACC,
+        basis={"base_fcf": _label, "initial_growth": "placeholder; the reverse "
+               "DCF solves for this, so the value here is not used"},
+    )
+    try:
+        _g = reverse_dcf(_a, 803.13)
+        print(f"{_label:<26}{_fcf/1e9:>11,.1f}B{_g:>21.1%}")
+    except ValueError as _e:
+        print(f"{_label:<26}{_fcf/1e9:>11,.1f}B   not solvable in range")
+print("-" * 76)
+print("""
+  The spread is ~66 percentage points on one input. That is not a model
+  failure, it IS the GE Vernova question: how much of $17.1B of operating
+  cash flow is profit and how much is customers pre-paying for turbines?
+
+  You cannot answer it from a screener. Open the 10-Q, find the cash flow
+  statement, and read the working-capital lines. If contract liabilities
+  and progress collections account for most of the increase, the bottom two
+  rows are the real ones and the stock requires 36-64% growth for a decade.
+  If they do not, the top two are real and it is cheap.
+
+  Until you have read that statement you do not have a view on GEV, you
+  have a hope. The multiple convergence in cell 3b is the better tool here
+  because it needs no FCF at all -- only EPS growth and a multiple.
+""")
 
 
 # %% 8 — Print the research brief for a name I'm studying
