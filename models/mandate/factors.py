@@ -483,6 +483,100 @@ BOOK: dict[str, ExposureSet] = {
 # ---------------------------------------------------------------------------
 
 CANDIDATES: dict[str, ExposureSet] = {
+    "NFLX": ExposureSet(
+        ticker="NFLX",
+        thesis=(
+            "Netflix. Streaming subscriptions in ~190 countries, plus an "
+            "ad-supported tier and a live-events push. "
+            "THE FIRST THING TO KNOW IS THAT YOU CANNOT ANALYSE IT ON "
+            "SUBSCRIBERS ANY MORE. Netflix announced in April 2024 that from "
+            "Q1 2025 it would stop disclosing quarterly subscriber additions, "
+            "and it dropped average revenue per user at the same time. "
+            "Management's reason is defensible: with password-sharing "
+            "conversions and a cheap ad tier, a $7.99 account and a $24.99 "
+            "account stopped being the same unit, so counting them identically "
+            "had become misleading. The consequence is still that the metric "
+            "the market tracked for fifteen years is gone. The last official "
+            "count was 269.6M at the end of March 2024. Investors were "
+            "explicitly redirected to revenue and operating margin. "
+            "AND THE MARGIN IS THE REAL STORY: operating margin went 17.8% in "
+            "FY2022, 20.6% in FY2023, 26.7% in FY2024, 29.5% in FY2025, and "
+            "31.3% on a trailing-twelve-month basis, on revenue compounding "
+            "15-16%. TTM revenue $49.7B (+14.7%), operating income $15.6B. "
+            "Q3 2026: revenue $12.87B (+12%), operating margin 34.6% against "
+            "28.2% a year earlier, diluted EPS $0.87 against $0.59, and a "
+            "RECORD $4.80B of buyback in the quarter. "
+            "TWO THINGS NOT TO MISREAD. Q4 2026 is guided to a 26.0% operating "
+            "margin, which looks like a collapse from 34.6% and is not: Q4 is "
+            "seasonally the weakest quarter (22.2% in 2024, 24.5% in 2025), so "
+            "26.0% is an improvement, and it carries ~120bp of drag from "
+            "announced headcount reductions. And TTM reported net income of "
+            "$14.77B is overstated -- Q1 2026 booked $5.28B of NET income on "
+            "$3.96B of OPERATING income, a ~$1.3B non-operating item. "
+            "Operating income taxed at ~15% implies clean TTM earnings nearer "
+            "$13.2B. "
+            "WHY IT MATTERS FOR THIS BOOK: ai_capex 0.00. Netflix's costs are "
+            "PROGRAMMING, which is semi-fixed and discretionary, not a capital "
+            "budget being deferred in lumps by four committees. It is the only "
+            "name on this list with a genuine consumer-subscription annuity "
+            "and no exposure to the AI capital cycle in either direction. "
+            "Price ~$65.78 on a single third-party source -- VERIFY IT. That "
+            "is consistent with ~4,211M shares (backed out of $3,664M of Q3 "
+            "net income at $0.87 diluted), ~$277B of market cap and ~19x "
+            "trailing reported earnings. The 10-for-1 split took effect 17 Nov "
+            "2025 at ~$111, so the stock is down roughly 41% in a year."
+        ),
+        exposures=[
+            Exposure(
+                "ai_capex",
+                0.00,
+                "None, in either direction. The second name in this file with "
+                "zero AI linkage, after CORT. Netflix buys compute like any "
+                "large company but its revenue does not come out of anyone's "
+                "AI capital budget and its costs are not set by GPU prices.",
+            ),
+            Exposure(
+                "consumer_spending",
+                0.45,
+                "Discretionary, but the most defensible kind. Streaming is "
+                "cheap entertainment that historically holds up in downturns, "
+                "and the mechanism is churn rather than a cancelled order. The "
+                "ad tier gives price-sensitive households somewhere to go DOWN "
+                "to instead of out, which blunts this further.",
+            ),
+            Exposure(
+                "ad_cycle",
+                0.30,
+                "The ad tier is real but still small -- FY2026 advertising "
+                "revenue is around $2.7-3.0B against ~$50B of total revenue, "
+                "roughly 6%, and the guidance was reportedly trimmed from ~$3B "
+                "toward $2.7B. Growing fast enough that this exposure rises "
+                "each year. Second name after GOOGL to carry it, which now "
+                "matters because an advertising-recession scenario exists.",
+            ),
+            Exposure(
+                "digital_services_tax",
+                0.25,
+                "Operates in ~190 countries and is a standing target for "
+                "digital services taxes and local content quotas, especially "
+                "in the EU. A margin tax rather than a demand shock.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.55,
+                "~19-21x earnings is not a demanding multiple, which caps "
+                "this. But a subscription annuity is long-duration by "
+                "construction and content is partly debt-funded.",
+            ),
+            Exposure(
+                "market_beta",
+                1.10,
+                "Slightly above market. Mega-cap and profitable, but it has "
+                "fallen ~41% in a year on guidance and ad-revenue "
+                "disappointments, so it is not a low-volatility holding.",
+            ),
+        ],
+    ),
     "VRT": ExposureSet(
         ticker="VRT",
         thesis=(
@@ -1585,6 +1679,29 @@ def validate_all(sets: Mapping[str, ExposureSet]) -> list[str]:
 from .valuation import ReturnEstimate  # noqa: E402
 
 ESTIMATES: dict[str, ReturnEstimate] = {
+    "NFLX": ReturnEstimate(
+        "NFLX", eps_growth=0.16, current_multiple=20.9, target_multiple=20.0,
+        basis="Revenue compounds low-to-mid teens (TTM +14.7%) and operating "
+              "margin has added roughly 350bp a year since 2022 (17.8% -> "
+              "31.3%), so EPS grows faster than revenue; FY2025 net income rose "
+              "26% on 15.9% revenue growth. A record $4.80B of buyback in Q3 "
+              "alone adds per-share accretion on top. 16% assumes that "
+              "decelerates -- margin expansion cannot run at 350bp/yr forever. "
+              "20.9x is CLEAN earnings (~$13.2B, operating income taxed at "
+              "~15%), deliberately NOT the 19.0x on reported TTM net income, "
+              "which is flattered by a ~$1.3B non-operating item in Q1 2026. "
+              "Target 20x assumes essentially NO further compression, which is "
+              "the whole bull case: a 31%-margin consumer annuity growing "
+              "low-teens is already AT a mature multiple, having historically "
+              "traded 30-50x. No dividend; capital returns come as buyback.",
+        caveat="The subscriber count is gone and so is ARPU. You are taking "
+               "management's word on the composition of the revenue -- how "
+               "much is price rises versus new accounts versus ad-tier mix -- "
+               "and there is no longer a public number to check it against. "
+               "Same pattern as Vertiv withdrawing orders data, with a better "
+               "stated reason. Judge it on revenue and margin, which is what "
+               "they asked for, and accept that you cannot see underneath.",
+    ),
     "VRT": ReturnEstimate(
         "VRT", eps_growth=0.20, current_multiple=37.1, target_multiple=22.0,
         basis="TTM revenue grew 35.3% and Q3 alone 61%, with operating margin "
