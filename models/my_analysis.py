@@ -177,7 +177,7 @@ for t, v in sorted(worst.items(), key=lambda kv: -kv[1]):
 # That is reported rather than papered over with price-to-sales, which would
 # smuggle in a margin assumption without stating it.
 
-from financial_analysis import ESTIMATES  # noqa: E402
+from financial_analysis import ESTIMATES, years_to_recover  # noqa: E402
 
 _all = {**BOOK, **CANDIDATES}
 _rows = []
@@ -194,15 +194,31 @@ for _tk, _prof in _all.items():
     _rows.append((_tk, _ret, _worst, _wname, _tk in BOOK))
 
 _rows.sort(key=lambda r: (r[1] is None, -(r[1] or 0)))
-print(f"{'':<7}{'exp. return':>13}{'worst case':>12}{'ret/risk':>10}  worst scenario")
-print("-" * 78)
+print(f"{'':<7}{'exp. return':>13}{'worst case':>12}{'ret/risk':>10}"
+      f"{'recover':>10}  worst scenario")
+print("-" * 88)
 for _tk, _ret, _worst, _wname, _held in _rows:
     _h = " *" if _held else "  "
     _r = f"{_ret:>12.1%}" if _ret is not None else "         n/a"
     _rr = f"{abs(_ret / _worst):>9.2f}" if _ret is not None and _worst < 0 else "        -"
-    print(f"{_tk + _h:<7}{_r}{_worst:>12.1%}{_rr}  {_wname[:34]}")
+    _yr = years_to_recover(_ret, _worst) if _ret is not None else None
+    _ys = f"{_yr:>8.1f}y" if _yr is not None else "       -"
+    print(f"{_tk + _h:<7}{_r}{_worst:>12.1%}{_rr}{_ys}  {_wname[:34]}")
 print("\n  * = currently held")
 print("  n/a = no earnings, so multiple convergence does not apply")
+print("""
+  READ 'recover' BEFORE 'ret/risk'. ret/risk divides an ANNUAL rate by a
+  ONE-TIME loss, so it is not dimensionless and no textbook threshold
+  applies to it -- there is no "strong" value, only a rank order inside
+  this one scenario set. It also contains no risk-free rate, so unlike a
+  Sharpe ratio it never asks whether the risk is paid for at all.
+
+  'recover' puts both numbers in the same unit: years of compounding to
+  climb back out of the worst case. Against a ten-year horizon, FIVE is
+  the line -- past it, one bad event eats half the runway.
+
+  The two metrics do not even agree on order. Where they conflict, the
+  years column is the one that means something.""")
 print("\n  Every estimate carries a basis string. Read them before trusting the")
 print("  ranking:  for tk, e in ESTIMATES.items(): print(tk, e.basis)")
 
@@ -235,20 +251,32 @@ for _tk, _prof in _allp.items():
         "dom": _dom, "held": _tk in BOOK,
     })
 
+for _r in _rk:
+    _r["yrs"] = (years_to_recover(_r["ret"], _r["worst"])
+                 if _r["ret"] is not None else None)
+
+# Sorted by RECOVERY TIME, not by ret/risk. See the note in cell 3b: the
+# ratio divides an annual rate by a one-time loss and the two orderings
+# genuinely differ. A name with None never recovers, so it sorts last.
 _rated = sorted((r for r in _rk if r["ret"] is not None),
-                key=lambda r: -abs(r["ret"] / r["worst"]))
+                key=lambda r: (r["yrs"] is None, r["yrs"] or 0.0))
 _unrated = sorted((r for r in _rk if r["ret"] is None), key=lambda r: -r["worst"])
 
 print("=" * 92)
-print("RANKED BY RETURN PER UNIT OF DOWNSIDE  (names with earnings)")
-print("=" * 92)
-print(f"{'':<3}{'':<7}{'exp ret':>9}{'worst':>8}{'2nd worst':>11}{'ret/risk':>10}  dominant factor")
-print("-" * 92)
+print("RANKED BY YEARS TO RECOVER THE WORST CASE  (names with earnings)")
+print("=" * 100)
+print(f"{'':<3}{'':<7}{'exp ret':>9}{'worst':>8}{'2nd worst':>11}{'ret/risk':>10}"
+      f"{'recover':>10}  dominant factor")
+print("-" * 100)
 for _i, _r in enumerate(_rated, 1):
     _h = "*" if _r["held"] else " "
     _d = f"{_r['dom'][0]} {_r['dom'][1]:+.2f}"
+    _y = _r["yrs"]
+    _ys = f"{_y:>8.1f}y" if _y is not None else "   never"
+    _mark = "  <<<" if _y is not None and _y > 5.0 else ""
     print(f"{_i:<3}{_r['tk'] + _h:<7}{_r['ret']:>9.1%}{_r['worst']:>8.1%}"
-          f"{_r['second']:>11.1%}{abs(_r['ret'] / _r['worst']):>10.2f}  {_d}")
+          f"{_r['second']:>11.1%}{abs(_r['ret'] / _r['worst']):>10.2f}{_ys}  {_d}{_mark}")
+print("\n  <<< = over 5 years to recover: one bad event costs half a 10-year horizon.")
 
 print("\n" + "=" * 92)
 print("NO EARNINGS — downside only, least bad first. No return is computable.")

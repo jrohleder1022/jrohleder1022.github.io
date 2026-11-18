@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import numpy as np
 import pandas as pd
 import re
@@ -144,6 +145,7 @@ factors = policy = risk = rubric = scenarios = valuation = _ModuleAlias()
 # -------------------------
 # Same discipline as factors.py: every assumption field has a `basis`. An
 # unsourced WACC is a number someone liked the look of.
+
 
 
 
@@ -499,6 +501,44 @@ class ConvergenceResult:
             f"{self.total_return:+.1%}/yr over {self.years}y "
             f"({self.current_multiple:.1f}x -> {self.target_multiple:.1f}x)"
         )
+
+
+def years_to_recover(annual_return: float, drawdown: float) -> float | None:
+    """Years of compounding needed to climb back out of a one-time loss.
+
+    WHY THIS EXISTS, AND WHY IT BEATS `ret/risk`
+    --------------------------------------------
+    The ret/risk ratio printed elsewhere in this package divides an ANNUAL
+    rate by a ONE-TIME loss. Those are different units -- %/year over %/event
+    -- so the quotient is not a dimensionless quality score and comparing it
+    to any textbook threshold is meaningless. It also has no risk-free rate
+    in it, so unlike a Sharpe ratio it never asks whether you are being paid
+    for the risk at all. Its one legitimate use is ranking names against each
+    other inside one scenario set on one day.
+
+    This function converts both quantities into the same unit -- TIME -- and
+    the result is directly comparable to the holding period:
+
+        (1 + r) ** years = 1 / (1 + drawdown)
+
+    The ordering is not even the same. CORT scores 0.46 on ret/risk against
+    GOOGL's 0.41, yet takes 3.4 years to recover where GOOGL takes 3.3,
+    because the ratio rewards a small denominator more than it rewards a
+    large numerator. When the two disagree, trust this one.
+
+    Against a ten-year horizon, five years is the number that matters: past
+    it, one bad event consumes half the runway and the position has to be
+    right about timing as well as direction.
+
+    Returns None when recovery is impossible: a total loss, or no growth.
+    """
+    if drawdown <= -1.0:
+        return None          # wiped out; no rate of return recovers it
+    if annual_return <= 0.0:
+        return None          # never recovers by compounding
+    if drawdown >= 0.0:
+        return 0.0           # nothing to recover
+    return math.log(1.0 / (1.0 + drawdown)) / math.log(1.0 + annual_return)
 
 
 def multiple_convergence(
