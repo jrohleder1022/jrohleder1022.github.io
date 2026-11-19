@@ -1223,6 +1223,107 @@ BOOK: dict[str, ExposureSet] = {
 # ---------------------------------------------------------------------------
 
 CANDIDATES: dict[str, ExposureSet] = {
+    "SNDK": ExposureSet(
+        ticker="SNDK",
+        thesis=(
+            "Sandisk. Pure-play NAND flash, spun out of Western Digital in "
+            "February 2025; WD kept the hard-disk business. No DRAM, and "
+            "therefore no HBM -- HBM is stacked DRAM, so this is structurally "
+            "impossible for Sandisk, not merely absent. "
+            "THE NUMBERS ARE THE MOST VIOLENT CYCLE TURN IN THE FILE. FY2025 "
+            "(June): revenue $7.36B, gross margin 30.1%, an operating LOSS of "
+            "$1.38B and a net LOSS of $1.64B. FY2026: revenue $20.25B, gross "
+            "margin 71.5%, operating income $12.39B, net income $11.43B. "
+            "Quarterly gross margin ran 29.8%, 50.9%, 78.4%, 84.6%, 85.0% "
+            "across five quarters. Q1 FY2027 (Sep 2026) alone: revenue $11.03B "
+            "(+378% YoY), gross margin 85.0%, operating income $8.78B, "
+            "non-GAAP EPS $49.51 against $44-46 guided. Q2 guided to $12.2-12.6B "
+            "of revenue, 84.5-85.5% margin, $55-57 EPS pre-split. An 8-for-1 "
+            "split takes effect for trading on 20 November 2026. "
+            "THE FINDING THAT MATTERS, AND IT CUTS AGAINST BOTH NAMES: Sandisk "
+            "grew 378% with an 85% gross margin while owning NO DRAM and NO "
+            "HBM. Micron grew 379% with an 87% gross margin. If the AI/HBM "
+            "story were the driver, the tight DRAM oligopoly (3 players) would "
+            "be dramatically outperforming the fragmented NAND market (6 "
+            "players: Samsung, SK Hynix/Solidigm, Kioxia, Sandisk, Micron, "
+            "YMTC). It is not. The worst-structured memory market on earth is "
+            "matching the best one almost exactly, which means this is a "
+            "SHORTAGE rather than a structural re-rating -- and shortages are "
+            "cured by capacity. "
+            "DEMAND DESTRUCTION IS ALREADY VISIBLE in the mix: data-centre "
+            "revenue rose 61% sequentially to $4.8B, 44% of the total, while "
+            "CONSUMER revenue FELL 29% sequentially to $397M as, in "
+            "management's framing, the market absorbs higher prices. Customers "
+            "buying less because it costs too much is the classic late-cycle "
+            "signal, and the data-centre strength is masking it. It also means "
+            "Sandisk's mix is shifting TOWARD the AI-levered end, so it is "
+            "becoming more cyclical, not less. "
+            "CAPITAL ALLOCATION IS THE REAL DIFFERENCE FROM MICRON. Sandisk is "
+            "harvesting: $5.0B of stock repurchased in ONE quarter against a "
+            "~$150B market cap (3.3% of the company in 90 days), $5.1B of cash, "
+            "NO debt, and gross capex guided to a mid-single-digit percentage "
+            "of FY2027 revenue. Micron is reinvesting: capex was $27.37B on "
+            "$133.19B of revenue, ~20.6%, and guided higher. One company is "
+            "behaving as though it is at a peak; the other as though the peak "
+            "is the new level. CAVEAT: Sandisk's fab capacity sits in joint "
+            "ventures with Kioxia, so its own reported capex understates the "
+            "capacity actually being added on its behalf. Do not read "
+            "mid-single-digit capex as 'not adding supply'. "
+            "AND THE MARKET IS VOTING. Both stocks are FALLING on record "
+            "results. Sandisk fell ~13% after this print and is reported down "
+            "roughly 42% from its high, around $920 pre-split. Micron reached "
+            "a $1 trillion market cap on 26 May 2026 and trades near $720 for "
+            "~$815B. Forward multiples on guided earnings are ~4.1-4.6x for "
+            "Sandisk and ~4.7x for Micron. That is not cheapness. That is the "
+            "market declining to capitalise earnings it does not believe will "
+            "persist -- the exact condition the memory_cycle factor exists to "
+            "flag."
+        ),
+        exposures=[
+            Exposure(
+                "memory_cycle",
+                1.30,
+                "HIGHER than Micron's 1.25, for three reasons. NAND has six "
+                "credible suppliers against DRAM's three, so pricing "
+                "discipline is historically worse and returns structurally "
+                "lower. Sandisk is a pure play with no second product to "
+                "cushion a NAND correction. And an 85% gross margin in a "
+                "business that earned 7.1% in FY2023 and 16.1% in FY2024 is "
+                "not a franchise margin -- it is a shortage margin, with a "
+                "date on it that nobody knows.",
+            ),
+            Exposure(
+                "ai_capex",
+                0.70,
+                "Data-centre is 44% of revenue and grew 61% sequentially, "
+                "while consumer FELL 29%. Below Micron's 1.00 because there is "
+                "no HBM here, but rising every quarter as the mix shifts: "
+                "enterprise SSD demand for AI storage tiers is the growth, and "
+                "the historic consumer base is shrinking under the price rises.",
+            ),
+            Exposure(
+                "china_policy",
+                0.35,
+                "YMTC is a state-backed Chinese NAND competitor and the "
+                "swing factor in future supply; export controls cut both ways; "
+                "and China is a large end market for consumer flash.",
+            ),
+            Exposure(
+                "rates_duration",
+                0.30,
+                "Low. Earnings are enormous and present, the multiple is ~4x "
+                "forward, and there is no debt. Duration is not this "
+                "position's problem -- the cycle is.",
+            ),
+            Exposure(
+                "market_beta",
+                1.60,
+                "Very high. A pure-play commodity producer at a cycle peak, "
+                "already down ~42% from its high while reporting the best "
+                "numbers in its history.",
+            ),
+        ],
+    ),
     "NFLX": ExposureSet(
         ticker="NFLX",
         thesis=(
@@ -1763,7 +1864,18 @@ CANDIDATES: dict[str, ExposureSet] = {
             Exposure(
                 "memory_cycle",
                 1.25,
-                "THE WHOLE POSITION, and the reason the factor was added. An "
+                "THE WHOLE POSITION, and the reason the factor was added. "
+                "UPDATE 19 Nov 2026: the single strongest piece of evidence "
+                "for this exposure now comes from OUTSIDE Micron. Sandisk -- "
+                "pure-play NAND, no DRAM, no HBM, in a SIX-supplier market -- "
+                "grew revenue 378% YoY with an 85.0% gross margin in the same "
+                "window Micron grew 379% with 87.0%. If HBM and the AI mix "
+                "were doing the work, the three-player DRAM oligopoly would be "
+                "crushing the fragmented NAND market. It is not. The "
+                "worst-structured memory market on earth is matching the best "
+                "one, which means a SHORTAGE is doing the work, not a "
+                "structural re-rating. That is the bear case stated with a "
+                "control group. An "
                 "87% gross margin in a commodity industry whose long-run "
                 "mid-cycle margin is 25-35% is not a new normal; it is a peak "
                 "with a date on it. Memory has all five boom ingredients — "
@@ -2418,6 +2530,24 @@ def validate_all(sets: Mapping[str, ExposureSet]) -> list[str]:
 
 
 ESTIMATES: dict[str, ReturnEstimate] = {
+    "SNDK": ReturnEstimate(
+        "SNDK", eps_growth=0.0, current_multiple=0.0, target_multiple=0.0,
+        applicable=False,
+        basis="DELIBERATELY NOT COMPUTED. Multiple convergence needs a "
+              "multiple that means something, and ~4.1-4.6x forward does not: "
+              "it is a low number on peak-cycle earnings, which the engine's "
+              "own memory_cycle note calls 'the market discounting earnings it "
+              "does not believe'. Running the arithmetic would produce a "
+              "spectacular expected return by assuming an 85% gross margin "
+              "persists for a decade in a six-supplier commodity market that "
+              "earned a 7.1% gross margin in FY2023. The honest output is a "
+              "refusal. If you want to underwrite this, the question is not "
+              "the multiple -- it is what mid-cycle NAND gross margin is "
+              "(history says 25-35%) and what EPS looks like there.",
+        caveat="Same treatment as MU and for the same reason. To value either, "
+               "normalize the margin first and then decide what to pay for "
+               "normalized earnings. Anything else is extrapolating a shortage.",
+    ),
     "NFLX": ReturnEstimate(
         "NFLX", eps_growth=0.16, current_multiple=20.9, target_multiple=20.0,
         basis="Revenue compounds low-to-mid teens (TTM +14.7%) and operating "
