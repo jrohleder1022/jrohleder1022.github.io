@@ -632,6 +632,205 @@ CANDIDATES: dict[str, ExposureSet] = {
             ),
         ],
     ),
+    "VRSN": ExposureSet(
+        ticker="VRSN",
+        thesis=(
+            "Verisign. Sole registry operator for .com and .net under "
+            "contracts with ICANN and the US Commerce Department. Registrars "
+            "pay a fixed fee per domain-year. The most consistent margin in "
+            "the screened universe: gross margin 86.8 / 87.7 / 88.2 / 88.8%, "
+            "operating margin 67.0 / 67.9 / 67.7 / 66.9% -- inside a 67-68.5% "
+            "band for five consecutive years. FY2025 revenue $1,657M (+6.4%), "
+            "Q3 2026 $443M (+5.7%). Price $306.45 (19 Nov 2026), ~$28B cap, "
+            "33.1x trailing EPS of $9.29, dividend $3.24/yr for a 1.06% yield. "
+            "THE FLAT MARGIN IS CONTRACTUAL, NOT STALLED -- which is the point "
+            "of owning it. THE RISK IS NOT COMPETITIVE, IT IS POLITICAL: this "
+            "is a government-granted monopoly on one contract, with "
+            "price-increase caps set by agreement rather than by the market. "
+            "There is no second business."
+        ),
+        exposures=[
+            Exposure("ai_capex", 0.00,
+                     "None. Domain registrations have no channel to data "
+                     "centre construction in either direction."),
+            Exposure("regulatory", 0.55,
+                     "THE WHOLE RISK, and it is high. The .com registry "
+                     "agreement is renewed with ICANN and reviewed by the "
+                     "Commerce Department; permitted price increases are "
+                     "capped by that agreement. A hostile review or a cap "
+                     "freeze hits the only revenue line there is. Competitive "
+                     "risk is near zero; political risk is not."),
+            Exposure("consumer_spending", 0.20,
+                     "Small-business and speculative domain renewals are "
+                     "discretionary at the margin, though renewal rates have "
+                     "held in past recessions."),
+            Exposure("rates_duration", 0.45,
+                     "33x trailing earnings on a 6% grower. The multiple, not "
+                     "the business, is what a rate move repriccs."),
+            Exposure("market_beta", 0.70,
+                     "Low. Contractual revenue, no cyclicality in the demand "
+                     "driver, and a dividend."),
+        ],
+    ),
+    "MSCI": ExposureSet(
+        ticker="MSCI",
+        thesis=(
+            "MSCI. Index licences (asset-based fees on fund AUM plus "
+            "subscriptions), analytics, private-capital and sustainability "
+            "data, sold to asset managers and owners on multi-year recurring "
+            "contracts. Gross margin 82.3 / 82.0 / 82.4 / 82.9%, operating "
+            "margin 54.8 / 53.5 / 54.7 / 56.3% -- flat-to-rising, with the "
+            "March dip a recurring seasonal comp-expense quarter. FY2025 "
+            "revenue +9.7%, Q3 2026 $892M (+12.5%). Price $656.72 (11 Nov "
+            "2026), ~$46B cap, 34.2x trailing EPS of $18.92, dividend "
+            "$8.20/yr for a 1.25% yield. "
+            "THE NON-OBVIOUS RISK: a meaningful share of revenue is "
+            "ASSET-BASED fees that scale with the AUM of funds tracking MSCI "
+            "indices. A market drawdown therefore cuts REVENUE and the "
+            "MULTIPLE at the same time. It is less defensive than a "
+            "subscription business looks, and that is why market_beta is above "
+            "1 here despite the recurring-revenue label."
+        ),
+        exposures=[
+            Exposure("ai_capex", 0.00,
+                     "None. Index and analytics licences are paid from asset "
+                     "managers' operating budgets."),
+            Exposure("market_beta", 1.05,
+                     "Above 1, deliberately. Asset-based index fees are levered "
+                     "to index LEVELS, so a drawdown hits the revenue line and "
+                     "the multiple together -- the double-dip the recurring "
+                     "label hides."),
+            Exposure("rates_duration", 0.50,
+                     "34x earnings. High-quality, but priced as such."),
+            Exposure("regulatory", 0.25,
+                     "EU sustainability-disclosure and benchmark regulation "
+                     "cuts both ways: compliance burden on clients drives "
+                     "demand for MSCI's data, while index-provider oversight "
+                     "is a standing risk."),
+            Exposure("market_volatility", 0.15,
+                     "Mildly negative for revenue: volatility drives flows out "
+                     "of the passive equity funds the asset-based fees track."),
+        ],
+    ),
+    "FTNT": ExposureSet(
+        ticker="FTNT",
+        thesis=(
+            "Fortinet. Network and endpoint security -- FortiGate appliances "
+            "plus subscription security services -- sold to enterprise and SMB "
+            "IT security budgets. The strongest fundamentals of the five "
+            "screened names: gross margin 76.7 / 80.6 / 80.5 / 79.0%, GAAP "
+            "operating margin 23.4 / 30.3 / 30.7 / 33.9%, rising annually AND "
+            "across all four trailing quarters, on Q3 2026 revenue of $2,078M "
+            "(+20.5%). "
+            "TWO PROBLEMS. Price $132.94 on 19 Nov 2026 puts the market cap at "
+            "~$97.7B -- the screen's ceiling was $100B, so headroom is now "
+            "~2.4%, having been ~8% when the screen ran a week earlier. And "
+            "roughly a third of revenue is PRODUCT: an appliance is a capital "
+            "purchase, which is the budget type this portfolio is trying to "
+            "reduce, even though security capex is among the last lines cut. "
+            "43.2x trailing EPS of $3.07; no dividend."
+        ),
+        exposures=[
+            Exposure("ai_capex", 0.25,
+                     "LOW but not zero. Security appliances for data centres "
+                     "ride some of the buildout, and ~1/3 of revenue is "
+                     "hardware bought from a capital budget. Far below the "
+                     "0.90-1.40 of the portfolio's existing AI names."),
+            Exposure("enterprise_it", 0.75,
+                     "The main driver. Enterprise and SMB security spend, "
+                     "which is defended in a downturn but not immune -- "
+                     "refresh cycles slip."),
+            Exposure("rates_duration", 0.60,
+                     "43x trailing on a decelerating grower. The highest "
+                     "multiple risk of the five."),
+            Exposure("saas_disintermediation", 0.10,
+                     "Low. Priced per device and per protected seat of "
+                     "infrastructure, not per human analyst, and AI adoption "
+                     "expands the attack surface rather than shrinking it."),
+            Exposure("market_beta", 1.15,
+                     "Above market. It fell ~31% in late October and has since "
+                     "rallied 5.9% in a day -- not a low-volatility holding."),
+        ],
+    ),
+    "FFIV": ExposureSet(
+        ticker="FFIV",
+        thesis=(
+            "F5. Application delivery controllers, load balancing, and "
+            "application and API security, sold to enterprise and telco IT and "
+            "security budgets. Gross margin 80.2 / 81.4 / 81.9% RISING, GAAP "
+            "operating margin 23.4 / 24.8 / 23.9% FLAT, on FY2026 revenue of "
+            "$3,417M (+11%) with PRODUCT revenue +23% in Q4. Price $321.04 (17 "
+            "Nov 2026), ~$18.2B cap, 25.3x trailing EPS of $12.71, no dividend. "
+            "WHY IT IS INTERESTING FOR THIS BOOK: direct AI bookings were "
+            "~$100M of $3,417M in all of FY2026 -- about 3%. So AI is genuine "
+            "UPSIDE here rather than the dependency the screen was built to "
+            "avoid, and the multiple at 25x is the lowest of the five, which "
+            "means the least to lose to compression. "
+            "WATCH: operating margin slipped 90bp in FY2026. Inside a flat "
+            "band, but the direction is the one thing the screen tests."
+        ),
+        exposures=[
+            Exposure("ai_capex", 0.15,
+                     "Minimal. ~3% of FY2026 bookings were AI-attributed. The "
+                     "revenue base is enterprise application delivery, not "
+                     "anyone's buildout."),
+            Exposure("enterprise_it", 0.80,
+                     "The driver. Application delivery and API security sit in "
+                     "enterprise IT and security budgets; a hardware refresh "
+                     "component makes it somewhat lumpier than pure software."),
+            Exposure("rates_duration", 0.35,
+                     "The LOWEST of the five. 25x trailing earnings leaves far "
+                     "less multiple to lose than FTNT at 43x or DSGX at 44x."),
+            Exposure("market_beta", 0.95,
+                     "Roughly market. Mature, profitable, buying back stock."),
+        ],
+    ),
+    "DSGX": ExposureSet(
+        ticker="DSGX",
+        domicile="CA",
+        pays_dividend=False,
+        thesis=(
+            "Descartes Systems Group. Logistics network software -- customs "
+            "and security filing, trade content, route planning, ecommerce "
+            "shipping -- sold to shippers, carriers and customs brokers. "
+            "Ontario-domiciled, NASDAQ-listed. The cleanest margin series in "
+            "the screened software universe: gross margin 75.9 / 75.6 / 77.1 / "
+            "77.9%, GAAP operating margin 24.9 / 27.8 / 30.2% and then pinned "
+            "at ~33% for four consecutive quarters. FY2026 revenue +12.0%, Q2 "
+            "FY2027 $201M (+11.7%). Price ~$94.70 (9 Nov 2026), ~$8.0B cap, "
+            "43.7x trailing EPS of $2.15, no dividend. "
+            "WHY THE REVENUE IS UNUSUALLY WELL-SHAPED: it scales with "
+            "SHIPMENTS AND CUSTOMS DECLARATIONS, not with customer headcount "
+            "and not with any capital budget. Automating customs brokerage IS "
+            "the product, so AI agents are the business model rather than the "
+            "threat. Goodwill is $1,026M against $1,619M of equity -- 63%, "
+            "with no impairments across FY2024-26, which is conservative for a "
+            "serial acquirer. "
+            "DOMICILE: Canadian, and it pays no dividend, so the Roth "
+            "withholding leak that disqualifies a European issuer does not "
+            "apply. Canada also exempts IRAs under Article XXI. The cost of "
+            "the foreign domicile here is unhedged CAD exposure and nothing "
+            "else."
+        ),
+        exposures=[
+            Exposure("ai_capex", 0.00,
+                     "None. Revenue is per-shipment and per-declaration."),
+            Exposure("regulatory", 0.40,
+                     "Tariff and trade-regime policy is the direct driver, and "
+                     "it cuts BOTH ways: more trade complexity means more "
+                     "customs declarations to file, which is revenue. A "
+                     "collapse in trade VOLUMES is the bad case, not a rise in "
+                     "trade friction."),
+            Exposure("consumer_spending", 0.30,
+                     "Ecommerce parcel volumes and global goods trade. The "
+                     "real cyclical exposure: shipments fall in a recession."),
+            Exposure("rates_duration", 0.55,
+                     "43.7x trailing earnings. High, and the main thing a rate "
+                     "move would reprice."),
+            Exposure("market_beta", 1.00,
+                     "Market-like. An $8B mid-cap on a high multiple."),
+        ],
+    ),
     "NFLX": ExposureSet(
         ticker="NFLX",
         thesis=(
@@ -1858,6 +2057,75 @@ ESTIMATES: dict[str, ReturnEstimate] = {
         caveat="Same treatment as MU and for the same reason. To value either, "
                "normalize the margin first and then decide what to pay for "
                "normalized earnings. Anything else is extrapolating a shortage.",
+    ),
+    "VRSN": ReturnEstimate(
+        "VRSN", eps_growth=0.09, current_multiple=33.1, target_multiple=26.0,
+        dividend_yield=0.0106,
+        basis="Revenue compounds only ~6% (FY25 +6.4%, Q3 26 +5.7%) and the "
+              "operating margin is flat by contract, so EPS growth comes "
+              "mostly from the buyback shrinking the share count. 9% = ~6% "
+              "revenue plus ~3% share reduction. 33.1x is $306.45 over trailing "
+              "EPS of $9.29. Target 26x, the low end of its own decade range, "
+              "because 33x for a 6% grower is the richest thing about it -- "
+              "that is -2.4%/yr of compression.",
+        caveat="Quality does not equal return here. This is the BEST business "
+               "in the screen and the LOWEST expected return of the five, "
+               "because a 6% grower at 33x has nowhere to go but the dividend "
+               "and the buyback. Same arithmetic that ruled out CME.",
+    ),
+    "MSCI": ReturnEstimate(
+        "MSCI", eps_growth=0.13, current_multiple=34.2, target_multiple=28.0,
+        dividend_yield=0.0125,
+        basis="Revenue +12.5% in Q3 26 and +9.7% in FY25, operating margin "
+              "rising ~50bp/yr toward 56%, plus a modest buyback. 13% blends "
+              "low-double-digit revenue with continued margin gain and assumes "
+              "deceleration. 34.2x is $656.72 over trailing EPS of $18.92. "
+              "Target 28x, still a premium multiple for a 12% grower with 56% "
+              "operating margins -- -2.0%/yr of compression.",
+        caveat="Asset-based index fees scale with the AUM tracking MSCI "
+               "indices, so a market drawdown cuts revenue AND the multiple "
+               "together. Less defensive than the recurring-revenue label "
+               "suggests.",
+    ),
+    "FTNT": ReturnEstimate(
+        "FTNT", eps_growth=0.17, current_multiple=43.2, target_multiple=25.0,
+        basis="The strongest operating momentum of the five: revenue +20.5% in "
+              "Q3 26 with GAAP operating margin up 23.4% -> 33.9% over three "
+              "years. 17% assumes revenue decelerates to mid-teens while "
+              "margin expansion continues more slowly. 43.2x is $132.94 over "
+              "trailing EPS of $3.07. Target 25x for a mature security "
+              "franchise, which is -5.3%/yr of compression -- the steepest "
+              "drag of the five and why the best business momentum does not "
+              "produce the best expected return.",
+        caveat="Market cap ~$97.7B at $132.94 against the screen's $100B "
+               "ceiling: ~2.4% of headroom, down from ~8% a week earlier. And "
+               "~1/3 of revenue is appliance PRODUCT, a capital purchase.",
+    ),
+    "FFIV": ReturnEstimate(
+        "FFIV", eps_growth=0.11, current_multiple=25.3, target_multiple=20.0,
+        basis="FY2026 revenue +11% with product revenue +23%, gross margin "
+              "rising, operating margin flat at ~24%, and a steady buyback. "
+              "11% = high-single-digit revenue plus share-count reduction. "
+              "25.3x is $321.04 over trailing EPS of $12.71 -- the LOWEST "
+              "multiple of the five, so only -2.3%/yr of assumed compression "
+              "to 20x. No dividend.",
+        caveat="Operating margin slipped 90bp in FY2026. Still inside a flat "
+               "band, but direction is exactly what the screen tests, so this "
+               "is the number to re-check next print.",
+    ),
+    "DSGX": ReturnEstimate(
+        "DSGX", eps_growth=0.15, current_multiple=43.7, target_multiple=25.0,
+        basis="Revenue +12% with GAAP operating margin up 24.9% -> 33.2%, plus "
+              "tuck-in acquisitions funded from cash flow. 15% assumes the "
+              "margin expansion slows once it plateaus near its current level. "
+              "43.7x is ~$94.70 over trailing EPS of $2.15. Target 25x for a "
+              "low-teens grower, which is -5.4%/yr of compression -- the "
+              "steepest of the five alongside FTNT.",
+        caveat="Canadian-domiciled, which is a stated preference against. The "
+               "tax cost is ZERO (no dividend, and IRAs are exempt under "
+               "US-Canada treaty Art. XXI); the real cost is unhedged CAD. "
+               "Also note 43.7x is a demanding multiple for a business levered "
+               "to global shipment volumes.",
     ),
     "NFLX": ReturnEstimate(
         "NFLX", eps_growth=0.16, current_multiple=20.9, target_multiple=20.0,
