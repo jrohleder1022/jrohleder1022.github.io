@@ -107,6 +107,29 @@ def report_policy(book: Book, contribution: float, using_basis: bool) -> None:
         print(f"  {f}")
     print(f"\n  {breaches} breach(es), {warnings} warning(s).")
 
+    # Domicile, which is an arithmetic question in a Roth rather than a
+    # preference. Foreign withholding on a dividend is unrecoverable here:
+    # there is no US tax liability for a foreign tax credit to offset. This
+    # prints only when a HELD position is a non-US issuer, so it stays silent
+    # for an all-US book instead of adding noise.
+    profiles = {**BOOK, **CANDIDATES}
+    notes = [
+        profiles[p.ticker].roth_withholding_note()
+        for p in book.positions
+        if p.ticker in profiles
+        and profiles[p.ticker].roth_withholding_note() is not None
+    ]
+    if notes:
+        print("\n  DOMICILE — foreign withholding is unrecoverable in a Roth")
+        for n in notes:
+            print(f"    ! {n}")
+        print(
+            "    A US-only rule is the right default for THIS account type, "
+            "and it\n    over-excludes in exactly two cases: a foreign issuer "
+            "paying no\n    dividend, and a Canadian one (IRAs are exempt "
+            "under treaty Art. XXI)."
+        )
+
 
 def report_risk(book: Book, contribution: float, prices: pd.DataFrame | None) -> None:
     section("2. CONCENTRATION")

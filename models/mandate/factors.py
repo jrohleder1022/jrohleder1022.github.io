@@ -204,8 +204,56 @@ class ExposureSet:
     thesis: str
     exposures: list[Exposure] = field(default_factory=list)
 
+    # Two-letter domicile of the ISSUER, not of its listing or operations.
+    # Added because the account is a ROTH IRA, where this is not a preference
+    # but an arithmetic fact: foreign withholding on a dividend is UNRECOVERABLE
+    # here. In a taxable account it returns as a foreign tax credit; a Roth has
+    # no US tax liability to credit it against, so the withheld amount is a
+    # permanent leak spent purely on the account type.
+    #
+    # The rule does NOT bite uniformly, which is why this is a field rather
+    # than a blanket ban:
+    #   - A foreign issuer that pays NO dividend costs nothing extra.
+    #   - Canada exempts IRAs from dividend withholding under Article XXI of
+    #     the US-Canada treaty, treating them as pension plans. CA is the
+    #     friendliest foreign domicile for this account.
+    #   - France, Switzerland and most of Europe withhold 15% under treaty and
+    #     25-35% statutory if the broker does not apply the treaty rate.
+    # Domicile also surprises: a company can be US-listed, S&P-500-included and
+    # US-operated while being incorporated abroad. Garmin is Swiss. Check the
+    # 10-K cover page, not the head office address.
+    domicile: str = "US"
+    pays_dividend: bool = True
+
     def as_map(self) -> dict[str, float]:
         return {e.factor: e.beta for e in self.exposures}
+
+    def roth_withholding_note(self) -> str | None:
+        """Why this issuer's domicile costs the account money, or None."""
+        if self.domicile == "US":
+            return None
+        if not self.pays_dividend:
+            return (
+                f"{self.ticker} is domiciled in {self.domicile}, but pays no "
+                "dividend, so there is nothing to withhold and the foreign "
+                "domicile costs this account nothing today. It would start to "
+                "cost if a dividend were ever initiated."
+            )
+        if self.domicile == "CA":
+            return (
+                f"{self.ticker} is domiciled in Canada. Article XXI of the "
+                "US-Canada treaty exempts IRAs from dividend withholding, so "
+                "the usual Roth leak does not apply. Currency remains an "
+                "unhedged second bet."
+            )
+        return (
+            f"{self.ticker} is domiciled in {self.domicile} and pays a "
+            "dividend. Withholding on it is UNRECOVERABLE in a Roth: ~15% at "
+            "the treaty rate, 25-35% if the broker applies the statutory rate, "
+            "and there is no US tax liability to claim a foreign tax credit "
+            "against. On a 2% yield that is 30-70bp a year, permanently, plus "
+            "unhedged currency and a wider spread if it trades as an ADR."
+        )
 
     def validate(self) -> list[str]:
         """Return a list of problems. Empty list means the profile is usable."""
@@ -746,6 +794,8 @@ CANDIDATES: dict[str, ExposureSet] = {
     ),
     "SBGSY": ExposureSet(
         ticker="SBGSY",
+        domicile="FR",
+        pays_dividend=True,
         thesis=(
             "Schneider Electric, via the US ADR. Energy management (power "
             "distribution, 3-phase UPS under the APC brand, prefabricated "
