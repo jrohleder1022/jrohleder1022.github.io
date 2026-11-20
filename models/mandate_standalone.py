@@ -1372,6 +1372,136 @@ CANDIDATES: dict[str, ExposureSet] = {
             ),
         ],
     ),
+    "EME": ExposureSet(
+        ticker="EME",
+        thesis=(
+            "EMCOR Group. Mechanical and electrical construction plus a "
+            "building-services segment, sold to commercial, institutional, "
+            "healthcare, industrial and -- increasingly -- data-centre "
+            "customers. THE ONLY NAME TO PASS ALL SEVEN TESTS of a screen "
+            "across ~114 US-listed candidates for growth plus rising margins "
+            "plus a sub-30x GAAP multiple plus beta under 1.3. "
+            "Delaware-incorporated, verified from the 10-K cover page. "
+            "FY2025 revenue $16.99B (+16.6%, organic +7.9%); Q3 2026 $5.54B "
+            "(+28.8%, ORGANIC +25.5%). GAAP operating margin 7.0% -> 9.2% -> "
+            "10.1%, and 9.8% in Q3 against 9.4% a year earlier. Stripping the "
+            "$144.9M UK divestiture gain, FY2025 was 9.4% against FY2024's "
+            "9.2% -- the rise holds either way. Price $634.85 (16 Nov 2026), "
+            "~$29.0B cap, 21.7-23.8x trailing GAAP, 18.1x forward on company "
+            "adjusted guidance. Beta 1.12-1.17 across four sources. "
+            "IT PASSED THE TEST GE VERNOVA FAILED, which is why it is here. "
+            "Nine-month CFO $1,086.6M against nine-month net income of "
+            "$1,110M -- a ratio of 0.98, with the 10-Q attributing the rise "
+            "'mainly to higher net income' and working capital a net DRAG "
+            "over nine months. Compare GEV's $17.1B of trailing FCF against "
+            "$3.7B for all of FY2025, funded by customer prepayments. Caveat: "
+            "Q3 alone was helped by $359M of contract liabilities, so it is "
+            "not spotless. "
+            "AI EXPOSURE IS SIZED FROM DISCLOSURE, not asserted: data-centre "
+            "remaining performance obligations are $8.74B of $18.57B total "
+            "RPO -- 47%, more than doubled year over year and +13% "
+            "sequentially. Data centres are roughly a third of YTD revenue "
+            "and approaching half of construction revenue."
+        ),
+        exposures=[
+            Exposure("ai_capex", 0.60,
+                     "Well above GEV's 0.35, and the reason is structural. "
+                     "EMCOR is PROJECT construction with no services annuity "
+                     "on an installed base to cushion a pause -- GEV has $93B "
+                     "of services backlog paid whether or not another data "
+                     "centre is built, and EMCOR has nothing equivalent. Data "
+                     "centre is 47% of RPO and ~1/3 of revenue. The offset is "
+                     "genuine diversification into healthcare, institutional, "
+                     "manufacturing and commercial HVAC work, which is why "
+                     "this is 0.60 and not 1.0."),
+            Exposure("financing_cost", 0.45,
+                     "Customers finance multi-year construction programmes, "
+                     "and a developer's cost of capital sets its build rate. "
+                     "Note Comfort Systems -- a direct peer -- disclosed it is "
+                     "'increasing credit scrutiny of newer data center "
+                     "counterparties' and warned bookings could lighten. That "
+                     "is a builder saying its customers' credit is worsening."),
+            Exposure("commodity_cycle", 0.25,
+                     "Copper, steel, switchgear and skilled electrical labour. "
+                     "Real on a 10% operating margin, where a few points of "
+                     "input cost is a large share of profit."),
+            Exposure("regulatory", 0.20,
+                     "Permitting, interconnection queues and local "
+                     "data-centre siting politics determine when a project "
+                     "starts, which is when EMCOR gets paid."),
+            Exposure("consumer_spending", 0.10,
+                     "Minimal. Commercial and institutional end markets, not "
+                     "households."),
+            Exposure("market_beta", 1.15,
+                     "Four independent sources cluster at 1.12-1.17, which is "
+                     "why this number is trustworthy where Powell "
+                     "Industries' (0.82 to 2.38 across providers) was not."),
+        ],
+    ),
+    "PLXS": ExposureSet(
+        ticker="PLXS",
+        thesis=(
+            "Plexus Corp. Contract design and manufacturing for medical "
+            "devices, semiconductor capital equipment, aerospace and defence. "
+            "WISCONSIN-incorporated, verified from the 10-K cover page. "
+            "Cleared six of seven screen tests across a 44-name "
+            "semiconductor and hardware universe; the only failure is that "
+            "its AI exposure cannot be SIZED because the company does not "
+            "disclose one. "
+            "FY2026 revenue $4.965B against $4.033B = +23.1%, and ORGANIC -- "
+            "Plexus bought nothing, making it the only double-digit grower in "
+            "that universe whose growth is not acquisition-fed, in a cycle "
+            "where Sanmina's 79% was mostly ZT Systems, HPE's 34% was "
+            "Juniper, Lattice's 118% included AMI and SiTime's 257% was TPD. "
+            "Q4 FY2026 revenue $1.427B (+35%). GAAP operating margin 4.2% -> "
+            "5.0% -> 5.3%, rising again to 6.0% in Q4. Price $208.73 (19 Nov "
+            "2026), ~$5.6B cap, 28.2x trailing GAAP, ~22-24x on annualised Q1 "
+            "FY2027 GAAP guidance. Beta 0.89 on two sources, 1.07-1.08 on a "
+            "third, with 40+ years of trading history behind it. "
+            "THE CRITICAL THING TO UNDERSTAND BEFORE BUYING IT: GROSS MARGIN "
+            "IS 10.2%. This is a contract manufacturer, structurally. It "
+            "satisfies 'rising margins' and emphatically not 'large margins' "
+            "-- it would have failed the earlier 60%-gross-margin screen by "
+            "fifty points. The operating leverage on a 10% gross margin is "
+            "powerful in both directions: a 1-point move in input costs or "
+            "pricing is a fifth of operating profit. "
+            "AI EXPOSURE IS REAL BUT SECOND-DERIVATIVE AND UNSIZED: Industrial "
+            "is 45% of Q3 revenue and grew 41.9%, and within it management "
+            "names the semiconductor capital equipment subsector plus a new "
+            "win building a battery energy storage system for data centres. "
+            "Plexus builds other people's AI tools. It publishes no AI "
+            "percentage, and that is the honest gap."
+        ),
+        exposures=[
+            Exposure("ai_capex", 0.30,
+                     "Indirect and second-derivative. Plexus manufactures "
+                     "semiconductor capital equipment for the companies that "
+                     "sell into the buildout, plus data-centre power gear. An "
+                     "AI capex pause reaches it with a lag and through a "
+                     "customer's order book, not directly. Set at 0.30 rather "
+                     "than higher because Healthcare/Life Sciences (37%) and "
+                     "Aerospace/Defence (18%) are more than half the company "
+                     "and have no AI linkage at all."),
+            Exposure("commodity_cycle", 0.30,
+                     "Amplified by the thin margin. Components, freight and "
+                     "tariffs pass through a 10.2% gross margin, so an input "
+                     "shock that a software company would not notice is "
+                     "material here."),
+            Exposure("regulatory", 0.25,
+                     "FDA quality systems for the medical-device work (37% of "
+                     "revenue) and ITAR/defence-programme funding for "
+                     "Aero/Defence (18%). Qualification barriers also cut the "
+                     "other way: they are the moat."),
+            Exposure("consumer_spending", 0.15,
+                     "Low. Almost no consumer end market; the cyclicality "
+                     "comes from customers' capital programmes."),
+            Exposure("market_beta", 0.89,
+                     "The LOWEST beta of anything that passed any test in "
+                     "either screen. Two sources agree at 0.89 on 40+ years "
+                     "of history, so it is a meaningful number rather than a "
+                     "short-window artefact."),
+        ],
+    ),
     "VRSN": ExposureSet(
         ticker="VRSN",
         thesis=(
@@ -2796,6 +2926,46 @@ ESTIMATES: dict[str, ReturnEstimate] = {
         caveat="Same treatment as MU and for the same reason. To value either, "
                "normalize the margin first and then decide what to pay for "
                "normalized earnings. Anything else is extrapolating a shortage.",
+    ),
+    "EME": ReturnEstimate(
+        "EME", eps_growth=0.14, current_multiple=22.5, target_multiple=16.0,
+        dividend_yield=0.0015,
+        basis="Revenue grew 16.6% in FY2025 and 28.8% in Q3 2026 with organic "
+              "at 25.5%, while GAAP operating margin climbed 7.0% -> 9.2% -> "
+              "10.1%. 14% assumes revenue decelerates to low double digits "
+              "and margin plateaus near 10% -- construction margins do not "
+              "compound indefinitely. 22.5x is the midpoint of the 21.7-23.8x "
+              "trailing GAAP range at $634.85. Target 16x because a "
+              "mechanical and electrical contractor has historically traded "
+              "12-18x and today's 22.5x embeds data-centre demand; that is "
+              "-3.4%/yr of compression.",
+        caveat="The cyclicality is in the ORDER BOOK, not the income "
+               "statement, and it will not show up in a margin series until "
+               "after it matters. Data-centre RPO is 47% of total. Watch two "
+               "things: whether contract liabilities keep flattering quarterly "
+               "cash flow (Q3 was +$359M), and peer commentary on "
+               "data-centre counterparty credit, where Comfort Systems has "
+               "already tightened scrutiny and warned on bookings.",
+    ),
+    "PLXS": ReturnEstimate(
+        "PLXS", eps_growth=0.14, current_multiple=28.2, target_multiple=18.0,
+        basis="FY2026 revenue +23.1% ORGANIC with GAAP operating margin 4.2% "
+              "-> 5.0% -> 5.3% and 6.0% in Q4. 14% assumes revenue slows to "
+              "low double digits with modest further margin gain; on a 10% "
+              "gross margin, operating leverage delivers EPS growth well "
+              "above revenue growth while it lasts. 28.2x is $208.73 over "
+              "FY2026 GAAP diluted EPS of $7.41. Target 18x -- EMS has "
+              "historically traded 12-20x, so 28.2x is a full price for a "
+              "contract manufacturer and implies -4.4%/yr of compression, the "
+              "largest drag of any name that passed either screen. No "
+              "dividend.",
+        caveat="TWO THINGS. The price is date-sensitive: undated aggregator "
+               "snapshots at $264-270 would imply ~36x rather than 28.2x, and "
+               "the 28.2x uses the dated 19 Nov close. And the AI exposure is "
+               "unsized by the company, so test 7 is unmet -- you are buying "
+               "a second-derivative beneficiary on inference, not disclosure. "
+               "The 10.2% gross margin is the real risk: it is the thinnest "
+               "of anything in this file by a factor of six.",
     ),
     "VRSN": ReturnEstimate(
         "VRSN", eps_growth=0.09, current_multiple=33.1, target_multiple=26.0,
